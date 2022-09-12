@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import App from './pages/App'
-import LoginPage from './pages/LoginPage'
+import LoginSignupPage from './pages/LoginSignupPage'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 import { ChakraProvider } from '@chakra-ui/react'
