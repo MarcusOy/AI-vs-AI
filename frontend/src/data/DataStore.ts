@@ -5,7 +5,7 @@ interface IStore {
     counter: number
 }
 
-const initialState = {
+const initialState: IStore = {
     isDarkMode: false,
     counter: 0,
 }

@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import App from './pages/App'
+import LoginPage from './pages/LoginPage'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 import { ChakraProvider } from '@chakra-ui/react'
 
@@ -9,7 +11,20 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
     <React.StrictMode>
         <ChakraProvider>
-            <App />
+            <BrowserRouter>
+                <nav
+                    style={{
+                        borderBottom: 'solid 1px',
+                        paddingBottom: '1rem',
+                    }}
+                >
+                    <Link to='/'>Home</Link> | <Link to='/login'>Login</Link>
+                </nav>
+                <Routes>
+                    <Route path='/' element={<App />} />
+                    <Route path='/login' element={<LoginPage />} />
+                </Routes>
+            </BrowserRouter>
         </ChakraProvider>
     </React.StrictMode>,
 )
