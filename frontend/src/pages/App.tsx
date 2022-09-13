@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { AVAStore } from '../data/DataStore'
 import React, { useState } from 'react'
+import LoginSignUpPage from './LoginSignupPage'
 
 
 function App() {
@@ -37,7 +38,7 @@ function App() {
 
     return (
         <div className='App'>
-            
+            <LoginSignUpPage/>
         </div>
     )
 }

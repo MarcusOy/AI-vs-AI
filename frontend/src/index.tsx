@@ -22,7 +22,7 @@ root.render(
                 </nav>
                 <Routes>
                     <Route path='/' element={<App />} />
-                    <Route path='/login' element={<LoginPage />} />
+                    <Route path='/login' element={<LoginSignupPage />} />
                 </Routes>
             </BrowserRouter>
         </ChakraProvider>
