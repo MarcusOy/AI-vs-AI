@@ -39,6 +39,10 @@ const SignUpForm = () => {
                     <FormLabel>Password</FormLabel>
                     <Input type='password' placeholder='Enter your password' />
                 </FormControl>
+                <FormControl>
+                    <FormLabel>Password-Confirm</FormLabel>
+                    <Input type='password' placeholder='Re-enter your password' />
+                </FormControl>
             </form>
         </Box>
     )
