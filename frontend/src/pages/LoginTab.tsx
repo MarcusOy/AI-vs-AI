@@ -1,10 +1,11 @@
 import React from 'react'
-import { Box, Flex, FormControl, FormLabel, Input } from '@chakra-ui/react'
+import { Box, Flex, FormControl, FormLabel, Input, Center, Heading } from '@chakra-ui/react'
 
 const LoginTab = () => {
     return (
         <Flex>
             <Box>
+                <LoginHeader />
                 <LoginForm />
             </Box>
         </Flex>
@@ -29,6 +30,16 @@ const LoginForm = () => {
                 </FormControl>
             </form>
         </Box>
+    )
+}
+
+const LoginHeader = () => {
+    return (
+        <Center>
+            <Box>
+                <Heading color=''>Glad to see you</Heading>
+            </Box>
+        </Center>
     )
 }
 

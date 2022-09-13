@@ -8,12 +8,15 @@ import {
     Button,
     ButtonGroup,
     Container,
+    Center,
+    Heading,
 } from '@chakra-ui/react'
 
 const SignUpTab = () => {
     return (
         <Flex>
             <Box>
+                <SignupHeader />
                 <SignUpForm />
             </Box>
         </Flex>
@@ -38,6 +41,16 @@ const SignUpForm = () => {
                 </FormControl>
             </form>
         </Box>
+    )
+}
+
+const SignupHeader = () => {
+    return (
+        <Center>
+            <Box>
+                <Heading>Welcome, AI Creators</Heading>
+            </Box>
+        </Center>
     )
 }
 

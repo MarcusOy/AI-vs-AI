@@ -13,7 +13,7 @@ const LoginSignUpPage = () => {
             <TabPanels>
                 <TabPanel>
                     <Center>
-                        <p>LOGIN</p>
+                        <p>LOG IN</p>
                     </Center>
                     <div>
                         <Center>

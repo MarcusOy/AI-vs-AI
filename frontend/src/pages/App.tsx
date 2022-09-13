@@ -18,7 +18,6 @@ import { AVAStore } from '../data/DataStore'
 import React, { useState } from 'react'
 import LoginSignUpPage from './LoginSignupPage'
 
-
 function App() {
     // const state = AVAStore.useState()
 
@@ -40,16 +39,7 @@ function App() {
     //     })
     // }
 
-    return (
-        <ThemeProvider theme={theme}>
-            <ColorModeProvider>
-                <CSSReset/>
-                <LoginSignUpPage/>
-            </ColorModeProvider>
-        </ThemeProvider>
-            
-        
-    )
+    return <LoginSignUpPage />
 }
 
 export default App
