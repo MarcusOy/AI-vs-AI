@@ -1,30 +1,38 @@
 import React from 'react'
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
+import { Tabs, TabList, TabPanels, Tab, TabPanel, Center } from '@chakra-ui/react'
 import SignUpTab from './SignUpTab'
 import LoginTab from './LoginTab'
 
 const LoginSignUpPage = () => {
     return (
-      <Tabs isFitted variant='enclosed'>
-        <TabList mb='1em'>
-          <Tab>Login</Tab>
-          <Tab>Signup</Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel>
-            <p>login here!</p>
-            <div>
-                <LoginTab/>
-            </div>
-          </TabPanel>
-          <TabPanel>
-            <p>sign up here!</p>
-            <div>
-                <SignUpTab/>
-            </div>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+        <Tabs isFitted variant='enclosed'>
+            <TabList mb='1em'>
+                <Tab>Login</Tab>
+                <Tab>Signup</Tab>
+            </TabList>
+            <TabPanels>
+                <TabPanel>
+                    <Center>
+                        <p>LOGIN</p>
+                    </Center>
+                    <div>
+                        <Center>
+                            <LoginTab />
+                        </Center>
+                    </div>
+                </TabPanel>
+                <TabPanel>
+                    <Center>
+                        <p>SIGN UP</p>
+                    </Center>
+                    <div>
+                        <Center>
+                            <SignUpTab />
+                        </Center>
+                    </div>
+                </TabPanel>
+            </TabPanels>
+        </Tabs>
     )
 }
 

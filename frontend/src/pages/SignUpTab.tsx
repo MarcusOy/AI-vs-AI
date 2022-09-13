@@ -1,40 +1,43 @@
 import React from 'react'
+import {
+    Input,
+    Flex,
+    Box,
+    FormControl,
+    FormLabel,
+    Button,
+    ButtonGroup,
+    Container,
+} from '@chakra-ui/react'
 
 const SignUpTab = () => {
     return (
-        <div>
+        <Flex>
+            <Box>
+                <SignUpForm />
+            </Box>
+        </Flex>
+    )
+}
+
+const SignUpForm = () => {
+    return (
+        <Box>
             <form>
-            <div className='form-group'>
-                <label>Email</label>
-                <input
-                type='text'
-                className='form-control'
-                placeholder='Enter your email'
-                />
-            </div>
-
-            <div className='form-group'>
-                <label>Username</label>
-                <input
-                type='text'
-                className='form-control'
-                placeholder='Enter your unique username'
-                />
-            </div>
-
-            <div className='form-group'>
-                <label>Password</label>
-                <input
-                type='text'
-                className='form-control'
-                placeholder='Enter your new password'
-                />
-            </div>
-                <button>
-                    Register
-                </button>
+                <FormControl>
+                    <FormLabel>Email</FormLabel>
+                    <Input type='email' placeholder='Enter your email address' />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>Username</FormLabel>
+                    <Input type='username' placeholder='Enter your username' />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>Password</FormLabel>
+                    <Input type='password' placeholder='Enter your password' />
+                </FormControl>
             </form>
-        </div>
+        </Box>
     )
 }
 

@@ -18,11 +18,11 @@ root.render(
                         paddingBottom: '1rem',
                     }}
                 >
-                    <Link to='/'>Home</Link> | <Link to='/login'>Login</Link>
+                    <Link to='/'>Home</Link> | <Link to='/loginSignup'>Login</Link>
                 </nav>
                 <Routes>
                     <Route path='/' element={<App />} />
-                    <Route path='/login' element={<LoginSignupPage />} />
+                    <Route path='/loginSignup' element={<LoginSignupPage />} />
                 </Routes>
             </BrowserRouter>
         </ChakraProvider>

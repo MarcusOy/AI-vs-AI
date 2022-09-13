@@ -8,7 +8,11 @@ import {
     HStack,
     Input,
     Stack,
+    ThemeProvider,
+    theme,
+    CSSReset,
     Wrap,
+    ColorModeProvider,
 } from '@chakra-ui/react'
 import { AVAStore } from '../data/DataStore'
 import React, { useState } from 'react'
@@ -37,9 +41,14 @@ function App() {
     // }
 
     return (
-        <div className='App'>
-            <LoginSignUpPage/>
-        </div>
+        <ThemeProvider theme={theme}>
+            <ColorModeProvider>
+                <CSSReset/>
+                <LoginSignUpPage/>
+            </ColorModeProvider>
+        </ThemeProvider>
+            
+        
     )
 }
 
