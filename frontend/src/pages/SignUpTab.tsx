@@ -44,6 +44,9 @@ const SignUpForm = () => {
                     <Input type='password' placeholder='Re-enter your password' />
                 </FormControl>
             </form>
+            <Center>
+                <Button>Register</Button>
+            </Center>
         </Box>
     )
 }
