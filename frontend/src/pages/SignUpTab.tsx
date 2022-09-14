@@ -45,7 +45,9 @@ const SignUpForm = () => {
                 </FormControl>
             </form>
             <Center>
-                <Button>Register</Button>
+                <Button size='lg' colorScheme='cyan' mt='24px'>
+                    Complete Sign Up
+                </Button>
             </Center>
         </Box>
     )

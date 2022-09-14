@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Flex, FormControl, FormLabel, Input, Center, Heading } from '@chakra-ui/react'
+import { Box, Flex, FormControl, FormLabel, Input, Center, Heading, Button } from '@chakra-ui/react'
 
 const LoginTab = () => {
     return (
@@ -29,6 +29,11 @@ const LoginForm = () => {
                     <Input type='password' placeholder='Enter your password' />
                 </FormControl>
             </form>
+            <Center>
+                <Button size='lg' colorScheme='cyan' mt='24px'>
+                    Log In
+                </Button>
+            </Center>
         </Box>
     )
 }
