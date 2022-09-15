@@ -1,6 +1,6 @@
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
-    public class SnappySettings
+    public class AVASettings
     {
         public string DisplayName { get; set; }
         public string DomainName { get; set; }

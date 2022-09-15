@@ -1,4 +1,4 @@
-namespace Snappy.API.Helpers
+namespace AVA.API.Helpers
 {
     using System;
     using System.IO;

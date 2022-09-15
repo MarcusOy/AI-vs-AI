@@ -3,11 +3,11 @@ using System.Security.Authentication;
 using Microsoft.Extensions.Options;
 using OtpNet;
 using QRCoder;
-using Snappy.API.Data;
-using Snappy.API.Helpers;
-using Snappy.API.Models;
+using AVA.API.Data;
+using AVA.API.Helpers;
+using AVA.API.Models;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface ITwoFactorService
     {
@@ -19,13 +19,13 @@ namespace Snappy.API.Services
     }
     public class TotpTwoFactorService : ITwoFactorService
     {
-        private readonly SnappyDBContext _dbContext;
-        private readonly SnappySettings _settings;
+        private readonly AVADbContext _dbContext;
+        private readonly AVASettings _settings;
         private readonly ILogger<TotpTwoFactorService> _logger;
         private readonly HttpContext _context;
 
-        public TotpTwoFactorService(SnappyDBContext dbContext,
-                                    IOptions<SnappySettings> settings,
+        public TotpTwoFactorService(AVADbContext dbContext,
+                                    IOptions<AVASettings> settings,
                                     ILogger<TotpTwoFactorService> logger,
                                     IHttpContextAccessor context)
         {

@@ -3,10 +3,10 @@ using System.Linq;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Snappy.API.Data;
-using Snappy.API.Models;
+using AVA.API.Data;
+using AVA.API.Models;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface IMessageService
     {
@@ -35,15 +35,15 @@ namespace Snappy.API.Services
     public class MessageService : IMessageService
     {
         private readonly ILogger<MessageService> _logger;
-        private readonly SnappyDBContext _dbContext;
-        private readonly SnappySettings _settings;
+        private readonly AVADbContext _dbContext;
+        private readonly AVASettings _settings;
         private readonly IIdentityService _idService;
         private readonly ISubscriptionService _subService;
 
         public MessageService(IHttpContextAccessor context,
                             ILogger<MessageService> logger,
-                            SnappyDBContext dbContext,
-                            IOptions<SnappySettings> settings,
+                            AVADbContext dbContext,
+                            IOptions<AVASettings> settings,
                             IIdentityService idService,
                             ISubscriptionService subService)
         {

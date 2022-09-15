@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
 using OtpNet;
 
-namespace Snappy.API.Helpers
+namespace AVA.API.Helpers
 {
     public static class SecurityHelpers
     {

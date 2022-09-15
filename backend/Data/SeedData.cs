@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Snappy.API.Helpers;
-using Snappy.API.Models;
+using AVA.API.Helpers;
+using AVA.API.Models;
 
-namespace Snappy.API.Data;
+namespace AVA.API.Data;
 
 public static class SeedData
 {

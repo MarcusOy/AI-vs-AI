@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Snappy.API.Models;
+namespace AVA.API.Models;
 
 
 public class BaseEntity

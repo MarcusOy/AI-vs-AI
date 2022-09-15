@@ -6,11 +6,11 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Snappy.API.Data;
-using Snappy.API.Helpers;
-using Snappy.API.Models;
+using AVA.API.Data;
+using AVA.API.Helpers;
+using AVA.API.Models;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface IIdentityService
     {
@@ -25,14 +25,14 @@ namespace Snappy.API.Services
     {
         private readonly HttpContext _context;
         private readonly ILogger<IdentityService> _logger;
-        private readonly SnappyDBContext _dbContext;
-        private readonly SnappySettings _settings;
+        private readonly AVADbContext _dbContext;
+        private readonly AVASettings _settings;
         private readonly ITwoFactorService _twoFactorService;
 
         public IdentityService(IHttpContextAccessor context,
                                ILogger<IdentityService> logger,
-                               SnappyDBContext dbContext,
-                               IOptions<SnappySettings> settings,
+                               AVADbContext dbContext,
+                               IOptions<AVASettings> settings,
                                ITwoFactorService twoFactorService)
         {
             _context = context.HttpContext;

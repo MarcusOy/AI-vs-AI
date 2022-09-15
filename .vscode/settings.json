@@ -1,5 +1,6 @@
 {
-    "git.ignoreLimitWarning": true,
-    "editor.formatOnSave": true,
-    "typescript.preferences.includePackageJsonAutoImports": "on"
+  "git.ignoreLimitWarning": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "typescript.preferences.includePackageJsonAutoImports": "on"
 }

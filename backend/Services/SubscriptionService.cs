@@ -1,8 +1,8 @@
 using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
-using Snappy.API.Models;
+using AVA.API.Models;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface ISubscriptionService
     {

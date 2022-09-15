@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Snappy.API.Controllers;
+namespace AVA.API.Controllers;
 
 public class HeartbeatController : Controller
 {
