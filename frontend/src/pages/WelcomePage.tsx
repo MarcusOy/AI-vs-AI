@@ -1,6 +1,7 @@
 import React from 'react'
-import { Center, Box, Heading, Text, Button } from '@chakra-ui/react'
-
+import { Center, Box, Heading, Text, Button, Link as ReachLink } from '@chakra-ui/react'
+import LoginSignUpPage from './LoginSignupPage'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 const WelcomePage = () => {
     return (
         <Center>
@@ -11,7 +12,7 @@ const WelcomePage = () => {
                 </Text>
                 <Center>
                     <Button size='lg' colorScheme='cyan' mt='24px'>
-                        Create a free account
+                        <Link to='/loginSignup'>Create a free account/Login</Link>
                     </Button>
                 </Center>
             </Box>

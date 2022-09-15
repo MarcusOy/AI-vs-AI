@@ -28,6 +28,14 @@ const SignUpForm = () => {
         <Box>
             <form>
                 <FormControl>
+                    <FormLabel>First Name</FormLabel>
+                    <Input type='first name' placeholder='Enter your first name' />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>Last Name</FormLabel>
+                    <Input type='last name' placeholder='Enter your last name' />
+                </FormControl>
+                <FormControl>
                     <FormLabel>Email</FormLabel>
                     <Input type='email' placeholder='Enter your email address' />
                 </FormControl>
