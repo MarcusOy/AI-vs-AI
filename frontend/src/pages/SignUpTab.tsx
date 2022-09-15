@@ -11,6 +11,7 @@ import {
     Center,
     Heading,
 } from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
 
 const SignUpTab = () => {
     return (
@@ -54,7 +55,7 @@ const SignUpForm = () => {
             </form>
             <Center>
                 <Button size='lg' colorScheme='cyan' mt='24px'>
-                    Complete Sign Up
+                    <Link to='/'>Complete Sign Up</Link> {/* to mainpage */}
                 </Button>
             </Center>
         </Box>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Flex, FormControl, FormLabel, Input, Center, Heading, Button } from '@chakra-ui/react'
-
+import { Link } from 'react-router-dom'
 const LoginTab = () => {
     return (
         <Flex>
@@ -31,7 +31,7 @@ const LoginForm = () => {
             </form>
             <Center>
                 <Button size='lg' colorScheme='cyan' mt='24px'>
-                    Log In
+                    <Link to='/'>Log In</Link> {/* to mainpage */}
                 </Button>
             </Center>
         </Box>
