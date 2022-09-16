@@ -335,12 +335,12 @@ public class API {
 	* 				 Returns FALSE if the above condition isn’t met.
 	* 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_FORMAT if the string
-	*				 representing the cell is invalid.
-    	             Returns ERR_INVALID_COL if the passed move’s
+	* @error         Returns ERR_INVALID_COL if the passed cell’s
 	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed move’s
+	                 Returns ERR_INVALID_ROW if the passed cell’s
 	  				 row is an invalid character.
+	  				 Returns ERR_FORMAT if the passed cell is
+	  				 otherwise improperly formatted.
 	*/
 	int isMyPiece(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -375,12 +375,12 @@ public class API {
 	  				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
     * 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_FORMAT if the string
-	*				 representing the cell is invalid.
-    	             Returns ERR_INVALID_COL if the passed move’s
+	* @error         Returns ERR_INVALID_COL if the passed cell’s
 	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed move’s
+	                 Returns ERR_INVALID_ROW if the passed cell’s
 	  				 row is an invalid character.
+	  				 Returns ERR_FORMAT if the passed cell is
+	  				 otherwise improperly formatted.
 	*/
 	int getPieceColor(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -426,12 +426,12 @@ public class API {
 	  				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
     * 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_FORMAT if the string
-	*				 representing the cell is invalid.
-    	             Returns ERR_INVALID_COL if the passed move’s
+	* @error         Returns ERR_INVALID_COL if the passed cell’s
 	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed move’s
+	                 Returns ERR_INVALID_ROW if the passed cell’s
 	  				 row is an invalid character.
+	  				 Returns ERR_FORMAT if the passed cell is
+	  				 otherwise improperly formatted.
 	*/
 	int getPieceMoveDistance(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -461,7 +461,15 @@ public class API {
     --------------------
     */
 	
-	
+	/**
+	 * 
+	 * @param color  An integer representing the color of 
+	 * 				 the current player.
+	 * @param board  The String[][] representation of the game
+	 * 				 board, comprised of 'cells', as described
+	 * 				 at the top of this doc.
+	 * @return
+	 */
 	String[] getMyPieceLocations(int color, String[][] board) {
 		String[] locations = new String[NUM_PIECES_PER_SIDE];
 		for (int i = 0; i < NUM_PIECES_PER_SIDE; i++)
@@ -487,11 +495,6 @@ public class API {
 	* @param  cell   The position of the cell on the board, from
 	  				 values “A0” to “J9”.
 
-	* @param  allowSelfCapture   Whether or not you want to include
-	    						 moves in which one of your pieces
-	    						 lands on top of another one of your
-	    						 pieces, thus causing a capture of
-	    						 your own piece(s).
 	* @param  board  The String[][] representation of the game
 	  				 board, comprised of ‘cells’, as described
 	  				 at the top of this doc.
@@ -505,13 +508,13 @@ public class API {
 	  				 in the current cell can move to, represented
 	  				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
 	*/
-	String[] getValidMoves(String cell, boolean allowSelfCapture, String[][] board) {
+	String[] getValidMoves(String cell, String[][] board) {
 		int row = cellToRow(cell);
 		int col = cellToCol(cell);
 		
-		return getValidMoves(col, row, allowSelfCapture, board);
+		return getValidMoves(col, row, board);
 	}
-	String[] getValidMoves(int col, int row, boolean allowSelfCapture, String[][] board) {
+	String[] getValidMoves(int col, int row, String[][] board) {
 		String[] moves = new String[VALID_MOVES_ARRAY_LENGTH];
 		
 		for (int i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {
@@ -530,7 +533,7 @@ public class API {
 				int newRow = row + j;			                
 
 				if ((isCellValid(colAndRowToCell(newCol, newRow)) == TRUE)
-					&& (allowSelfCapture || isMyPiece(newCol, newRow, board) != TRUE)) {
+					&& isMyPiece(newCol, newRow, board) != TRUE) {
                     int pieceColor = getPieceColor(col, row, board);
                     if (isPlayerInCheck(pieceColor, board) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
                         continue;
@@ -645,7 +648,7 @@ public class API {
 		
 		int pieceMoveDistance = getPieceMoveDistance(fromCell, board);
 		
-		if (isMyPiece(fromCell, board) != TRUE || pieceMoveDistance == 0)
+		if (pieceMoveDistance == 0 || isMyPiece(fromCell, board) != TRUE || isMyPiece(toCell, board) == TRUE)
 			return FALSE;
 		
 		if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) > pieceMoveDistance)
@@ -662,11 +665,11 @@ public class API {
 	  				 cell is valid.
 	  				 Returns a negative integer if it’s invalid,
 	  				 causing an error.
-	* @error         Returns ERR_INVALID_COL if the passed move’s
+	* @error         Returns ERR_INVALID_COL if the passed cell’s
 	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed move’s
+	                 Returns ERR_INVALID_ROW if the passed cell’s
 	  				 row is an invalid character.
-	  				 Returns ERR_FORMAT if the passed move is
+	  				 Returns ERR_FORMAT if the passed cell is
 	  				 otherwise improperly formatted.
 	*/
 	int isCellValid(String cell) {
