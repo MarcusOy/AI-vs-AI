@@ -11,11 +11,13 @@ public class Battle {
     private int iterations;
     private int attackerWins;
     private int defenderWins;
+    private int gamesCompleted;
     //stackTrace
     private ArrayList<BattleGame> battleGames;
 
-    public Battle() {
+    public Battle(int iterations) {
         id = UUID.randomUUID();
+        this.iterations = iterations;
         battleGames = new ArrayList<>();
         status = Status.READY;
     }
@@ -36,7 +38,7 @@ public class Battle {
         else
             defenderWins++;
 
-        iterations++;
+        gamesCompleted++;
     }
 
     // handles the completion of the Battle
@@ -59,12 +61,14 @@ public class Battle {
         return id;
     }
 
+    public int getIterations() { return iterations; }
+
     public int getAttackerWins() { return attackerWins; }
 
     public int getDefenderWins() { return defenderWins; }
 
     public Color getAttackerColor() {
-        return iterations % 2 == 0 ? Color.WHITE : Color.BLACK;
+        return gamesCompleted % 2 == 0 ? Color.WHITE : Color.BLACK;
     }
 
     @Override
@@ -75,6 +79,7 @@ public class Battle {
                 ", iterations=" + iterations +
                 ", attackerWins=" + attackerWins +
                 ", defenderWins=" + defenderWins +
+                ", gamesCompleted=" + defenderWins +
                 ", battleGames=" + printBattleGames() /*battleGames*/ +
                 '}';
     }

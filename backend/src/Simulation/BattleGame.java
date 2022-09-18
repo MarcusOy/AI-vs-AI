@@ -25,7 +25,11 @@ public class BattleGame {
         didAttackerWin = winnerColor.equals(attackerColor);
     }
 
+    public int getGameNumber() { return gameNumber; }
+
     public Color getAttackerColor() { return attackerColor; }
+
+    public Color getDefenderColor() { return attackerColor == Color.WHITE ? Color.BLACK : Color.WHITE; }
 
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();

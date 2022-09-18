@@ -1,23 +1,49 @@
 package Simulation;
 
+import Strategy.RandomAI;
+import API.API;
+
 import java.util.Scanner;
 import java.util.UUID;
+
+/*
+   -----------------------------------------------------------------------
+   NOTE - Modify getAttackerMoveString() and/or getDefenderMoveString()
+          to test a new AI.
+   -----------------------------------------------------------------------
+*/
 
 public class SimulationApp {
     static boolean CONSOLE_APP = true;
     static boolean DEBUG = true;
+    static boolean ATTACKER_MANUAL = false;
+    static boolean DEFENDER_MANUAL = false;
 
     static final int BOARD_LENGTH = 10;
 
     static GameState gameState; // the gameState of the current game
+    static Scanner scan; // scanner used to interact with the console (can be used for manual play)
 
     // Runs a battle with an infinite number of BattleGames, starting a fresh BattleGame when the previous completes
     public static void main(String[] args) {
         // ask for console setup info
-        Scanner scan = new Scanner(System.in);
-        System.out.println("Do you want to run in CONSOLE mode? (y, n)");
+        scan = new Scanner(System.in);
+        System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
+                           "This mode prints out important information and prompts for input.\n" +
+                            "This mode is the only way to play manually.");
         CONSOLE_APP = scan.nextLine().equals("y");
-        System.out.println("Do you want to run in DEBUG mode? (y, n)");
+
+        if (CONSOLE_APP) {
+            System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
+            ATTACKER_MANUAL = scan.nextLine().equals("y");
+            System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "AI" : "MANUAL"));
+            System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
+            DEFENDER_MANUAL = scan.nextLine().equals("y");
+            System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "AI" : "MANUAL"));
+        }
+
+        System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
+                           "This mode prints out more detailed status and error information.");
         DEBUG = scan.nextLine().equals("y");
         int numGames;
         while (true) {
@@ -31,14 +57,14 @@ public class SimulationApp {
         }
 
         // setup Battle
-        Battle battle = new Battle();
+        Battle battle = new Battle(numGames);
 
         while (numGames > 0) {
             //setup BattleGame
             BattleGame currentBattleGame = battle.addBattleGame();
             gameState = new GameState();
 
-            Color gameWinner = playGame(battle.getId(), currentBattleGame);
+            Color gameWinner = playGame(battle, currentBattleGame);
             currentBattleGame.setWinner(gameWinner);
             battle.processGameWinner(currentBattleGame, gameWinner);
 
@@ -46,38 +72,41 @@ public class SimulationApp {
                 System.out.println("Game Over ---- Launching next game...");
 
             //wait 1 second before creating a new game
-            long gameEndTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() < gameEndTime + 1000) { }
+            if (CONSOLE_APP)
+                waitms(1000);
             numGames--;
         }
-        if (CONSOLE_APP) {
-            int aWins = battle.getAttackerWins();
-            int dWins = battle.getDefenderWins();
-            System.out.printf("%s wins the Battle!  %d - %d\n", aWins > dWins ? "ATTACKER" : "DEFENDER", aWins, dWins);
-        }
+        int aWins = battle.getAttackerWins();
+        int dWins = battle.getDefenderWins();
+        System.out.printf("%s wins the Battle!  A-%d vs D-%d\n", aWins > dWins ? "ATTACKER" : "DEFENDER", aWins, dWins);
         battle.complete();
 
         debugPrintln(battle.toString());
+
+        scan.close();
     }
 
     // runs one game loop, from creating a fresh board to returning
     // the winner at the end of the game
-    static Color playGame(UUID battleId, BattleGame battleGame) {
+    static Color playGame(Battle battle, BattleGame battleGame) {
         Color winner;
-        if (CONSOLE_APP)
+        if (CONSOLE_APP || DEBUG) {
+            System.out.printf("Game Starting.  ATTACKER - %s\t\t DEFENDER - %s\n", battleGame.getAttackerColor(), battleGame.getDefenderColor());
+            if (CONSOLE_APP)
+                waitms(3000);
             printBoard();
-
-        Scanner scan = new Scanner(System.in);
+        }
 
         while (true) {
 
             // fetch player move
             if (CONSOLE_APP)
                 System.out.println(playerString(gameState.currentPlayer) + "'s turn");
-            String moveString = scan.nextLine();
+            String moveString = currentColor().equals(battleGame.getAttackerColor())
+                                ? getAttackerMoveString(scan) : getDefenderMoveString(scan);
 
             // stores moveString in new turn, even if invalid
-            battleGame.addTurn(battleId, currentColor(), moveString);
+            battleGame.addTurn(battle.getId(), currentColor(), moveString);
 
             // validates move string
             boolean isValid = isMoveValid(moveString, gameState.board);
@@ -93,7 +122,7 @@ public class SimulationApp {
             // process player move
             processMove(moveString);
 
-            if (CONSOLE_APP)
+            if (CONSOLE_APP || DEBUG)
                 printBoard();
 
             // end game if all of a player's pawns are captured
@@ -128,12 +157,55 @@ public class SimulationApp {
             alternatePlayer();
         }
 
-        scan.close();
-
-        if (CONSOLE_APP || DEBUG)
-            System.out.printf("%s Wins!!!\n", winner.name());
+        System.out.printf("---------------- FINAL BOARD STATE (%d/%d)----------------", battleGame.getGameNumber(), battle.getIterations() - 1);
+        printBoard();
+        System.out.printf("%s Wins!!!\n", winner.name());
 
         return winner;
+    }
+
+    // You can replace the contents of this function with the Attacker AI,
+    // thus ignoring the Scanner for System.in
+    //
+    // Return string must be in the form "<fromCell>, <toCell>".
+    static String getAttackerMoveString(Scanner scan) {
+        debugPrintln("Fetching attacker's move");
+        if (ATTACKER_MANUAL)
+            return scan.nextLine();
+
+        // ATTACKER set to AI mode
+        String moveString = "";
+        try {
+            moveString = RandomAI.getMove(gameState);
+        } catch (Exception e) {
+            debugPrintf("Attacker Exception\n%s\n", e);
+            if (DEBUG)
+                e.printStackTrace();
+        }
+
+        return moveString;
+    }
+
+    // You can replace the contents of this function with the Defender AI,
+    // thus ignoring the Scanner for System.in
+    //
+    // Return string must be in the form "<fromCell>, <toCell>".
+    static String getDefenderMoveString(Scanner scan) {
+        debugPrintln("Fetching defender's move");
+        if (DEFENDER_MANUAL)
+            return scan.nextLine();
+
+        // DEFENDER set to AI mode
+        String moveString = "";
+        try {
+            moveString = RandomAI.getMove(gameState);
+        } catch (Exception e) {
+            debugPrintf("Defender Exception\n%s\n", e);
+            if (DEBUG)
+                e.printStackTrace();
+        }
+
+        return moveString;
     }
 
     //adjusts the gameState based upon the moveString
@@ -141,11 +213,11 @@ public class SimulationApp {
         String[][] board = gameState.board;
         String[] moveCells = moveString.split(", ");
 
-        int fromMoveDistance = getPieceMoveDistance(moveCells[0], board);
-        int toMoveDistance = getPieceMoveDistance(moveCells[1], board);
-
         String fromCell = moveCells[0];
         String toCell = moveCells[1];
+
+        int fromMoveDistance = getPieceMoveDistance(fromCell, board);
+        int toMoveDistance = getPieceMoveDistance(toCell, board);
         int fromCol = cellToCol(fromCell);
         int fromRow = cellToRow(fromCell);
         int toCol = cellToCol(toCell);
@@ -199,6 +271,8 @@ public class SimulationApp {
                 System.out.printf("\t%s,", gameState.board[j][i]);
             System.out.print("\t},\n");
         }
+        System.out.printf("W:%d\twPawns:%d\tB:%d\tbPawns:%d\n", gameState.numWhitePieces, gameState.numWhitePawns,
+                gameState.numBlackPieces, gameState.numBlackPawns);
         System.out.print("\n\n");
     }
 
@@ -273,7 +347,9 @@ public class SimulationApp {
     }
 
     static int getPieceMoveDistance(String cell, String[][] board) {
-        if (!isCellValid(cell))
+        return (new API()).getPieceMoveDistance(cell, board);
+
+        /*if (!isCellValid(cell))
             return 0;
 
         int col = cellToCol(cell);
@@ -283,7 +359,7 @@ public class SimulationApp {
         if (cellVal.equals(""))
             return 0;
 
-        return Integer.parseInt(cellVal.substring(1));
+        return Integer.parseInt(cellVal.substring(1));*/
     }
 
     static Color getPieceColor(String cell, String[][] board) {
@@ -308,7 +384,7 @@ public class SimulationApp {
 
     // returns the translation of the cell's second character to it's corresponding index in board[][]
     static int cellToRow(String cell) {
-        return Integer.parseInt(cell.substring(1));
+        return Integer.parseInt(cell.substring(1, 2));
     }
 
     // a string representing the passed player/color
@@ -322,10 +398,14 @@ public class SimulationApp {
             gameState.numWhitePieces--;
             if (pieceMoveDistance == 1)
                 gameState.numWhitePawns--;
+
+            debugPrintln("\t\t\t\t\t\t\t\t\t\t\t\t\tLosing WHITE piece");
         } else if (pieceColor == Color.BLACK) {
             gameState.numBlackPieces--;
             if (pieceMoveDistance == 1)
                 gameState.numBlackPawns--;
+
+            debugPrintln("\t\t\t\t\t\t\t\t\t\t\t\t\tLosing BLACK piece");
         }
     }
 
@@ -351,5 +431,10 @@ public class SimulationApp {
         } catch (Exception e) {
             return Color.ERROR_PLAYER;
         }
+    }
+
+    static void waitms(long msToWait) {
+        long gameEndTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() < gameEndTime + msToWait) { }
     }
 }

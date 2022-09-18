@@ -1,5 +1,7 @@
 package API;
 
+import Simulation.GameState;
+
 public class API {
 	// cell values are NEVER null - they should be "" if empty
 
@@ -12,7 +14,7 @@ public class API {
 	final char WHITE_CHAR = 'w';
 	final char BLACK_CHAR = 'b';
 	
-	final int VALID_MOVES_ARRAY_LENGTH = 80;
+	final int VALID_MOVES_ARRAY_LENGTH = 81;
 	// 10x10 board, B,W colors,  
 	
 	final int TRUE = 1;
@@ -29,6 +31,8 @@ public class API {
     final int ERR_FORMAT_MOVE_FROM = -6;
     final int ERR_FORMAT_MOVE_TO = -7;
 
+	// This constructor is just so these functions can be used in the console app
+	public API () { }
 
 	/*
 	--------------------
@@ -48,9 +52,8 @@ public class API {
 	 					 board, comprised of ‘cells’, as described
 	 					 at the top of this doc.
 	*/
-	String[][] getBoard(/*GameState*/String gameState) {
-		//TODO actually implement
-		return new String[10][10]; // temporary
+	public String[][] getBoard(GameState gameState) {
+		return gameState.board;
 	}
 	
 	
@@ -67,28 +70,26 @@ public class API {
 	* 				 	 the current player.
 	* 				 	 0 = WHITE  and  1 = BLACK
 	*/
-	int getMyColor(/*GameState gameState*/) {
-		//TODO actually implement
-		return 0; // temporary
+	public int getMyColor(GameState gameState) {
+		return gameState.currentPlayer;
 	}
 	
 	
 	
 	/**
-	* @param  gameState  The GameState object sent from the 
-	*					 simulation service every time.  This
-	*					 stores all the information about the
-	*					 current state
-	*					 of the game, including which color
-	*					 the current player is.
-	*
 	* @return		  	 An integer representing the color of
 	* 				 	 the not current player.
 	* 				 	 0 = WHITE  and  1 = BLACK
+	 * 				 	 Returns a negative integer, ERR_INVALID_COLOR,
+	 * 				 	 if myColor is invalid
 	*/
-	int getOpponentColor(/*GameState gameState*/) {
-		//TODO actually implement
-		return 1; // temporary
+	public int getOpponentColor(int myColor) {
+		if (myColor == WHITE)
+			return BLACK;
+		else if (myColor == BLACK)
+			return WHITE;
+		else
+			return ERR_INVALID_COLOR;
 	}
 
 	
@@ -112,7 +113,7 @@ public class API {
 	*			  	 “b1” representing one the black-side player’s
 	*			  	 1 pieces.
 	*/
-	String getCellValue(String cell, String[][] board) {
+	public String getCellValue(String cell, String[][] board) {
 		String foundVal = getCellValue(cellToCol(cell), cellToRow(cell), board);
 		
 		if (foundVal == null || foundVal.length() != 2)
@@ -135,7 +136,7 @@ public class API {
 	 *			  	 “b1” representing one the black-side player’s
 	 *			  	 1 pieces.
 	 */
-	String getCellValue(int col, int row, String[][] board) {
+	public String getCellValue(int col, int row, String[][] board) {
 		return board[col][row];
 	}
 
@@ -163,7 +164,7 @@ public class API {
     *                Returns ERR_FORMAT if the cell is
     *                otherwise improperly formatted.
 	*/
-	int cellToCol(String cell) {
+	public int cellToCol(String cell) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -187,7 +188,7 @@ public class API {
     *                Returns ERR_FORMAT if the cell is
     *                otherwise improperly formatted.
 	*/
-	int cellToRow(String cell) {
+	public int cellToRow(String cell) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -205,7 +206,7 @@ public class API {
 	 * 
 	 *				 See Board documention
 	 */
-	char cellToColChar(String cell) {
+	public char cellToColChar(String cell) {
 		return cell.charAt(0);
 	}
 	
@@ -218,7 +219,7 @@ public class API {
 	 *
 	 *				 See Board documention
 	 */
-	char cellToRowChar(String cell) {
+	public char cellToRowChar(String cell) {
 		return cell.charAt(1);
 	}
 
@@ -238,8 +239,8 @@ public class API {
 	* @return        The column of the cell on the board, from
 	*				 characters A-J. See diagram at top of doc.
 	*/
-	char colToColChar(int col) {
-		return (char)(col + 'a');
+	public char colToColChar(int col) {
+		return (char)(col + 'A');
 	}
 	
 	
@@ -251,7 +252,7 @@ public class API {
 	* @return        The row of the cell on the board, from
 	*				 characters 0-9. See diagram at top of doc.
 	*/
-	char rowToRowChar(int row) {
+	public char rowToRowChar(int row) {
 		return Integer.toString(row).charAt(0);
 	}
 	
@@ -270,7 +271,7 @@ public class API {
 	* 				 indices.
 	*			 	 For example, colAndRowToCell(2, 4) returns “C4”
 	*/
-	String colAndRowToCell(int col, int row) {
+	public String colAndRowToCell(int col, int row) {
 		return "" + colToColChar(col) + rowToRowChar(row);
 	}
 
@@ -303,7 +304,7 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed cell is
 	* 				 otherwise improperly formatted.
 	*/
-	int cellHasPiece(String cell, String[][] board) {
+	public int cellHasPiece(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -336,7 +337,7 @@ public class API {
 	 * 				 Returns ERR_FORMAT if the passed cell is
 	 * 				 otherwise improperly formatted.
 	 */
-	int cellHasPiece(int col, int row, String[][] board) {
+	public int cellHasPiece(int col, int row, String[][] board) {
         int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -352,6 +353,7 @@ public class API {
 	* @param  board  The String[][] representation of the game
 	* 				 board, comprised of ‘cells’, as described
 	* 				 at the top of this doc.
+	* @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	* @return        Returns TRUE if the given cell is storing a
 	* 				 string representing a piece of yours.  I.e.
 	* 				 “b3” if you are on black-side.
@@ -365,14 +367,14 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed cell is
 	* 				 otherwise improperly formatted.
 	*/
-	int isMyPiece(String cell, String[][] board) {
+	public int isMyPiece(String cell, int myColor, String[][] board) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
 
 		int col = cellToCol(cell);
 		int row = cellToRow(cell);
-		return isMyPiece(col, row, board);
+		return isMyPiece(col, row, myColor, board);
 	}
 	/**
 	 * @param  col    The index of the target cell’s column in the
@@ -384,6 +386,7 @@ public class API {
 	 * @param  board  The String[][] representation of the game
 	 * 				 board, comprised of ‘cells’, as described
 	 * 				 at the top of this doc.
+	 * @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	 * @return        Returns TRUE if the given cell is storing a
 	 * 				 string representing a piece of yours.  I.e.
 	 * 				 “b3” if you are on black-side.
@@ -397,12 +400,12 @@ public class API {
 	 *				Returns ERR_FORMAT if the passed cell is
 	 *				otherwise improperly formatted.
 	 */
-	int isMyPiece(int col, int row, String[][] board) {
+	public int isMyPiece(int col, int row, int myColor, String[][] board) {
 		int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
 
-		return getPieceColor(col, row, board) == getMyColor() ? TRUE : FALSE;
+		return getPieceColor(col, row, board) == myColor ? TRUE : FALSE;
 	}
 	
 	/**
@@ -422,7 +425,7 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed cell is
 	* 				 otherwise improperly formatted.
 	*/
-	int getPieceColor(String cell, String[][] board) {
+	public int getPieceColor(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -450,7 +453,7 @@ public class API {
 	 * 				 Returns ERR_FORMAT if the passed cell is
 	 * 				 otherwise improperly formatted.
 	 */
-	int getPieceColor(int col, int row, String[][] board) {	
+	public int getPieceColor(int col, int row, String[][] board) {
         int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -485,7 +488,7 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed cell is
 	* 				 otherwise improperly formatted.
 	*/
-	int getPieceMoveDistance(String cell, String[][] board) {
+	public int getPieceMoveDistance(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -515,7 +518,7 @@ public class API {
 	 * 				 Returns ERR_FORMAT if the passed cell is
 	 * 				 otherwise improperly formatted.
 	 */
-	int getPieceMoveDistance(int col, int row, String[][] board) {
+	public int getPieceMoveDistance(int col, int row, String[][] board) {
 		int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
             return isCellValidRet;
@@ -545,7 +548,7 @@ public class API {
 	 * 				 color are in.  The array is of fixed length 20,
 	 * 				 with empty array entries having the value "".
 	 */
-	String[] getMyPieceLocations(int color, String[][] board) {
+	public String[] getMyPieceLocations(int color, String[][] board) {
 		String[] locations = new String[NUM_PIECES_PER_SIDE];
 		for (int i = 0; i < NUM_PIECES_PER_SIDE; i++)
 			locations[i] = "";
@@ -554,7 +557,7 @@ public class API {
 		
 		for (int i = 0; i < BOARD_LENGTH; i++) {
 			for (int j = 0; j < BOARD_LENGTH; j++) {
-				if (isMyPiece(i, j, board) == TRUE) {
+				if (isMyPiece(i, j, color, board) == TRUE) {
 					locations[curArrIndex] = colAndRowToCell(i, j);
 					curArrIndex++;
 				}
@@ -569,7 +572,7 @@ public class API {
 	/**
 	* @param  cell   The position of the cell on the board, from
 	* 				 values “A0” to “J9”.
-	*
+	* @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	* @param  board  The String[][] representation of the game
 	* 				 board, comprised of ‘cells’, as described
 	* 				 at the top of this doc.
@@ -577,11 +580,11 @@ public class API {
 	* 				 in the current cell can move to, represented
 	* 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
 	*/
-	String[] getValidMoves(String cell, String[][] board) {
+	public String[] getValidMoves(String cell, int myColor, String[][] board) {
 		int row = cellToRow(cell);
 		int col = cellToCol(cell);
 		
-		return getValidMoves(col, row, board);
+		return getValidMoves(col, row, myColor, board);
 	}
 	/**
 	 * @param  col    The index of the target cell’s column in the
@@ -590,6 +593,7 @@ public class API {
 	 * @param  row    The index of the target cell’s row in the
 	 * 				 String[][] board, retrieved through using
 	 * 				 cellToRow().
+	 * @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	 * @param  board  The String[][] representation of the game
 	 * 				 board, comprised of ‘cells’, as described
 	 * 				 at the top of this doc.
@@ -597,7 +601,7 @@ public class API {
 	 * 				 in the current cell can move to, represented
 	 * 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
 	 */
-	String[] getValidMoves(int col, int row, String[][] board) {
+	public String[] getValidMoves(int col, int row, int myColor, String[][] board) {
 		String[] moves = new String[VALID_MOVES_ARRAY_LENGTH];
 		
 		for (int i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {
@@ -607,16 +611,26 @@ public class API {
 		int currentArrayIndex = 0;
 		int moveDistance = getPieceMoveDistance(col, row, board);
 		
-		if (moveDistance <= 0)
+		if (moveDistance <= 0) {
+			//System.out.println("moveDistance: " + moveDistance);
 			return moves;
+		}
 		
 		for (int i = -moveDistance; i <= moveDistance; i++) {
 			for (int j = -moveDistance; j <= moveDistance; j++) {
 				int newCol = col + i;
 				int newRow = row + j;			                
 
-				if ((isCellValid(colAndRowToCell(newCol, newRow)) == TRUE)
-					&& isMyPiece(newCol, newRow, board) != TRUE) {
+				/*String cell = colAndRowToCell(newCol, newRow);
+				int valid = isCellValid(newCol, newRow);
+				System.out.printf("Cell %s [%d][%d] valid: %d\n", cell, newCol, newRow, valid);
+				if (valid == TRUE) {
+					System.out.printf("piece: (%s) - isMyPiece: %d\n",
+							getCellValue(newCol, newRow, board), isMyPiece(newCol, newRow, myColor, board));
+				}*/
+
+				if ((isCellValid(newCol, newRow) == TRUE)
+					&& isMyPiece(newCol, newRow, myColor, board) != TRUE) {
                     int pieceColor = getPieceColor(col, row, board);
                     if (isPlayerInCheck(pieceColor, board) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
                         continue;
@@ -655,7 +669,7 @@ public class API {
 	*/
 
 	// similar func in GameState
-	int isPlayerInCheck(int color, String[][] board) {
+	public int isPlayerInCheck(int color, String[][] board) {
 		int rowToCheck;
 		
 		if (color == WHITE)
@@ -666,7 +680,7 @@ public class API {
 			return ERR_INVALID_COLOR;
 		
 		for (int i = 0; i < BOARD_LENGTH; i++) {
-			if ((getPieceColor(i, rowToCheck, board) == getOpponentColor())
+			if ((getPieceColor(i, rowToCheck, board) == getOpponentColor(color))
 				&& (getPieceMoveDistance(i, rowToCheck, board) == 1))
 				return TRUE;
 		}
@@ -692,6 +706,7 @@ public class API {
 	* 					  land in.
 	* 					  For example, “A2, B2” is moving the piece
 	* 					  currently in cell A2 to cell B2.
+	* @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	* @param  board  The String[][] representation of the game
 	* 				 board, comprised of ‘cells’, as described
 	* 				 at the top of this doc.
@@ -708,7 +723,7 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed move is
 	* 				 otherwise improperly formatted.
 	*/
-	int isMoveValid(String moveString, String[][] board) {
+	public int isMoveValid(String moveString, int myColor, String[][] board) {
 		String[] moveCells = moveString.split(", ");
 		
 		if (moveCells.length != 2)
@@ -717,13 +732,14 @@ public class API {
 		String fromCell = moveCells[0];
 		String toCell = moveCells[1];
 		
-		return isMoveValid(fromCell, toCell, board);
+		return isMoveValid(fromCell, toCell, myColor, board);
 	}
 	/**
-	 * @param  cellFrom   A string representation of the cell that
+	 * @param  fromCell   A string representation of the cell that
 	 * 					  a piece starts in, with values "A0"-"J9".
-	 * @param  cellTo   A string representation of the cell that
+	 * @param  toCell   A string representation of the cell that
 	 * 					  a piece will land in, with values "A0"-"J9".
+	 * @param  myColor  The integer representing your color WHITE=0, BLACK=1
 	 * @param  board  The String[][] representation of the game
 	 * 				 board, comprised of ‘cells’, as described
 	 * 				 at the top of this doc.
@@ -740,7 +756,7 @@ public class API {
 	 * 				 Returns ERR_FORMAT if the passed move is
 	 * 				 otherwise improperly formatted.
 	 */
-	int isMoveValid(String fromCell, String toCell, String[][] board) {
+	public int isMoveValid(String fromCell, String toCell, int myColor, String[][] board) {
 		if (fromCell == null || toCell == null || fromCell.length() != 2 || toCell.length() != 2)
 			return ERR_FORMAT;
 		
@@ -754,7 +770,7 @@ public class API {
 		
 		int pieceMoveDistance = getPieceMoveDistance(fromCell, board);
 		
-		if (pieceMoveDistance == 0 || isMyPiece(fromCell, board) != TRUE || isMyPiece(toCell, board) == TRUE)
+		if (pieceMoveDistance == 0 || isMyPiece(fromCell, myColor, board) != TRUE || isMyPiece(toCell, myColor, board) == TRUE)
 			return FALSE;
 		
 		if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) > pieceMoveDistance)
@@ -778,7 +794,7 @@ public class API {
 	* 				 Returns ERR_FORMAT if the passed cell is
 	* 				 otherwise improperly formatted.
 	*/
-	int isCellValid(String cell) {
+	public int isCellValid(String cell) {
 		if (cell == null || cell.length() != 2)
 			return ERR_FORMAT;
 		
@@ -811,7 +827,7 @@ public class API {
 	 * 				 Returns ERR_FORMAT if the passed cell is
 	 * 				 otherwise improperly formatted.
 	 */
-    int isCellValid(int col, int row) {
+    public int isCellValid(int col, int row) {
         if (col < 0 || col > 9)
             return ERR_INVALID_COL;
         if (row < 0 || row > 9)
