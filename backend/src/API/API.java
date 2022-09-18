@@ -1,3 +1,5 @@
+package API;
+
 public class API {
 	// cell values are NEVER null - they should be "" if empty
 
@@ -104,12 +106,6 @@ public class API {
 	* @param  board  The String[][] representation of the game
 	*				 board, comprised of ‘cells’, as described
 	*				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	*				 String[][] board, retrieved through using
-	*				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	*				 String[][] board, retrieved through using
-	*				 cellToRow().
 	*
 	* @return        The two-character representation of a ‘cell’,
 	*			  	 with “” being an empty cell with no piece, and
@@ -124,8 +120,23 @@ public class API {
 		
 		return foundVal;
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 *				 String[][] board, retrieved through using
+	 *				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 *				 String[][] board, retrieved through using
+	 *				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 *				 board, comprised of ‘cells’, as described
+	 *				 at the top of this doc.
+	 * @return        The two-character representation of a ‘cell’,
+	 *			  	 with “” being an empty cell with no piece, and
+	 *			  	 “b1” representing one the black-side player’s
+	 *			  	 1 pieces.
+	 */
 	String getCellValue(int col, int row, String[][] board) {
-		return board[row][col];
+		return board[col][row];
 	}
 
 	
@@ -145,7 +156,7 @@ public class API {
 	*				 String[][] board.
     *                Returns a negative integer if an error occurs.
     *
-    * @error         Returns ERR_INVALID_COL if cell's column
+    * 		         Returns ERR_INVALID_COL if cell's column
     *                is a character outside of the range A-J.
     *                Returns ERR_INVALID_ROW if cell's row
     *                is a character outside of the range 0-9.
@@ -157,7 +168,7 @@ public class API {
         if (isCellValidRet != TRUE)
             return isCellValidRet;
 
-        return cellToColChar(cell);
+        return cellToColChar(cell) - 'A';
 	}
 		
 	
@@ -169,7 +180,7 @@ public class API {
 	*				 String[][] board.
     *                Returns a negative integer if an error occurs.
     *
-    * @error         Returns ERR_INVALID_COL if cell's column
+    * 		         Returns ERR_INVALID_COL if cell's column
     *                is a character outside of the range A-J.
     *                Returns ERR_INVALID_ROW if cell's row
     *                is a character outside of the range 0-9.
@@ -192,7 +203,7 @@ public class API {
 	 * @return       The column of the cell on the board, from
 	 * 				 characters A-J.
 	 * 
-	 * @see			 Board documention
+	 *				 See Board documention
 	 */
 	char cellToColChar(String cell) {
 		return cell.charAt(0);
@@ -204,8 +215,8 @@ public class API {
 	 * 				 values "A0" to "J9".
 	 * @return       The row of the cell on the board, from
 	 * 				 characters A-J.
-	 * 
-	 * @see			 Board documentation.
+	 *
+	 *				 See Board documention
 	 */
 	char cellToRowChar(String cell) {
 		return cell.charAt(1);
@@ -278,12 +289,6 @@ public class API {
 	* @param  board  The String[][] representation of the game
 	* 				 board, comprised of ‘cells’, as described
 	* 				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	* 				 String[][] board, retrieved through using
-	* 				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	* 				 String[][] board, retrieved through using
-	* 				 cellToRow().
 	* 
 	* @return        Returns TRUE if the given cell is storing a
 	* 				 string representing a piece, like “b3” or “w1”.
@@ -291,7 +296,7 @@ public class API {
 	* 				 Returns a negative integer if an error
 	* 				 occurs.
 	* 
-	* @error         Returns ERR_INVALID_COL if the passed cell’s
+	*		         Returns ERR_INVALID_COL if the passed cell’s
 	* 				 column is an invalid character.
 	*                Returns ERR_INVALID_ROW if the passed cell’s
 	* 				 row is an invalid character.
@@ -307,6 +312,30 @@ public class API {
 		int row = cellToRow(cell);
 		return cellHasPiece(col, row, board);
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 *
+	 * @return        Returns TRUE if the given cell is storing a
+	 * 				 string representing a piece, like “b3” or “w1”.
+	 * 				 False if the cell is storing “”.
+	 * 				 Returns a negative integer if an error
+	 * 				 occurs.
+	 *
+	 *		         Returns ERR_INVALID_COL if the passed cell’s
+	 * 				 column is an invalid character.
+	 *                Returns ERR_INVALID_ROW if the passed cell’s
+	 * 				 row is an invalid character.
+	 * 				 Returns ERR_FORMAT if the passed cell is
+	 * 				 otherwise improperly formatted.
+	 */
 	int cellHasPiece(int col, int row, String[][] board) {
         int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
@@ -323,24 +352,18 @@ public class API {
 	* @param  board  The String[][] representation of the game
 	* 				 board, comprised of ‘cells’, as described
 	* 				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	* 				 String[][] board, retrieved through using
-	* 				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	* 				 String[][] board, retrieved through using
-	* 				 cellToRow().
 	* @return        Returns TRUE if the given cell is storing a
 	* 				 string representing a piece of yours.  I.e.
 	* 				 “b3” if you are on black-side.
 	* 				 Returns FALSE if the above condition isn’t met.
 	* 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_INVALID_COL if the passed cell’s
-	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed cell’s
-	  				 row is an invalid character.
-	  				 Returns ERR_FORMAT if the passed cell is
-	  				 otherwise improperly formatted.
+	* 		         Returns ERR_INVALID_COL if the passed cell’s
+	*				 column is an invalid character.
+	*                Returns ERR_INVALID_ROW if the passed cell’s
+	* 				 row is an invalid character.
+	* 				 Returns ERR_FORMAT if the passed cell is
+	* 				 otherwise improperly formatted.
 	*/
 	int isMyPiece(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -351,6 +374,29 @@ public class API {
 		int row = cellToRow(cell);
 		return isMyPiece(col, row, board);
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 * @return        Returns TRUE if the given cell is storing a
+	 * 				 string representing a piece of yours.  I.e.
+	 * 				 “b3” if you are on black-side.
+	 * 				 Returns FALSE if the above condition isn’t met.
+	 * 				 Returns a negative integer if an error
+	 * 				 occurs.
+	 * 		         Returns ERR_INVALID_COL if the passed cell’s
+	 *				column is an invalid character.
+	 *				Returns ERR_INVALID_ROW if the passed cell’s
+	 *				row is an invalid character.
+	 *				Returns ERR_FORMAT if the passed cell is
+	 *				otherwise improperly formatted.
+	 */
 	int isMyPiece(int col, int row, String[][] board) {
 		int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
@@ -361,26 +407,20 @@ public class API {
 	
 	/**
 	* @param  cell   The position of the cell on the board, from
-	  				 values “A0” to “J9”.
+	* 				 values “A0” to “J9”.
 	* @param  board  The String[][] representation of the game
-	  				 board, comprised of ‘cells’, as described
-	  				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	  				 String[][] board, retrieved through using
-	  				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	  				 String[][] board, retrieved through using
-	  				 cellToRow().
+	* 				 board, comprised of ‘cells’, as described
+	* 				 at the top of this doc.
 	* @return        An integer representing the color/owner of the
-	  				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
+	* 				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
     * 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_INVALID_COL if the passed cell’s
-	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed cell’s
-	  				 row is an invalid character.
-	  				 Returns ERR_FORMAT if the passed cell is
-	  				 otherwise improperly formatted.
+	*		         Returns ERR_INVALID_COL if the passed cell’s
+	* 				 column is an invalid character.
+	*                Returns ERR_INVALID_ROW if the passed cell’s
+	* 				 row is an invalid character.
+	* 				 Returns ERR_FORMAT if the passed cell is
+	* 				 otherwise improperly formatted.
 	*/
 	int getPieceColor(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -389,6 +429,27 @@ public class API {
         
 		return getPieceColor(cellToCol(cell), cellToRow(cell), board);
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 * @return        An integer representing the color/owner of the
+	 * 				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
+	 * 				 Returns a negative integer if an error
+	 * 				 occurs.
+	 *		         Returns ERR_INVALID_COL if the passed cell’s
+	 * 				 column is an invalid character.
+	 *                Returns ERR_INVALID_ROW if the passed cell’s
+	 * 				 row is an invalid character.
+	 * 				 Returns ERR_FORMAT if the passed cell is
+	 * 				 otherwise improperly formatted.
+	 */
 	int getPieceColor(int col, int row, String[][] board) {	
         int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
@@ -399,39 +460,30 @@ public class API {
 		
 		String cellVal = getCellValue(col, row, board);
 		char colorChar = cellVal.charAt(0);
-		
-		switch (colorChar) {
-			case WHITE_CHAR:
-				return WHITE;
-			case BLACK_CHAR:
-				return BLACK;
-			default:
-				return NO_PIECE;
-		}
+
+		return switch (colorChar) {
+			case WHITE_CHAR -> WHITE;
+			case BLACK_CHAR -> BLACK;
+			default -> NO_PIECE;
+		};
 	}
 
 	/**
 	* @param  cell   The position of the cell on the board, from
-	  				 values “A0” to “J9”.
+	* 				 values “A0” to “J9”.
 	* @param  board  The String[][] representation of the game
-	  				 board, comprised of ‘cells’, as described
-	  				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	  				 String[][] board, retrieved through using
-	  				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	  				 String[][] board, retrieved through using
-	  				 cellToRow().
+	* 				 board, comprised of ‘cells’, as described
+	* 				 at the top of this doc.
 	* @return        An integer representing the color/owner of the
-	  				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
+	* 				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
     * 				 Returns a negative integer if an error
 	* 				 occurs.
-	* @error         Returns ERR_INVALID_COL if the passed cell’s
-	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed cell’s
-	  				 row is an invalid character.
-	  				 Returns ERR_FORMAT if the passed cell is
-	  				 otherwise improperly formatted.
+	* 		         Returns ERR_INVALID_COL if the passed cell’s
+	* 				 column is an invalid character.
+	*                Returns ERR_INVALID_ROW if the passed cell’s
+	* 				 row is an invalid character.
+	* 				 Returns ERR_FORMAT if the passed cell is
+	* 				 otherwise improperly formatted.
 	*/
 	int getPieceMoveDistance(String cell, String[][] board) {
         int isCellValidRet = isCellValid(cell);
@@ -442,6 +494,27 @@ public class API {
 		int row = cellToRow(cell);
 		return getPieceMoveDistance(col, row, board);
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 * @return        An integer representing the color/owner of the
+	 * 				 piece.  0 = WHITE, 1 = BLACK, and -1 = NO_PIECE
+	 * 				 Returns a negative integer if an error
+	 * 				 occurs.
+	 * 		         Returns ERR_INVALID_COL if the passed cell’s
+	 * 				 column is an invalid character.
+	 *                Returns ERR_INVALID_ROW if the passed cell’s
+	 * 				 row is an invalid character.
+	 * 				 Returns ERR_FORMAT if the passed cell is
+	 * 				 otherwise improperly formatted.
+	 */
 	int getPieceMoveDistance(int col, int row, String[][] board) {
 		int isCellValidRet = isCellValid(col, row);
         if (isCellValidRet != TRUE)
@@ -468,7 +541,9 @@ public class API {
 	 * @param board  The String[][] representation of the game
 	 * 				 board, comprised of 'cells', as described
 	 * 				 at the top of this doc.
-	 * @return
+	 * @return		 An array of cells that pieces of the specified
+	 * 				 color are in.  The array is of fixed length 20,
+	 * 				 with empty array entries having the value "".
 	 */
 	String[] getMyPieceLocations(int color, String[][] board) {
 		String[] locations = new String[NUM_PIECES_PER_SIDE];
@@ -493,20 +568,14 @@ public class API {
 	
 	/**
 	* @param  cell   The position of the cell on the board, from
-	  				 values “A0” to “J9”.
-
+	* 				 values “A0” to “J9”.
+	*
 	* @param  board  The String[][] representation of the game
-	  				 board, comprised of ‘cells’, as described
-	  				 at the top of this doc.
-	* @param  col    The index of the target cell’s column in the
-	  				 String[][] board, retrieved through using
-	  				 cellToCol().
-	* @param  row    The index of the target cell’s row in the
-	  				 String[][] board, retrieved through using
-	  				 cellToRow().
+	* 				 board, comprised of ‘cells’, as described
+	* 				 at the top of this doc.
 	* @return        An array of all cell positions that the piece
-	  				 in the current cell can move to, represented
-	  				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
+	* 				 in the current cell can move to, represented
+	* 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
 	*/
 	String[] getValidMoves(String cell, String[][] board) {
 		int row = cellToRow(cell);
@@ -514,6 +583,20 @@ public class API {
 		
 		return getValidMoves(col, row, board);
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 * @return        An array of all cell positions that the piece
+	 * 				 in the current cell can move to, represented
+	 * 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
+	 */
 	String[] getValidMoves(int col, int row, String[][] board) {
 		String[] moves = new String[VALID_MOVES_ARRAY_LENGTH];
 		
@@ -567,16 +650,18 @@ public class API {
 	  				 Returns a negative integer if an
 	  				 error occurs.
 	
-	* @error         Returns ERR_INVALID_COLOR if the passed color
+	* 		         Returns ERR_INVALID_COLOR if the passed color
 	  				 is not WHITE or BLACK.
 	*/
+
+	// similar func in GameState
 	int isPlayerInCheck(int color, String[][] board) {
 		int rowToCheck;
 		
 		if (color == WHITE)
-			rowToCheck = 0;
-		else if (color == BLACK)
 			rowToCheck = 9;
+		else if (color == BLACK)
+			rowToCheck = 0;
 		else
 			return ERR_INVALID_COLOR;
 		
@@ -600,28 +685,28 @@ public class API {
 	
 	/**
 	* @param  moveString  A string representation of a move of
-	  					  piece from one cell to another cell, in the
-	  					  format: “<cellFrom>, <cellTo>”.  ‘cellFrom’
-	  					  refers to the cell that a piece starts in, and
-	  					  ‘cellTo’ refers to the cell that the piece will
-	  					  land in.
-	  					  For example, “A2, B2” is moving the piece
-	  					  currently in cell A2 to cell B2.
+	* 					  piece from one cell to another cell, in the
+	* 					  format: “<cellFrom>, <cellTo>”.  ‘cellFrom’
+	* 					  refers to the cell that a piece starts in, and
+	* 					  ‘cellTo’ refers to the cell that the piece will
+	* 					  land in.
+	* 					  For example, “A2, B2” is moving the piece
+	* 					  currently in cell A2 to cell B2.
 	* @param  board  The String[][] representation of the game
-	  				 board, comprised of ‘cells’, as described
-	  				 at the top of this doc.
+	* 				 board, comprised of ‘cells’, as described
+	* 				 at the top of this doc.
 	* @return        Returns TRUE if the passed move is valid.
-				  	 Returns FALSE if the passed move is properly
-	  				 formatted, but invalid.
-	  				 Returns a negative integer if an error
-	  				 occurs.
-	* @error         Returns ERR_FORMAT_MOVE_FROM if the string
-	  				 representing the fromCell is invalid.
-	  				 Returns ERR_FORMAT_MOVE_TO if the string
-	  				 representing the toCell is invalid.
-	  				 otherwise improperly formatted.
-	  				 Returns ERR_FORMAT if the passed move is
-	  				 otherwise improperly formatted.
+	*			  	 Returns FALSE if the passed move is properly
+	* 				 formatted, but invalid.
+	* 				 Returns a negative integer if an error
+	* 				 occurs.
+	* 		         Returns ERR_FORMAT_MOVE_FROM if the string
+	* 				 representing the fromCell is invalid.
+	* 				 Returns ERR_FORMAT_MOVE_TO if the string
+	* 				 representing the toCell is invalid.
+	* 				 otherwise improperly formatted.
+	* 				 Returns ERR_FORMAT if the passed move is
+	* 				 otherwise improperly formatted.
 	*/
 	int isMoveValid(String moveString, String[][] board) {
 		String[] moveCells = moveString.split(", ");
@@ -633,7 +718,28 @@ public class API {
 		String toCell = moveCells[1];
 		
 		return isMoveValid(fromCell, toCell, board);
-	}	
+	}
+	/**
+	 * @param  cellFrom   A string representation of the cell that
+	 * 					  a piece starts in, with values "A0"-"J9".
+	 * @param  cellTo   A string representation of the cell that
+	 * 					  a piece will land in, with values "A0"-"J9".
+	 * @param  board  The String[][] representation of the game
+	 * 				 board, comprised of ‘cells’, as described
+	 * 				 at the top of this doc.
+	 * @return        Returns TRUE if the passed move is valid.
+	 *			  	 Returns FALSE if the passed move is properly
+	 * 				 formatted, but invalid.
+	 * 				 Returns a negative integer if an error
+	 * 				 occurs.
+	 * 		         Returns ERR_FORMAT_MOVE_FROM if the string
+	 * 				 representing the fromCell is invalid.
+	 * 				 Returns ERR_FORMAT_MOVE_TO if the string
+	 * 				 representing the toCell is invalid.
+	 * 				 otherwise improperly formatted.
+	 * 				 Returns ERR_FORMAT if the passed move is
+	 * 				 otherwise improperly formatted.
+	 */
 	int isMoveValid(String fromCell, String toCell, String[][] board) {
 		if (fromCell == null || toCell == null || fromCell.length() != 2 || toCell.length() != 2)
 			return ERR_FORMAT;
@@ -660,17 +766,17 @@ public class API {
 	
 	/**
 	* @param  cell   The position of the cell on the board, from
-	  				 values “A0” to “J9”.
+	* 				 values “A0” to “J9”.
 	* @return        Returns TRUE, a positive integer, if the passed
-	  				 cell is valid.
-	  				 Returns a negative integer if it’s invalid,
-	  				 causing an error.
-	* @error         Returns ERR_INVALID_COL if the passed cell’s
-	  				 column is an invalid character.
-	                 Returns ERR_INVALID_ROW if the passed cell’s
-	  				 row is an invalid character.
-	  				 Returns ERR_FORMAT if the passed cell is
-	  				 otherwise improperly formatted.
+	* 				 cell is valid.
+	* 				 Returns a negative integer if it’s invalid,
+	* 				 causing an error.
+	* 		         Returns ERR_INVALID_COL if the passed cell’s
+	* 				 column is an invalid character.
+	*                Returns ERR_INVALID_ROW if the passed cell’s
+	* 				 row is an invalid character.
+	* 				 Returns ERR_FORMAT if the passed cell is
+	* 				 otherwise improperly formatted.
 	*/
 	int isCellValid(String cell) {
 		if (cell == null || cell.length() != 2)
@@ -682,11 +788,29 @@ public class API {
 		if (colChar < 'A' || colChar > 'J')
 			return ERR_INVALID_COL;
 		
-		if (rowChar < 0 || rowChar > 9)
+		if (rowChar < '0' || rowChar > '9')
 			return ERR_INVALID_ROW;
 		
 		return TRUE;
 	}
+	/**
+	 * @param  col    The index of the target cell’s column in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToCol().
+	 * @param  row    The index of the target cell’s row in the
+	 * 				 String[][] board, retrieved through using
+	 * 				 cellToRow().
+	 * @return        Returns TRUE, a positive integer, if the passed
+	 * 				 cell is valid.
+	 * 				 Returns a negative integer if it’s invalid,
+	 * 				 causing an error.
+	 * 		         Returns ERR_INVALID_COL if the passed cell’s
+	 * 				 column is an invalid character.
+	 *                Returns ERR_INVALID_ROW if the passed cell’s
+	 * 				 row is an invalid character.
+	 * 				 Returns ERR_FORMAT if the passed cell is
+	 * 				 otherwise improperly formatted.
+	 */
     int isCellValid(int col, int row) {
         if (col < 0 || col > 9)
             return ERR_INVALID_COL;
