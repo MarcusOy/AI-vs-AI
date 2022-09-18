@@ -1,5 +1,7 @@
 package Simulation;
 
+import Strategy.Strategy;
+
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -7,8 +9,8 @@ import java.util.UUID;
 // between the same two AI.
 public class Battle {
     private UUID id;
-    //attackingStrategy
-    //defendingStrategy
+    private Strategy attackingStrategy;
+    private Strategy defendingStrategy;
     private Status status;
     private int iterations;
     private int attackerWins;
@@ -17,10 +19,17 @@ public class Battle {
     //stackTrace
     private ArrayList<BattleGame> battleGames;
 
-    public Battle(int iterations) {
+    // Only internally used for fairness... Doesn't need to be stored or printed
+    // Decided randomly in constructor
+    private boolean willAttackerStartWhite;
+
+    public Battle(int iterations, Strategy attackingStrategy, Strategy defendingStrategy) {
         id = UUID.randomUUID();
+        this.attackingStrategy = attackingStrategy;
+        this.defendingStrategy = defendingStrategy;
         this.iterations = iterations;
         battleGames = new ArrayList<>();
+        willAttackerStartWhite = Math.random() < 0.5; // 50% odds the attacker will start white
         status = Status.READY;
     }
 
@@ -70,7 +79,10 @@ public class Battle {
     public int getDefenderWins() { return defenderWins; }
 
     public Color getAttackerColor() {
-        return gamesCompleted % 2 == 0 ? Color.WHITE : Color.BLACK;
+        // used to make attacker start the color that willAttackerStartWhite dictates
+        int startOffset = willAttackerStartWhite ? 0 : 1;
+
+        return (gamesCompleted + startOffset) % 2 == 0 ? Color.WHITE : Color.BLACK;
     }
 
     @Override
@@ -78,6 +90,8 @@ public class Battle {
         return "Battle{" +
                 "id=" + id +
                 ", status=" + status +
+                ", attackingStrategy=" + attackingStrategy +
+                ", defendingStrategy=" + defendingStrategy +
                 ", iterations=" + iterations +
                 ", attackerWins=" + attackerWins +
                 ", defenderWins=" + defenderWins +

@@ -2,14 +2,20 @@ package Simulation;
 
 import Strategy.RandomAI;
 import API.API;
+import Strategy.Strategy;
 
 import java.util.Scanner;
 
 /*
-   -----------------------------------------------------------------------
-   NOTE - Modify getAttackerMoveString() and/or getDefenderMoveString()
-          to test a new AI.
-   -----------------------------------------------------------------------
+   ----------------------------------------------------------------------------
+   NOTE - Modify setupStrategies() to test a new AI (Strategy).
+
+
+              - New files with AI code must implement the Strategy interface.
+              - The return value of Strategy.getMove() must follow the format,
+                    "<cellFrom>, <cellTo>", where a cell is a string representing
+                    a spot on the grid, with values from "A0-J9"
+   ----------------------------------------------------------------------------
 */
 
 // Sets up and runs a Battle, providing different modes to giving users the options of
@@ -17,6 +23,9 @@ import java.util.Scanner;
 //   - the default AI is random, but this can be adjusted locally for testing
 // - displaying detailed gamestate and debug info
 public class SimulationApp {
+    static Strategy attackingStrategy;
+    static Strategy defendingStrategy;
+
     static boolean CONSOLE_APP = true;
     static boolean DEBUG = true;
     static boolean ATTACKER_MANUAL = false;
@@ -39,11 +48,12 @@ public class SimulationApp {
         if (CONSOLE_APP) {
             System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
             ATTACKER_MANUAL = scan.nextLine().equals("y");
-            System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "AI" : "MANUAL"));
+            System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "MANUAL" : "AI"));
             System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
             DEFENDER_MANUAL = scan.nextLine().equals("y");
-            System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "AI" : "MANUAL"));
+            System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "MANUAL" : "AI"));
         }
+        setupStrategies();
 
         System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
                            "This mode prints out more detailed status and error information.");
@@ -60,7 +70,7 @@ public class SimulationApp {
         }
 
         // setup Battle
-        Battle battle = new Battle(numGames);
+        Battle battle = new Battle(numGames, attackingStrategy, defendingStrategy);
 
         while (numGames > 0) {
             //setup BattleGame
@@ -74,9 +84,6 @@ public class SimulationApp {
             if (CONSOLE_APP)
                 System.out.println("Game Over ---- Launching next game...");
 
-            //wait 1 second before creating a new game
-            if (CONSOLE_APP)
-                waitms(1000);
             numGames--;
         }
         int aWins = battle.getAttackerWins();
@@ -87,6 +94,12 @@ public class SimulationApp {
         debugPrintln(battle.toString());
 
         scan.close();
+    }
+    
+    // creates the AI Strategy objects for the game to be played with
+    static void setupStrategies() {
+        attackingStrategy = new RandomAI();
+        defendingStrategy = new RandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -106,7 +119,7 @@ public class SimulationApp {
             if (CONSOLE_APP)
                 System.out.println(playerString(gameState.currentPlayer) + "'s turn");
             String moveString = currentColor().equals(battleGame.getAttackerColor())
-                                ? getAttackerMoveString(scan) : getDefenderMoveString(scan);
+                                ? getAttackerMoveString() : getDefenderMoveString();
 
             // stores moveString in new turn, even if invalid
             battleGame.addTurn(battle.getId(), currentColor(), moveString);
@@ -171,7 +184,7 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    static String getAttackerMoveString(Scanner scan) {
+    static String getAttackerMoveString() {
         debugPrintln("Fetching attacker's move");
         if (ATTACKER_MANUAL)
             return scan.nextLine();
@@ -179,7 +192,7 @@ public class SimulationApp {
         // ATTACKER set to AI mode
         String moveString = "";
         try {
-            moveString = RandomAI.getMove(gameState);
+            moveString = attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             if (DEBUG)
@@ -193,7 +206,7 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    static String getDefenderMoveString(Scanner scan) {
+    static String getDefenderMoveString() {
         debugPrintln("Fetching defender's move");
         if (DEFENDER_MANUAL)
             return scan.nextLine();
@@ -201,7 +214,7 @@ public class SimulationApp {
         // DEFENDER set to AI mode
         String moveString = "";
         try {
-            moveString = RandomAI.getMove(gameState);
+            moveString = defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
             if (DEBUG)
