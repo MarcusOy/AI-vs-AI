@@ -3,6 +3,7 @@ package Simulation;
 import java.util.UUID;
 import java.util.ArrayList;
 
+// One specific game within the battle.
 public class BattleGame {
     private UUID id;
     private int gameNumber;

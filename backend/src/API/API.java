@@ -5,31 +5,32 @@ import Simulation.GameState;
 public class API {
 	// cell values are NEVER null - they should be "" if empty
 
-	final int NUM_PIECES_PER_SIDE = 20;
-	final int BOARD_LENGTH = 10;
+	public final int NUM_PIECES_PER_SIDE = 20;
+	public final int NUM_PAWNS_PER_SIDE = 9;
+	public final int BOARD_LENGTH = 10;
 	
-	final int MIN_MOVE_DISTANCE = 1;
-	final int MAX_MOVE_DISTANCE = 4;
+	public final int MIN_MOVE_DISTANCE = 1;
+	public final int MAX_MOVE_DISTANCE = 4;
 	
-	final char WHITE_CHAR = 'w';
-	final char BLACK_CHAR = 'b';
-	
-	final int VALID_MOVES_ARRAY_LENGTH = 81;
+	public final char WHITE_CHAR = 'w';
+	public final char BLACK_CHAR = 'b';
+
+	public final int VALID_MOVES_ARRAY_LENGTH = 81;
 	// 10x10 board, B,W colors,  
-	
-	final int TRUE = 1;
-	final int FALSE = 0;
-	
-	final int WHITE = 0;
-	final int BLACK = 1;
-	final int NO_PIECE = -1;
-	
-	final int ERR_INVALID_COLOR = -2;
-    final int ERR_INVALID_COL = -3;
-    final int ERR_INVALID_ROW = -4;
-    final int ERR_FORMAT = -5;
-    final int ERR_FORMAT_MOVE_FROM = -6;
-    final int ERR_FORMAT_MOVE_TO = -7;
+
+	public final int TRUE = 1;
+	public final int FALSE = 0;
+
+	public final int WHITE = 0;
+	public final int BLACK = 1;
+	public final int NO_PIECE = -1;
+
+	public final int ERR_INVALID_COLOR = -2;
+	public final int ERR_INVALID_COL = -3;
+	public final int ERR_INVALID_ROW = -4;
+	public final int ERR_FORMAT = -5;
+	public final int ERR_FORMAT_MOVE_FROM = -6;
+	public final int ERR_FORMAT_MOVE_TO = -7;
 
 	// This constructor is just so these functions can be used in the console app
 	public API () { }
@@ -611,23 +612,13 @@ public class API {
 		int currentArrayIndex = 0;
 		int moveDistance = getPieceMoveDistance(col, row, board);
 		
-		if (moveDistance <= 0) {
-			//System.out.println("moveDistance: " + moveDistance);
+		if (moveDistance <= 0)
 			return moves;
-		}
 		
 		for (int i = -moveDistance; i <= moveDistance; i++) {
 			for (int j = -moveDistance; j <= moveDistance; j++) {
 				int newCol = col + i;
-				int newRow = row + j;			                
-
-				/*String cell = colAndRowToCell(newCol, newRow);
-				int valid = isCellValid(newCol, newRow);
-				System.out.printf("Cell %s [%d][%d] valid: %d\n", cell, newCol, newRow, valid);
-				if (valid == TRUE) {
-					System.out.printf("piece: (%s) - isMyPiece: %d\n",
-							getCellValue(newCol, newRow, board), isMyPiece(newCol, newRow, myColor, board));
-				}*/
+				int newRow = row + j;
 
 				if ((isCellValid(newCol, newRow) == TRUE)
 					&& isMyPiece(newCol, newRow, myColor, board) != TRUE) {

@@ -3,6 +3,8 @@ package Simulation;
 import java.util.ArrayList;
 import java.util.UUID;
 
+// Stores all info related to a series of consecutive BattleGames
+// between the same two AI.
 public class Battle {
     private UUID id;
     //attackingStrategy

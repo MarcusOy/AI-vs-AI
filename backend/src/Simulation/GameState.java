@@ -1,14 +1,20 @@
 package Simulation;
 
 public class GameState {
+    // constants for a language-independent API
     public final int WHITE = 0;
     public final int BLACK = 1;
+
+    // simple information about the current state of the game
     public int currentPlayer; // 0=WHITE 1=BLACK
     public int numWhitePieces = 20;
     public int numBlackPieces = 20;
     public int numWhitePawns = 9;
     public int numBlackPawns = 9;
     public int numMovesMade = 0;
+
+    // The board is indexed [column][row], so A9 would be board[0][9].
+    // Printouts display the board in the lower, commented-out orientation.
     public String[][] board = {
             { "b3", "b1", "", "", "", "", "", "", "w1", "w3"},
             { "b3", "b2", "", "", "", "", "", "", "w2", "w3"},

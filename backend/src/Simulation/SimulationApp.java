@@ -4,7 +4,6 @@ import Strategy.RandomAI;
 import API.API;
 
 import java.util.Scanner;
-import java.util.UUID;
 
 /*
    -----------------------------------------------------------------------
@@ -13,6 +12,10 @@ import java.util.UUID;
    -----------------------------------------------------------------------
 */
 
+// Sets up and runs a Battle, providing different modes to giving users the options of
+// - choosing whether each player is MANUAL or AI
+//   - the default AI is random, but this can be adjusted locally for testing
+// - displaying detailed gamestate and debug info
 public class SimulationApp {
     static boolean CONSOLE_APP = true;
     static boolean DEBUG = true;

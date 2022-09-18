@@ -2,6 +2,7 @@ package Simulation;
 
 import java.util.UUID;
 
+// The info associated with one player's move
 public class Turn {
     private UUID battleId;
     private int battleGameNumber;
