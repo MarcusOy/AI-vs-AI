@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import './index.css'
 import App from './pages/App'
 import LoginSignupPage from './pages/LoginSignupPage'
+import Programming from './pages/Programming'
 import WelcomePage from './pages/WelcomePage'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
@@ -19,11 +20,12 @@ root.render(
                         paddingBottom: '1rem',
                     }}
                 >
-                    <Link to=''>Home Page</Link> | <Link to='/loginSignup'>Login/Signup</Link>
+                    <Link to=''>Home Page</Link> | <Link to='/loginSignup'>Login/Signup</Link> | <Link to='/programming'>Programming</Link>
                 </nav>
                 <Routes>
                     <Route path='' element={<WelcomePage />} />
                     <Route path='/loginSignup' element={<LoginSignupPage />} />
+                    <Route path='/programming' element={<Programming />} />
                 </Routes>
             </BrowserRouter>
         </ChakraProvider>
