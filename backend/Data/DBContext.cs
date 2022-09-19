@@ -22,6 +22,28 @@ public class AVADbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        // Manually defining Strategy -> Battle relationship
+        builder.Entity<Strategy>()
+            .HasMany(s => s.AttackerBattles)
+            .WithOne(b => b.AttackingStrategy)
+            .HasForeignKey(b => b.AttackingStrategyId);
+        builder.Entity<Strategy>()
+            .HasMany(s => s.DefenderBattles)
+            .WithOne(b => b.DefendingStrategy)
+            .HasForeignKey(b => b.DefendingStrategyId);
+
+        // Manually defining Turn's composite PKs
+        builder.Entity<Turn>()
+            .HasKey(t => new { t.BattleId, t.BattleGameNumber, t.TurnNumber });
+
+        // Manually defining BattleGame's composite PKs
+        builder.Entity<BattleGame>()
+            .HasKey(bg => new { bg.BattleId, bg.GameNumber });
+        builder.Entity<BattleGame>()
+            .HasMany(bg => bg.Turns)
+            .WithOne(t => t.BattleGame)
+            .HasForeignKey(t => new { t.BattleId, t.BattleGameNumber });
+
         // Ensure seed data
         builder.HasSeedData();
     }

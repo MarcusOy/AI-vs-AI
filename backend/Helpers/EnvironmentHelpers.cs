@@ -16,10 +16,11 @@ namespace AVA.API.Helpers
                     '=',
                     StringSplitOptions.RemoveEmptyEntries);
 
-                if (parts.Length != 2)
+                if (parts.Length < 2)
                     continue;
 
-                Environment.SetEnvironmentVariable(parts[0], parts[1]);
+                var value = String.Join("=", parts.Skip(1).ToArray());
+                Environment.SetEnvironmentVariable(parts[0], value);
             }
         }
     }

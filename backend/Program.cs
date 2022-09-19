@@ -1,11 +1,11 @@
 using System.Text;
-using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using AVA.API.Data;
 using AVA.API.Helpers;
 using AVA.API.Services;
+using Newtonsoft.Json;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -21,14 +21,17 @@ builder.Configuration.AddEnvironmentVariables();
 var settings = new AVASettings();
 builder.Configuration.GetSection("AVA").Bind(settings);
 
+if (String.IsNullOrEmpty(settings.ConnectionString))
+    throw new ArgumentException("The environment variable AVA__CONNECTIONSTRING must be set with a valid connection string pointing towards a MySQL database.");
+
+if (String.IsNullOrEmpty(settings.JwtKey))
+    throw new ArgumentException("The envronment variable AVA__JWTKEY must be set with a secret key.");
+
+
 // Add EntityFramework Context
-var dbPath = System.IO.Path.Join(
-    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-     "AVA.db"
-);
 builder.Services.AddDbContextPool<AVADbContext>(
     dbContextOptions => dbContextOptions
-        .UseSqlite($"Data Source={dbPath}")
+        .UseMySql(settings.ConnectionString, new MySqlServerVersion(new Version(5, 7)))
         .EnableDetailedErrors()
         .EnableSensitiveDataLogging()
 );
@@ -45,11 +48,10 @@ var tokenValidator = new TokenValidationParameters
 {
     ValidateIssuerSigningKey = true,
     ValidateIssuer = true,
-    ValidateAudience = true,
+    ValidateAudience = false,
     ValidateLifetime = true,
-    ValidAudience = settings.Jwt.Audience,
-    ValidIssuer = settings.Jwt.Issuer,
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.Jwt.Key))
+    ValidIssuer = "AVA",
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtKey))
 };
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
@@ -60,8 +62,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
 // Setting up domain services
-builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+// builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();

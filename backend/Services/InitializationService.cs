@@ -11,18 +11,15 @@ namespace AVA.API.Services
     {
         private readonly AVADbContext _dbContext;
         private readonly IIdentityService _identityService;
-        private readonly ITwoFactorService _twoFactorService;
         private readonly ILogger<InitializationService> _logger;
 
         public InitializationService(AVADbContext dbContext,
                                      IIdentityService identityService,
-                                     ILogger<InitializationService> logger,
-                                     ITwoFactorService twoFactorService)
+                                     ILogger<InitializationService> logger)
         {
             _dbContext = dbContext;
             _identityService = identityService;
             _logger = logger;
-            _twoFactorService = twoFactorService;
         }
         public void InitializeDatabase()
         {
