@@ -12,6 +12,5 @@ public class BugController : Controller
         // TODO - send the bug report to the database
 
         return Ok("Bug Report Recieved");
-        ;
     }
 }
