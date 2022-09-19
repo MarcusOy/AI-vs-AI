@@ -2,9 +2,8 @@ using System;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
-using OtpNet;
 
-namespace Snappy.API.Helpers
+namespace AVA.API.Helpers
 {
     public static class SecurityHelpers
     {
@@ -72,11 +71,6 @@ namespace Snappy.API.Helpers
                 Byte[] bytes = System.Text.Encoding.UTF8.GetBytes(string.Concat(key));
                 return Convert.ToBase64String(sha.ComputeHash(bytes));
             }
-        }
-        public static string GenerateTwoFactorSecret()
-        {
-            var secret = KeyGeneration.GenerateRandomKey(20);
-            return Base32Encoding.ToString(secret);
         }
 
         public static string GetIPAddress(this HttpContext context)
