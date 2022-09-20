@@ -113,7 +113,7 @@ const SignUpTab = () => {
                                 }}
                             />
                             {!isError4 ? (
-                                <FormHelperText>Username </FormHelperText>
+                                <FormHelperText></FormHelperText>
                             ) : (
                                 <FormErrorMessage>Username is required</FormErrorMessage>
                             )}
@@ -155,7 +155,7 @@ const SignUpTab = () => {
                     </form>
                     <Center>
                         <Button size='lg' colorScheme='cyan' mt='24px' onClick={onClick}>
-                            Complete Sign Up
+                            <Link to='/Profile'>Complete Sign Up</Link>
                         </Button>
                     </Center>
                 </Box>

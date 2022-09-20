@@ -61,7 +61,7 @@ const LoginTab = () => {
                     </form>
                     <Center>
                         <Button size='lg' colorScheme='cyan' mt='24px' onClick={onClick}>
-                            <Link to='/'>Log In</Link> {/* to mainpage */}
+                            <Link to='/Profile'>Log In</Link> {/* to mainpage */}
                         </Button>
                     </Center>
                 </Box>
