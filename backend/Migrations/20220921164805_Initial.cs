@@ -253,14 +253,23 @@ namespace AVA.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "Active", "CreatedOn", "DeletedOn", "Email", "FirstName", "LastName", "Password", "Salt", "UpdatedOn", "Username" },
-                values: new object[] { new Guid("104d8f61-c4b4-4e08-9534-848dac332425"), true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Kyle", "Orciuch", "9omC/kK+zVKzfdX8QhvNfGpBFXIs7hXgyKdEClFCd0M=", "z+wbth/X2dPpMSxSffmr+g==", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "kyle" });
+                table: "Games",
+                columns: new[] { "Id", "BoilerplateCode", "CreatedOn", "DeletedOn", "LongDescription", "Name", "ShortDescription", "UpdatedOn" },
+                values: new object[,]
+                {
+                    { 1, "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "\r\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\r\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\r\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\r\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\r\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\r\n                ", "1234 Chess", "Advance a 1-piece past your opponent's last rank.", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 2, "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "\r\nCheckers is a board game played between two people on an 8x8 checked board.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ", "Checkers", "Eliminate all of your opponents pieces by jumping over them.", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 3, "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2022, 9, 21, 16, 48, 4, 901, DateTimeKind.Utc).AddTicks(1760), "\r\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ", "Chess", "Eliminate all of your opponents pieces by jumping over them.", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                });
 
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "Id", "Active", "CreatedOn", "DeletedOn", "Email", "FirstName", "LastName", "Password", "Salt", "UpdatedOn", "Username" },
-                values: new object[] { new Guid("1601abf9-f469-4e79-95fb-c1592b8bcef0"), true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Marcus", "Orciuch", "T4oCXhanOafoDFBJnqTIZ8+8AfqHliGcIvCHowE6fr8=", "66bhDOqtne7jeQBlUOHNBQ==", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "marcus" });
+                values: new object[,]
+                {
+                    { new Guid("45e74982-2aac-46d3-ad81-ce7c5a116a79"), true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Kyle", "Orciuch", "OP0b+/uom3GWkydOVPqDTS+ascqbkPBTuMqUEdBcrdQ=", "jea/hpF1tKMwMBfBn6gVWw==", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "kyle" },
+                    { new Guid("47424124-8ee0-4897-a68e-66231b1b4534"), true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Marcus", "Orciuch", "P2gM+LRHPEgo+OC3KbbFVeGydBnUMp3M3ROX/1muxZU=", "TCqAwI/s5V1MgyMBUE5Ayg==", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "marcus" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuthTokens_ReplacedByTokenId",
