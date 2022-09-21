@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// using Microsoft.AspNetCore.Mvc;
 
-namespace DefaultNamespace;
+// namespace DefaultNamespace;
 
-public class StatsController : Controller
-{
-    [Route("/getStats")]
-    public ActionResult getStats(Battle b)
-    {
-        // The incoming message will be the battle to display the stats from. This may change
-        
-        // TODO - retrieve stats from the database, and send it to the client
+// public class StatsController : Controller
+// {
+//     [Route("/getStats")]
+//     public ActionResult getStats(Battle b)
+//     {
+//         // The incoming message will be the battle to display the stats from. This may change
 
-        return Ok("Stats goes here");
-    }
-}
+//         // TODO - retrieve stats from the database, and send it to the client
+
+//         return Ok("Stats goes here");
+//     }
+// }
