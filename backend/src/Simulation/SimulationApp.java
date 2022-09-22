@@ -1,6 +1,7 @@
 package Simulation;
 
 import Strategy.RandomAI;
+import Strategy.EasyAI;
 import API.API;
 import Strategy.Strategy;
 
@@ -99,7 +100,7 @@ public class SimulationApp {
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
         attackingStrategy = new RandomAI();
-        defendingStrategy = new RandomAI();
+        defendingStrategy = new EasyAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
