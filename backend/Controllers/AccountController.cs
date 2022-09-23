@@ -1,56 +1,93 @@
-﻿// using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using AVA.API.Data;
+using AVA.API.Models;
+using AVA.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace DefaultNamespace;
+namespace DefaultNamespace;
 
-// public class AccountController : Controller
-// {
-//     [Route("/register")]
-//     public ActionResult register(User u)
-//     {
-//         // The incoming message will be a new user object to add to the database
+public class AccountController : Controller
+{
+    // [Route("/register")]
+    // public ActionResult register(User u)
+    // {
+    //     // The incoming message will be a new user object to add to the database
 
-//         // TODO - Add the new user to the database
+    //     // TODO - Add the new user to the database
 
-//         return Ok("User is added");
-//     }
+    //     return Ok("User is added");
+    // }
 
-//     [Route("/login")]
-//     public ActionResult login(User u)
-//     {
-//         // As of right now, the incoming message will be a user object with their populated fields. This may change
+    private readonly IIdentityService _idService;
+    private readonly AVADbContext _dbContext;
 
-//         // TODO - Check the username and password against the database, and send appropriate response
+    public AccountController(IIdentityService idService, AVADbContext dbContext)
+    {
+        _idService = idService;
+        _dbContext = dbContext;
+    }
 
-//         return Ok("Send user object back here");
-//     }
+    [HttpPost, Route("/Login")]
+    public async Task<ActionResult> Login([FromBody] LoginPair pair)
+    {
+        var tokens = await _idService.Authenticate(pair.Username, pair.Password);
 
-//     [Route("/deleteAccount")]
-//     public ActionResult delete(User u)
-//     {
-//         // The incoming message will be a user object to delete.
+        var cookieOptions = new CookieOptions
+        {
+            Secure = true,
+            HttpOnly = true,
+            Domain = "localhost",
+            Expires = DateTime.UtcNow.AddYears(10),
+            IsEssential = true
+        };
 
-//         // TODO - remove the user specified from the database
+        HttpContext.Response.Cookies.Append("X_AVA_AuthToken", tokens.AuthToken, cookieOptions);
+        HttpContext.Response.Cookies.Append("X_AVA_RefreshToken", tokens.RefreshToken, cookieOptions);
 
-//         return Ok("User is deleted");
-//     }
+        return Ok();
+    }
 
-//     [Route("/editAccount")]
-//     public ActionResult editAccount(User u)
-//     {
-//         // The incoming message will be a user object to update
+    [HttpGet, Route("/WhoAmI")]
+    public User WhoAmI()
+    {
+        return _dbContext.Users
+            .Where(u => u.Active)
+            .FirstOrDefault(u => u.Username == _idService.CurrentUser.Username);
+    }
 
-//         // TODO - send the edited user to the database to be updated.
+    // [Route("/deleteAccount")]
+    // public ActionResult delete(User u)
+    // {
+    //     // The incoming message will be a user object to delete.
 
-//         return Ok("User is updated");
-//     }
+    //     // TODO - remove the user specified from the database
 
-//     [Route("/getAccount")]
-//     public ActionResult displayAccount(User u)
-//     {
-//         // The incoming message will be a user object to display information from
+    //     return Ok("User is deleted");
+    // }
 
-//         // TODO - send the user information to the client
+    // [Route("/editAccount")]
+    // public ActionResult editAccount(User u)
+    // {
+    //     // The incoming message will be a user object to update
 
-//         return Ok("User info goes here");
-//     }
-// }
+    //     // TODO - send the edited user to the database to be updated.
+
+    //     return Ok("User is updated");
+    // }
+
+    // [Route("/getAccount")]
+    // public ActionResult displayAccount(User u)
+    // {
+    //     // The incoming message will be a user object to display information from
+
+    //     // TODO - send the user information to the client
+
+    //     return Ok("User info goes here");
+    // }
+
+    public class LoginPair
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}

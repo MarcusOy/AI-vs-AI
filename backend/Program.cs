@@ -79,7 +79,8 @@ app.UseWebSockets();
 app.UseRouting();
 
 app.UseCors(x => x
-    .AllowAnyOrigin()
+    .AllowCredentials()
+    .WithOrigins("http://localhost:3000")
     .AllowAnyMethod()
     .AllowAnyHeader());
 
@@ -94,5 +95,5 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<IInitializationService>()
         .InitializeDatabase();
 
-app.Run();
+app.Run("https://0.0.0.0:443");
 #endregion

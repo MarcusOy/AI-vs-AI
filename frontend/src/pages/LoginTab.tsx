@@ -5,12 +5,13 @@ const LoginTab = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const onClick = () => {
-        fetch('https://webhook.site/f87e51c8-9a3a-4836-8603-6047d18985e6', {
+        fetch('https://localhost/Login', {
             body: JSON.stringify({
                 username,
                 password,
             }),
             method: 'POST',
+            headers: [['Content-Type', 'application/json']],
         })
     }
     return (

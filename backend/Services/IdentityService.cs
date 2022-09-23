@@ -15,7 +15,7 @@ namespace AVA.API.Services
     public interface IIdentityService
     {
         Task<User> Register(string firstName, string lastName, string username, string password);
-        Task<TokenPair> Authenticate(string username, string password, string code);
+        Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
         User CurrentUser { get; }
     }
@@ -67,7 +67,7 @@ namespace AVA.API.Services
 
             return newUser;
         }
-        public async Task<TokenPair> Authenticate(string username, string password, string code)
+        public async Task<TokenPair> Authenticate(string username, string password)
         {
             var u = _dbContext.Users
                 .Where(u => u.Active)

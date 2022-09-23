@@ -6,7 +6,7 @@ namespace AVA.API.Models;
 
 public class User : BaseEntity
 {
-    [Required, JsonIgnore]
+    [Required]
     public Guid Id { get; set; }
     [Required]
     public string Username { get; set; }
