@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Box, Button, Divider, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
+import { Box, Button, Divider, Grid, GridItem, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 function Programming() {
     const initialValue = '// Enter Strategy Here'
     const [code, setCode] = useState(initialValue);
@@ -38,7 +38,6 @@ function Programming() {
                       <img src='/10x10 chess board.png' className='App-logo' alt='logo'/>
                     </TabPanel>
                     <TabPanel>
-
                     </TabPanel>
                   </TabPanels>
                 </Tabs>
@@ -53,14 +52,28 @@ function Programming() {
               </Box>
         </HStack>
         <Divider orientation='horizontal'/>
-        <Box  mx='3' borderRadius='1g' borderWidth='1px' width='98%' display='flex' flexDirection='row' justifyContent='flex-end'>
-          <Button margin='3'>
-            Run Strategy
-          </Button>
-          <Button margin='3' disabled>
-            Submit Strategy
-          </Button>
-        </Box>
+        <Grid>
+          <GridItem>
+            <Button variant='outline' margin='3' color={'green'}>
+              Easy Stock
+            </Button>
+            <Button variant='outline' margin='3' color={'orange'} disabled>
+              Medium Stock
+            </Button>
+            <Button variant='outline' margin='3' color={'red'} disabled>
+              Hard Stock
+            </Button>
+          </GridItem>
+          <GridItem colStart={9}>
+            <Button margin='3'>
+              Run Strategy
+            </Button>
+            <Button margin='3' disabled>
+              Submit Strategy
+            </Button>
+          </GridItem>
+        </Grid>
+          
       </Box>
       )
 }
