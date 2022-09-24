@@ -1,7 +1,12 @@
 import React, { useState } from 'react'
 import Editor from '@monaco-editor/react';
 import { Box, Button, Divider, Grid, GridItem, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
-function Programming() {
+import { Game, Strategy } from '../../Models/Models'
+interface ProgrammingProps {
+  game: Game,
+  strategy: Strategy
+}
+function Programming(props: ProgrammingProps) {
     const initialValue = '// Enter Strategy Here'
     const [code, setCode] = useState(initialValue);
     const [buffer, setBuffer] = useState(0);
