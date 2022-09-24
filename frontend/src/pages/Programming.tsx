@@ -4,6 +4,19 @@ import { Box, Button, Divider, HStack, Tab, TabList, TabPanel, TabPanels, Tabs }
 function Programming() {
     const initialValue = '// Enter Strategy Here'
     const [code, setCode] = useState(initialValue);
+    const [buffer, setBuffer] = useState(0);
+
+    const updateSave = (value) => {
+      setCode(value === undefined ? '' : value)
+      if (buffer + 1 > 10) {
+        localStorage.setItem('draft', code);
+        localStorage.setItem('draftAvailable', 'true');
+        setBuffer(0);
+      } else {
+        setBuffer(buffer+1)
+      }
+    }
+
     return (
         <Box>
           <HStack>
@@ -13,10 +26,19 @@ function Programming() {
                     <Tab>
                       Game Canvas
                     </Tab>
+                    <Tab>
+                      Stock Code
+                    </Tab>
+                    <Tab>
+                      Submission Statistics
+                    </Tab>
                   </TabList>
-                  <TabPanels>
-                    <TabPanel height='82vh'>
+                  <TabPanels height='82vh'>
+                    <TabPanel>
                       <img src='/10x10 chess board.png' className='App-logo' alt='logo'/>
+                    </TabPanel>
+                    <TabPanel>
+
                     </TabPanel>
                   </TabPanels>
                 </Tabs>
@@ -24,9 +46,9 @@ function Programming() {
               <Box width='55%' height='85vh'>
                 <Editor
                 defaultLanguage="javascript"
-                defaultValue={initialValue}
+                defaultValue={localStorage.getItem('draftAvailable') === 'true' ? localStorage.getItem('draft') || initialValue : initialValue}
                 theme='vs-dark'
-                onChange={(value) => setCode(value === undefined ? '' : value)}
+                onChange={(value) => updateSave(value)}
                 />
               </Box>
         </HStack>
@@ -34,6 +56,9 @@ function Programming() {
         <Box  mx='3' borderRadius='1g' borderWidth='1px' width='98%' display='flex' flexDirection='row' justifyContent='flex-end'>
           <Button margin='3'>
             Run Strategy
+          </Button>
+          <Button margin='3' disabled>
+            Submit Strategy
           </Button>
         </Box>
       </Box>
