@@ -54,7 +54,7 @@ const SignUpTab = () => {
                 </Center>
                 <Box>
                     <form>
-                        <FormControl isInvalid={isError1}>
+                        <FormControl isInvalid={isError1} isRequired>
                             <FormLabel>First Name</FormLabel>
                             <Input
                                 type='firstname'
@@ -70,7 +70,7 @@ const SignUpTab = () => {
                                 <FormErrorMessage>First name is required</FormErrorMessage>
                             )}
                         </FormControl>
-                        <FormControl isInvalid={isError2}>
+                        <FormControl isInvalid={isError2} isRequired>
                             <FormLabel>Last Name</FormLabel>
                             <Input
                                 type='lastname'
@@ -86,7 +86,7 @@ const SignUpTab = () => {
                                 <FormErrorMessage>Last name is required</FormErrorMessage>
                             )}
                         </FormControl>
-                        <FormControl isInvalid={isError3}>
+                        <FormControl isInvalid={isError3} isRequired>
                             <FormLabel>Email</FormLabel>
                             <Input
                                 type='email'
@@ -102,7 +102,7 @@ const SignUpTab = () => {
                                 <FormErrorMessage>Email is required</FormErrorMessage>
                             )}
                         </FormControl>
-                        <FormControl isInvalid={isError4}>
+                        <FormControl isInvalid={isError4} isRequired>
                             <FormLabel>Username</FormLabel>
                             <Input
                                 type='username'
@@ -118,7 +118,7 @@ const SignUpTab = () => {
                                 <FormErrorMessage>Username is required</FormErrorMessage>
                             )}
                         </FormControl>
-                        <FormControl isInvalid={isError5}>
+                        <FormControl isInvalid={isError5} isRequired>
                             <FormLabel>Password</FormLabel>
                             <Input
                                 type='password'
@@ -136,7 +136,7 @@ const SignUpTab = () => {
                                 </FormErrorMessage>
                             )}
                         </FormControl>
-                        <FormControl isInvalid={isError6}>
+                        <FormControl isInvalid={isError6} isRequired>
                             <FormLabel>Password-Confirm</FormLabel>
                             <Input
                                 type='password'
