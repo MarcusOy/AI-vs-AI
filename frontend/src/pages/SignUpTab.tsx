@@ -42,7 +42,7 @@ const SignUpTab = () => {
     const validate = () => {
         // email error check
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i
-        if (!regex.test(email) || !email.includes('.com')) {
+        if ((email.length > 0 && !regex.test(email)) || !email.includes('.com')) {
             setEmailErr('Email form invalid')
             return false
         }
@@ -52,7 +52,7 @@ const SignUpTab = () => {
             return false
         }
         // password error check
-        if (password.length < 7) {
+        if (password != '' && password.length < 7) {
             setPasswordErr('Password is too short')
             return false
         }
@@ -86,6 +86,8 @@ const SignUpTab = () => {
         if (isValid) {
             console.log(firstname, lastname, email, username, password, password2)
             handleChange
+
+            // route to profile page
         }
     }
 
@@ -212,8 +214,7 @@ const SignUpTab = () => {
                     </form>
                     <Center>
                         <Button size='lg' colorScheme='cyan' mt='24px' onClick={onClick}>
-                            {/* <Link to='/Profile'>Complete Sign Up</Link> */}
-                            complete
+                            Complete sign up
                         </Button>
                     </Center>
                 </Box>
