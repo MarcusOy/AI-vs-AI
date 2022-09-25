@@ -342,6 +342,14 @@ public class SimulationApp {
             return false;
         }
 
+        boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell)) && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
+                || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell)) && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
+
+        if (movingPieceNotFarEnough) {
+            debugPrintln("Trying to move piece not far enough");
+            return false;
+        }
+
         boolean movingPieceTooFar = ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) > pieceMoveDistance)
                 || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) > pieceMoveDistance));
 

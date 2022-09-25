@@ -2,6 +2,7 @@ package Strategy;
 
 import API.API;
 import Simulation.GameState;
+import Strategy.Strategy;
 
 import java.util.ArrayList;
 
@@ -23,6 +24,10 @@ public class RandomAI implements Strategy {
 
                 moves.add(piece + ", " + move);
             }
+        }
+
+        if (moves.size() == 0) {				//if you have no legal moves, that means you are checkmated
+            return "CHECKMATED";
         }
         return moves.get((int)(Math.random() * moves.size()));
     }

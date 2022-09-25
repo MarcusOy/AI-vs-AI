@@ -615,22 +615,28 @@ public class API {
 		if (moveDistance <= 0)
 			return moves;
 		
-		for (int i = -moveDistance; i <= moveDistance; i++) {
-			for (int j = -moveDistance; j <= moveDistance; j++) {
+		for (int i = -moveDistance; i <= moveDistance; i += moveDistance) {			//William, you almost got it right. I just need to change two places in the code, i++ and j++
+			for (int j = -moveDistance; j <= moveDistance; j += moveDistance) {		//to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp
 				int newCol = col + i;
 				int newRow = row + j;
 
 				if ((isCellValid(newCol, newRow) == TRUE)
 					&& isMyPiece(newCol, newRow, myColor, board) != TRUE) {
                     int pieceColor = getPieceColor(col, row, board);
-                    if (isPlayerInCheck(pieceColor, board) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
-                        continue;
+                    /*if (isPlayerInCheck(pieceColor, board) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
+                        continue;*/
+					if (isPlayerInCheck(pieceColor, board) == TRUE) {
+						int columnInCheck = whichColumnIsPlayerInCheck(pieceColor, board);
+						int rowToCheck = (pieceColor == WHITE) ? 9 : 0;
+						if (newCol != columnInCheck || newRow != rowToCheck)
+							continue;
+					}
 					moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);
 					currentArrayIndex++;
 				}					
 			}
 		}		
-		
+
 		return moves;
 	}
 
@@ -677,6 +683,49 @@ public class API {
 		}
 		
 		return FALSE;
+	}
+
+	/**
+	 * @param  color  An integer representing the color of
+	 * 			     the current player.
+	 * 			     0 = WHITE  and  1 = BLACK
+	 * @param  board  The String[][] representation of the game
+	board, comprised of ‘cells’, as described
+	at the top of this doc.
+
+	 * @return        Assumes the given player’s opponent has
+	gotten a 1-piece of theirs to the given
+	player’s starting side of the board, and returns the column that 1-piece is in.  Only
+	moves that capture this 1-piece will be valid,
+	and failure to capture it will result in a
+	checkmate.
+	Returns a negative integer if an
+	error occurs.
+
+	Returns NO_PIECE if the given player’s opponent
+	does not meet the above condition.
+
+	 * 		         Returns ERR_INVALID_COLOR if the passed color
+	is not WHITE or BLACK.
+	 */
+
+	public int whichColumnIsPlayerInCheck(int color, String[][] board) {
+		int rowToCheck;
+
+		if (color == WHITE)
+			rowToCheck = 9;
+		else if (color == BLACK)
+			rowToCheck = 0;
+		else
+			return ERR_INVALID_COLOR;
+
+		for (int i = 0; i < BOARD_LENGTH; i++) {
+			if ((getPieceColor(i, rowToCheck, board) == getOpponentColor(color))
+					&& (getPieceMoveDistance(i, rowToCheck, board) == 1))
+				return i;
+		}
+
+		return NO_PIECE;
 	}
 	
 	
@@ -764,8 +813,8 @@ public class API {
 		if (pieceMoveDistance == 0 || isMyPiece(fromCell, myColor, board) != TRUE || isMyPiece(toCell, myColor, board) == TRUE)
 			return FALSE;
 		
-		if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) > pieceMoveDistance)
-			 || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) > pieceMoveDistance))
+		if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)
+			 || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))
 			return FALSE;
 		
 		return TRUE;

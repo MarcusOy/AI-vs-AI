@@ -2,6 +2,7 @@ package Strategy;
 
 import API.API;
 import Simulation.GameState;
+import Strategy.Strategy;
 
 import java.util.ArrayList;
 
@@ -18,18 +19,18 @@ public class EasyAI implements Strategy {
         switch (turnNumber) {
             case 1:
                 if (api.getMyColor(gameState) == 0) {    //we are playing white
-                    if (board[3][1].equals("b3") || board[3][4].equals("b3")) {
+                    if (board[1][3].equals("b3") || board[4][3].equals("b3")) {
                         return "F9, F5";            //move the RIGHT 4 if opponent moved the LEFT 3
-                    } else if (board[3][5].equals("b3") || board[3][9].equals("b3")) {
+                    } else if (board[5][3].equals("b3") || board[9][3].equals("b3")) {
                         return "E9, E5";            //move the LEFT 4 if opponent moved the RIGHT 3
                     } else {
                         String[] moves = {"E9, E5", "F9, F5"};      //pick randomly
                         return moves[(int)(Math.random() * moves.length)];
                     }
                 } else {                            //we are playing black
-                    if (board[6][1].equals("w3") || board[6][4].equals("w3")) {
+                    if (board[1][6].equals("w3") || board[4][6].equals("w3")) {
                         return "F0, F4";            //move the RIGHT 4 if opponent moved the LEFT 3
-                    } else if (board[6][5].equals("w3") || board[6][9].equals("w3")) {
+                    } else if (board[5][6].equals("w3") || board[9][6].equals("w3")) {
                         return "E0, E4";            //move the LEFT 4 if opponent moved the RIGHT 3
                     } else {
                         String[] moves = {"E0, E4", "F0, F4"};      //pick randomly
@@ -39,27 +40,27 @@ public class EasyAI implements Strategy {
             case 2:
                 if (api.getMyColor(gameState) == 0) {    //we are playing white
                     if (board[5][5].equals("w4")) {      //we moved the RIGHT 4 for our first move
-                        if (board[3][5].equals("b3") || board[3][9].equals("b3")) {
+                        if (board[5][3].equals("b3") || board[9][3].equals("b3")) {
                             return "E9, E5";            //move the LEFT 4 if opponent moved the RIGHT 3
                         } else {                    //otherwise move the RIGHT 2
                             return "H9, F9";
                         }
-                    } else if (board[5][4].equals("w4")) {                     //we moved the LEFT 4 for our first move
-                        if (board[3][1].equals("b3") || board[3][4].equals("b3")) {
+                    } else if (board[4][5].equals("w4")) {                     //we moved the LEFT 4 for our first move
+                        if (board[1][3].equals("b3") || board[4][3].equals("b3")) {
                             return "F9, F5";            //move the RIGHT 4 if opponent moved the LEFT 3
                         } else {                    //otherwise move the LEFT 2
                             return "C9, E9";
                         }
                     }
                 } else {                            //we are playing black
-                    if (board[4][5].equals("b4")) {      //we moved the RIGHT 4 for our first move
-                        if (board[6][5].equals("w3") || board[6][9].equals("w3")) {
+                    if (board[5][4].equals("b4")) {      //we moved the RIGHT 4 for our first move
+                        if (board[5][6].equals("w3") || board[9][6].equals("w3")) {
                             return "E0, E4";            //move the LEFT 4 if opponent moved the RIGHT 3
                         } else {                    //otherwise move the RIGHT 2
                             return "H0, F0";
                         }
                     } else if (board[4][4].equals("b4")) {                     //we moved the LEFT 4 for our first move
-                        if (board[6][1].equals("w3") || board[6][4].equals("w3")) {
+                        if (board[1][6].equals("w3") || board[4][6].equals("w3")) {
                             return "F0, F4";            //move the RIGHT 4 if opponent moved the LEFT 3
                         } else {                    //otherwise move the LEFT 2
                             return "C0, E0";
@@ -68,18 +69,18 @@ public class EasyAI implements Strategy {
                 }
             case 3:
                 if (api.getMyColor(gameState) == 0) {    //we are playing white
-                    if (board[9][5].equals("w2")) {      //we moved the RIGHT 2 for our second move
+                    if (board[5][9].equals("w2")) {      //we moved the RIGHT 2 for our second move
                         return "E9, E5";            //move the LEFT 4
-                    } else if (board[9][4].equals("w2")) { //we moved the LEFT 2 for our second move
+                    } else if (board[4][9].equals("w2")) { //we moved the LEFT 2 for our second move
                         return "F9, F5";            //move the RIGHT 4
                     } else {
                         String[] moves = {"H9, F9", "C9, E9"};      //let's just move a random 2 and hope for the best =)
                         return moves[(int)(Math.random() * moves.length)];
                     }
                 } else {                            //we are playing black
-                    if (board[0][5].equals("b2")) {      //we moved the RIGHT 2 for our second move
+                    if (board[5][0].equals("b2")) {      //we moved the RIGHT 2 for our second move
                         return "E0, E4";            //move the LEFT 4
-                    } else if (board[0][4].equals("b2")) { //we moved the LEFT 2 for our second move
+                    } else if (board[4][0].equals("b2")) { //we moved the LEFT 2 for our second move
                         return "F0, F4";            //move the RIGHT 4
                     } else {
                         String[] moves = {"H0, F0", "C0, E0"};      //let's just move a random 2 and hope for the best =)
@@ -88,13 +89,13 @@ public class EasyAI implements Strategy {
                 }
             case 4:
                 if (api.getMyColor(gameState) == 0) {    //we are playing white
-                    if (board[9][5].equals("w2")) {      //we moved the RIGHT 2 already
+                    if (board[5][9].equals("w2")) {      //we moved the RIGHT 2 already
                         return "C9, E9";            //move the LEFT 2
                     } else {
                         return "H9, F9";            //move the RIGHT 2
                     }
                 } else {
-                    if (board[0][5].equals("b2")) {      //we moved the RIGHT 2 already
+                    if (board[5][0].equals("b2")) {      //we moved the RIGHT 2 already
                         return "C0, E0";            //move the LEFT 2
                     } else {
                         return "H0, F0";            //move the RIGHT 2
@@ -137,6 +138,9 @@ public class EasyAI implements Strategy {
 
                             moves.add(piece + ", " + move);
                         }
+                    }
+                    if (moves.size() == 0) {				//if you have no legal moves, that means you are checkmated
+                        return "CHECKMATED";
                     }
                     return moves.get((int)(Math.random() * moves.size()));
                 //}
