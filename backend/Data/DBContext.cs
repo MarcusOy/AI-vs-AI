@@ -1,31 +1,49 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Snappy.API.Models;
+using AVA.API.Models;
 
-namespace Snappy.API.Data;
+namespace AVA.API.Data;
 
-public class SnappyDBContext : DbContext
+public class AVADbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<AuthToken> AuthTokens { get; set; }
-    public DbSet<Message> Messages { get; set; }
-
+    public DbSet<Game> Games { get; set; }
+    public DbSet<Strategy> Strategies { get; set; }
+    public DbSet<Battle> Battles { get; set; }
+    public DbSet<BattleGame> BattleGames { get; set; }
+    public DbSet<Turn> Turns { get; set; }
+    public DbSet<BugReport> BugReports { get; set; }
     public string DbPath { get; }
 
-    public SnappyDBContext(DbContextOptions<SnappyDBContext> options)
+    public AVADbContext(DbContextOptions<AVADbContext> options)
     : base(options)
     { }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<User>()
-            .HasMany(u => u.MessagesSent)
-            .WithOne(m => m.Sender)
-            .HasForeignKey(m => m.SenderId);
-        builder.Entity<User>()
-            .HasMany(u => u.MessagesReceived)
-            .WithOne(m => m.Receiver)
-            .HasForeignKey(m => m.ReceiverId);
+        // Manually defining Strategy -> Battle relationship
+        builder.Entity<Strategy>()
+            .HasMany(s => s.AttackerBattles)
+            .WithOne(b => b.AttackingStrategy)
+            .HasForeignKey(b => b.AttackingStrategyId);
+        builder.Entity<Strategy>()
+            .HasMany(s => s.DefenderBattles)
+            .WithOne(b => b.DefendingStrategy)
+            .HasForeignKey(b => b.DefendingStrategyId);
+
+        // Manually defining Turn's composite PKs
+        builder.Entity<Turn>()
+            .HasKey(t => new { t.BattleId, t.BattleGameNumber, t.TurnNumber });
+
+        // Manually defining BattleGame's composite PKs
+        builder.Entity<BattleGame>()
+            .HasKey(bg => new { bg.BattleId, bg.GameNumber });
+        builder.Entity<BattleGame>()
+            .HasMany(bg => bg.Turns)
+            .WithOne(t => t.BattleGame)
+            .HasForeignKey(t => new { t.BattleId, t.BattleGameNumber });
+
         // Ensure seed data
         builder.HasSeedData();
     }

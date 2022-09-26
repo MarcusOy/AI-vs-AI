@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Snappy.API.Data;
+using AVA.API.Data;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface IInitializationService
     {
@@ -9,25 +9,22 @@ namespace Snappy.API.Services
     }
     public class InitializationService : IInitializationService
     {
-        private readonly SnappyDBContext _dbContext;
+        private readonly AVADbContext _dbContext;
         private readonly IIdentityService _identityService;
-        private readonly ITwoFactorService _twoFactorService;
         private readonly ILogger<InitializationService> _logger;
 
-        public InitializationService(SnappyDBContext dbContext,
+        public InitializationService(AVADbContext dbContext,
                                      IIdentityService identityService,
-                                     ILogger<InitializationService> logger,
-                                     ITwoFactorService twoFactorService)
+                                     ILogger<InitializationService> logger)
         {
             _dbContext = dbContext;
             _identityService = identityService;
             _logger = logger;
-            _twoFactorService = twoFactorService;
         }
         public void InitializeDatabase()
         {
             // Database initial data checks
-            using (_logger.BeginScope("Snappy is checking the configured database..."))
+            using (_logger.BeginScope("AVA is checking the configured database..."))
             {
                 // Ensure database and apply pending migrations
                 // _dbContext.Database.EnsureCreated();

@@ -5,6 +5,7 @@ import App from './pages/App'
 import LoginSignupPage from './pages/LoginSignupPage'
 import Programming from './pages/Programming'
 import WelcomePage from './pages/WelcomePage'
+import Profile from './pages/Profile'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 import { ChakraProvider } from '@chakra-ui/react'
@@ -26,6 +27,7 @@ root.render(
                     <Route path='' element={<WelcomePage />} />
                     <Route path='/loginSignup' element={<LoginSignupPage />} />
                     <Route path='/programming' element={<Programming />} />
+                    <Route path='/Profile' element={<Profile />} />
                 </Routes>
             </BrowserRouter>
         </ChakraProvider>
