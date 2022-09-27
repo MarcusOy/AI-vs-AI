@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Box, Button, Divider, Grid, GridItem, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
+import { Box, Button, Code, Divider, Grid, GridItem, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Game, Strategy } from '../../Models/Models'
-interface ProgrammingProps {
-  game: Game,
-  strategy: Strategy
-}
-function Programming(props: ProgrammingProps) {
+
+function Programming() {
     const initialValue = '// Enter Strategy Here'
     const [code, setCode] = useState(initialValue);
     const [buffer, setBuffer] = useState(0);
-
+    const [stockCode, setStockCode] = useState('')
+    
     const updateSave = (value) => {
       setCode(value === undefined ? '' : value)
       if (buffer + 1 > 10) {
@@ -20,7 +18,15 @@ function Programming(props: ProgrammingProps) {
       } else {
         setBuffer(buffer+1)
       }
-    }
+  }
+  async function fetchStock() {
+    // TODO update URL
+    fetch('/getAI', {
+      method: 'POST',
+      body: ''
+    }).then(response => response.json()).then(stock =>
+      setStockCode(stock as string))
+  }
 
     return (
         <Box>
@@ -30,7 +36,10 @@ function Programming(props: ProgrammingProps) {
                   <TabList>
                     <Tab>
                       Game Canvas
-                    </Tab>
+                  </Tab>
+                  <Tab>
+                    Game Description
+                  </Tab>
                     <Tab>
                       Stock Code
                     </Tab>
@@ -43,7 +52,15 @@ function Programming(props: ProgrammingProps) {
                       <img src='/10x10 chess board.png' className='App-logo' alt='logo'/>
                     </TabPanel>
                     <TabPanel>
+                  <p>{ 'No description found'}</p>
                     </TabPanel>
+                <TabPanel onClick={fetchStock}>
+                  <Code>
+                    {stockCode}
+                  </Code>
+                    </TabPanel>
+                  <TabPanel>
+                      </TabPanel>
                   </TabPanels>
                 </Tabs>
               </Box>
