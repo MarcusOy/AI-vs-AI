@@ -1,18 +1,40 @@
 import React, { useState } from 'react'
-import { Box, Flex, FormControl, FormLabel, Input, Center, Heading, Button } from '@chakra-ui/react'
+import {
+    Box,
+    Flex,
+    FormControl,
+    FormLabel,
+    Input,
+    Center,
+    Heading,
+    Button,
+    Stack,
+} from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
+import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form'
+import Form from '../components/Form'
+import FormTextBox from '../components/FormTextBox'
+import useAVAFetch from '../helpers/useAVAFetch'
+import IdentityService from '../data/IdentityService'
+
+interface ILoginForm {
+    username: string
+    password: string
+}
+
 const LoginTab = () => {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-    const onClick = () => {
-        fetch('https://webhook.site/f87e51c8-9a3a-4836-8603-6047d18985e6', {
-            body: JSON.stringify({
-                username,
-                password,
-            }),
-            method: 'POST',
-        })
+    const { data, isLoading, error, execute } = useAVAFetch(
+        '/Login',
+        { method: 'POST' },
+        { manual: true }, // makes sure this request fires on user action
+    )
+
+    const onSubmit: SubmitHandler<ILoginForm> = async (data) => {
+        const response = await execute({ data })
+        if (response.status == 200) IdentityService.onLogin()
     }
+    const onError: SubmitErrorHandler<ILoginForm> = (err, e) => console.error({ err, e })
+
     return (
         <Flex>
             <Box>
@@ -22,35 +44,24 @@ const LoginTab = () => {
                     </Box>
                 </Center>
                 <Box>
-                    <form>
-                        <FormControl isRequired>
-                            <FormLabel>Username</FormLabel>
-                            <Input
-                                type='username'
-                                placeholder='Enter your username'
-                                value={username}
-                                onChange={(e) => {
-                                    setUsername(e.target.value)
-                                }}
+                    <Form onFormSubmit={onSubmit} onFormError={onError}>
+                        <Stack spacing='2'>
+                            <FormTextBox name='username' inputProps={{ placeholder: 'Username' }} />
+                            <FormTextBox
+                                name='password'
+                                inputProps={{ placeholder: '***********', type: 'password' }}
                             />
-                        </FormControl>
-                        <FormControl isRequired>
-                            <FormLabel>Password</FormLabel>
-                            <Input
-                                type='password'
-                                placeholder='Enter your password'
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value)
-                                }}
-                            />
-                        </FormControl>
-                    </form>
-                    <Center>
-                        <Button size='lg' colorScheme='cyan' mt='24px' onClick={onClick}>
-                            <Link to='/Profile'>Log In</Link> {/* to mainpage */}
-                        </Button>
-                    </Center>
+                            <Button
+                                size='lg'
+                                colorScheme='cyan'
+                                mt='24px'
+                                type='submit'
+                                isLoading={isLoading}
+                            >
+                                Login
+                            </Button>
+                        </Stack>
+                    </Form>
                 </Box>
             </Box>
         </Flex>

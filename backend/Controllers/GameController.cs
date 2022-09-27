@@ -21,4 +21,19 @@ public class GameController : Controller
             .Where(g => g.DeletedOn == null)
             .ToList();
     }
+
+    [HttpGet, Route("/Games/{id}")]
+    public Game Get(int id)
+    {
+        return _dbContext.Games
+            .Where(g => g.DeletedOn == null)
+            .FirstOrDefault(g => g.Id == id);
+    }
+
+
+    // [HttpPost, Route("/Games")]
+    // public Game Get([FromBody] Game game)
+    // {
+    //     return game;
+    // }
 }

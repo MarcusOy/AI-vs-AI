@@ -1,9 +1,11 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TypeGen.Core.TypeAnnotations;
 
 namespace AVA.API.Models
 {
+    [ExportTsInterface]
     public class AuthToken : BaseEntity
     {
         [Required]

@@ -13,6 +13,7 @@ import {
     FormHelperText,
     Alert,
     AlertIcon,
+    Stack,
     Grid,
     GridItem,
     ButtonGroup,
@@ -21,7 +22,7 @@ import {
     EditableInput,
     EditablePreview,
     Textarea,
-    Select,
+    Select
 } from '@chakra-ui/react'
 
 const userData = {
@@ -29,6 +30,12 @@ const userData = {
 }
 
 const profilePage = () => {
+    const onClick = () => {
+        fetch('https://localhost/WhoAmI', {
+            credentials: 'include',
+        })
+    }
+
     return (
         <div color='black'>
             <Center>
