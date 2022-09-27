@@ -62,11 +62,6 @@ const LoginTab = () => {
                             </Button>
                         </Stack>
                     </Form>
-                    <Center>
-                        {/* <Button size='lg' colorScheme='cyan' mt='24px' type='submit'>
-                            <Link to='/Profile'>Log In</Link> 
-                        </Button> */}
-                    </Center>
                 </Box>
             </Box>
         </Flex>
