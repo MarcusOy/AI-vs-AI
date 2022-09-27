@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using TypeGen.Core.TypeAnnotations;
 
 namespace AVA.API.Models;
 
+[ExportTsInterface]
 public class Battle : BaseEntity
 {
     [Required]

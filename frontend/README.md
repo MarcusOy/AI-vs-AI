@@ -1,3 +1,7 @@
+# TODO: this readme
+
+BTW IF YOU ARE DEVELOPING IN FIREFOX, VISIT THE API IN THE BROWSER AND ACCEPT THE RISK OF THE SELF SIGNED SSL CERTIFICATE. OTHERWISE YOU WILL GET CORS ERRORS.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

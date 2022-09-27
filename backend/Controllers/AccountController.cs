@@ -2,12 +2,24 @@
 using AVA.API.Data;
 using AVA.API.Models;
 using AVA.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DefaultNamespace;
+namespace AVA.API.Controllers;
 
 public class AccountController : Controller
 {
+    public static string COOKIE_AUTH_TOKEN = "X_AVA_AuthToken";
+    public static string COOKIE_REFRESH_TOKEN = "X_AVA_RefreshToken";
+    public static CookieOptions COOKIE_OPTIONS = new CookieOptions
+    {
+        Secure = true,
+        HttpOnly = true,
+        Domain = "localhost",
+        Expires = DateTime.UtcNow.AddYears(10),
+        IsEssential = true
+    };
+
     // [Route("/register")]
     // public ActionResult register(User u)
     // {
@@ -32,22 +44,13 @@ public class AccountController : Controller
     {
         var tokens = await _idService.Authenticate(pair.Username, pair.Password);
 
-        var cookieOptions = new CookieOptions
-        {
-            Secure = true,
-            HttpOnly = true,
-            Domain = "localhost",
-            Expires = DateTime.UtcNow.AddYears(10),
-            IsEssential = true
-        };
-
-        HttpContext.Response.Cookies.Append("X_AVA_AuthToken", tokens.AuthToken, cookieOptions);
-        HttpContext.Response.Cookies.Append("X_AVA_RefreshToken", tokens.RefreshToken, cookieOptions);
+        HttpContext.Response.Cookies.Append(COOKIE_AUTH_TOKEN, tokens.AuthToken, COOKIE_OPTIONS);
+        HttpContext.Response.Cookies.Append(COOKIE_REFRESH_TOKEN, tokens.RefreshToken, COOKIE_OPTIONS);
 
         return Ok();
     }
 
-    [HttpGet, Route("/WhoAmI")]
+    [HttpGet, Route("/WhoAmI"), Authorize]
     public User WhoAmI()
     {
         return _dbContext.Users

@@ -20,6 +20,11 @@ You can check if they are installed globally with these commands respectively:
 - `code .` (should launch Visual Studio Code)
 - C# Extension should appear in the list of extensions
 
+Once `dotnet` is installed, install two global tools needed for this project:
+
+- `dotnet tool install --global dotnet-ef`
+- `dotnet tool install --global dotnet-typegen`
+
 ## Development
 
 Make sure [Docker](https://www.docker.com/) and [.NET Core SDK 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) are installed.

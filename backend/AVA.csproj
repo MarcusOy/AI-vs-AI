@@ -25,5 +25,11 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="TypeGen" Version="3.0.0" />
   </ItemGroup>
+
+  <Target Name="GenerateTSModels" AfterTargets="Build">
+    <Message Importance="High" Text="Executing TypeGen on DTOs..." />
+    <Exec Command="dotnet-typegen generate" />
+  </Target>
 </Project>
