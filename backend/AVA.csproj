@@ -28,7 +28,7 @@
     <PackageReference Include="TypeGen" Version="3.0.0" />
   </ItemGroup>
 
-  <Target Name="GenerateTSModels" AfterTargets="Build">
+  <Target Name="GenerateTSModels" AfterTargets="Build" Condition="'$(Configuration)'!='Release'">
     <Message Importance="High" Text="Executing TypeGen on DTOs..." />
     <Exec Command="dotnet-typegen generate" />
   </Target>
