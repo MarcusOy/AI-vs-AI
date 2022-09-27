@@ -23,7 +23,7 @@ const LoginTab = () => {
                 </Center>
                 <Box>
                     <form>
-                        <FormControl>
+                        <FormControl isRequired>
                             <FormLabel>Username</FormLabel>
                             <Input
                                 type='username'
@@ -34,7 +34,7 @@ const LoginTab = () => {
                                 }}
                             />
                         </FormControl>
-                        <FormControl>
+                        <FormControl isRequired>
                             <FormLabel>Password</FormLabel>
                             <Input
                                 type='password'
