@@ -8,6 +8,7 @@ RUN dotnet restore
 
 # Copy everything else and build
 COPY ./ ./
+RUN dotnet tool install --global dotnet-typegen
 RUN dotnet publish -c Release -o out
 
 # Build runtime image
