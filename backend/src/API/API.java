@@ -568,8 +568,6 @@ public class API {
 		return locations;
 	}
 	
-	
-	
 	/**
 	* @param  cell   The position of the cell on the board, from
 	* 				 values “A0” to “J9”.

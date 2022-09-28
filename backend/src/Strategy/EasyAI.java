@@ -25,7 +25,7 @@ public class EasyAI implements Strategy {
                         return "E9, E5";            //move the LEFT 4 if opponent moved the RIGHT 3
                     } else {
                         String[] moves = {"E9, E5", "F9, F5"};      //pick randomly
-                        return moves[(int)(Math.random() * moves.length)];
+                        return moves[(int) (Math.random() * moves.length)];
                     }
                 } else {                            //we are playing black
                     if (board[1][6].equals("w3") || board[4][6].equals("w3")) {
@@ -34,7 +34,7 @@ public class EasyAI implements Strategy {
                         return "E0, E4";            //move the LEFT 4 if opponent moved the RIGHT 3
                     } else {
                         String[] moves = {"E0, E4", "F0, F4"};      //pick randomly
-                        return moves[(int)(Math.random() * moves.length)];
+                        return moves[(int) (Math.random() * moves.length)];
                     }
                 }
             case 2:
@@ -75,7 +75,7 @@ public class EasyAI implements Strategy {
                         return "F9, F5";            //move the RIGHT 4
                     } else {
                         String[] moves = {"H9, F9", "C9, E9"};      //let's just move a random 2 and hope for the best =)
-                        return moves[(int)(Math.random() * moves.length)];
+                        return moves[(int) (Math.random() * moves.length)];
                     }
                 } else {                            //we are playing black
                     if (board[5][0].equals("b2")) {      //we moved the RIGHT 2 for our second move
@@ -84,7 +84,7 @@ public class EasyAI implements Strategy {
                         return "F0, F4";            //move the RIGHT 4
                     } else {
                         String[] moves = {"H0, F0", "C0, E0"};      //let's just move a random 2 and hope for the best =)
-                        return moves[(int)(Math.random() * moves.length)];
+                        return moves[(int) (Math.random() * moves.length)];
                     }
                 }
             case 4:
@@ -102,48 +102,53 @@ public class EasyAI implements Strategy {
                     }
                 }
             default:
-                /*if (api.isPlayerInCheck(, board)) {        // Capture the opponent’s 1
-                    int rowToCheck = getMyColor(gameState) == WHITE ? 9 : 0;            //sorry William i basically copied your code
-                    int i;
-                    for (i = 0; i < BOARD_LENGTH; i++) {
-                        if ((getPieceColor(i, rowToCheck, board) == getOpponentColor(color))
-                                && (getPieceMoveDistance(i, rowToCheck, board) == 1)) {
-                            break;
-                        }
-                    }
-                    if (getMyColor(gameState)) {
-                        switch (i) {
-                            case 0:
-
-                            case 1:
-
-                        }
-                    } else {
-
-                    }
-                } else*/ //if (isFormationReady(gameState)) {
+                if (api.isPlayerInCheck(api.getMyColor(gameState), board) == api.TRUE) {        // Capture the opponent’s 1
                     ArrayList<String> moves = new ArrayList<String>();
-                    for (String piece : pieceLocations) {
-                        if (piece.equals(""))
+                    for (String location : pieceLocations) {
+                        if (location.equals(""))
                             break;
-                        if (piece.equals("w4") || piece.equals("b4"))
+                        String[] validMoves = api.getValidMoves(location, api.getMyColor(gameState), board);
+                        for (String move : validMoves) {
+                            if (move.equals(""))
+                                break;
+                            moves.add(location + ", " + move);
+                        }
+                    }
+                    if (moves.size() == 0) {                //if you have no legal moves, that means you are checkmated
+                        return "CHECKMATED";
+                    }
+                    return moves.get((int) (Math.random() * moves.size()));
+                } else {
+                    ArrayList<String> moves = new ArrayList<String>();
+                    for (String location : pieceLocations) {
+                        if (location.equals(""))
+                            break;
+                        /*if (piece.equals("w4") || piece.equals("b4"))
                             continue;
-                        if (piece.equals("w2") || piece.equals("b2"))           //we can only move 3s and 1s
+                        if (piece.equals("w2") || piece.equals("b2"))
+                            continue;*/
+                        int piece = api.getPieceMoveDistance(location, board);
+                        if (piece == 4) {                   //do not move pieces that are part of the formation
                             continue;
+                        }
+                        if (piece == 2 && api.cellToRow(location) % 2 != api.getMyColor(gameState)) {   //neat way to check which parity of 2s
+                            continue;
+                        }
 
-                        String[] validMoves = api.getValidMoves(piece, api.getMyColor(gameState), board);
+                        String[] validMoves = api.getValidMoves(location, api.getMyColor(gameState), board);
                         for (String move : validMoves) {
                             if (move.equals(""))
                                 break;
 
-                            moves.add(piece + ", " + move);
+                            moves.add(location + ", " + move);
                         }
                     }
-                    if (moves.size() == 0) {				//if you have no legal moves, that means you are checkmated
+                    if (moves.size() == 0) {                //if you have no legal moves, that means you are checkmated
                         return "CHECKMATED";
                     }
-                    return moves.get((int)(Math.random() * moves.size()));
-                //}
+                    return moves.get((int) (Math.random() * moves.size()));
+
+                }
         }
 
 
@@ -167,7 +172,7 @@ public class EasyAI implements Strategy {
         }
         return moves.get((int)(Math.random() * moves.size()));*/
     }
-
+    /*
     public boolean isFormationReady(GameState gameState) {
         API api = new API();
         String board[][] = api.getBoard(gameState);
@@ -178,7 +183,7 @@ public class EasyAI implements Strategy {
         } else {
             return (board[4][4].equals("b4") && board[4][5].equals("b4") && board[0][4].equals("b2") && board[0][5].equals("b2"));
         }
-    }
+    }*/
 }
 
 
