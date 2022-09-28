@@ -30,6 +30,7 @@
             "error",
             "single"
         ],
+        "@typescript-eslint/no-explicit-any": "off",
         "no-duplicate-imports": "error"
     },
     "settings": {

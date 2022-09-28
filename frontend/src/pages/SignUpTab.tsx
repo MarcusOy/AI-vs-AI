@@ -1,102 +1,22 @@
-import React, { useState } from 'react'
+import React from 'react'
 
-import {
-    Input,
-    Flex,
-    Box,
-    FormControl,
-    FormLabel,
-    Button,
-    Center,
-    Heading,
-    FormErrorMessage,
-    FormHelperText,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-} from '@chakra-ui/react'
-import { Link } from 'react-router-dom'
-import { MotionValue } from 'framer-motion'
+import { Flex, Box, Button, Center, Heading, Stack } from '@chakra-ui/react'
+import Form from '../components/Form'
+import { SubmitErrorHandler, SubmitHandler } from 'react-hook-form'
+import FormTextBox from '../components/FormTextBox'
+
+interface ISignupForm {
+    firstname: string
+    lastname: string
+    email: string
+    username: string
+    password: string
+    password2: string
+}
 
 const SignUpTab = () => {
-    const [firstname, setFirstname] = useState('')
-    const [lastname, setLastname] = useState('')
-    const [email, setEmail] = useState('')
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-    const [password2, setPassword2] = useState('')
-
-    const isError1 = firstname === ''
-    const isError2 = lastname === ''
-    const isError3 = email === ''
-    const isError4 = username === ''
-    const isError5 = password === ''
-    const isError6 = password2 === ''
-
-    const [emailErr, setEmailErr] = useState('')
-    const [usernameErr, setUsernameErr] = useState('')
-    const [passwordErr, setPasswordErr] = useState('')
-    const [password2Err, setPassword2Err] = useState('')
-
-    const validate = () => {
-        // email error check
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i
-        if ((email.length > 0 && !regex.test(email)) || !email.includes('.com')) {
-            setEmailErr('Email form invalid')
-            return false
-        }
-        // username error check
-        if (username.length > 15) {
-            setUsernameErr('Username is too long')
-            return false
-        }
-        // password error check
-        if (password != '' && password.length < 7) {
-            setPasswordErr('Password is too short')
-            return false
-        }
-        const regex2 = /^[a-z0-9]+[!@#$%^*()-+=<>?'";{|}]$/
-        if (!regex2.test(password)) {
-            setPasswordErr('Password form invalid')
-            return false
-        }
-        // password match
-        if (password2 != password) {
-            setPassword2Err('Password does not match')
-            return false
-        }
-
-        return true
-    }
-
-    const onClick = () => {
-        // fetch('https://webhook.site/f87e51c8-9a3a-4836-8603-6047d18985e6', {
-        //     body: JSON.stringify({
-        //         firstname,
-        //         lastname,
-        //         email,
-        //         username,
-        //         password,
-        //     }),
-        //     method: 'POST',
-        // })
-        const isValid = validate()
-
-        if (isValid) {
-            console.log(firstname, lastname, email, username, password, password2)
-            handleChange
-
-            // route to profile page
-        }
-    }
-
-    const handleChange = () => {
-        setEmailErr('')
-        setUsernameErr('')
-        setPasswordErr('')
-        setPassword2Err('')
-    }
+    const onSubmit: SubmitHandler<ISignupForm> = async (data) => console.log({ data })
+    const onError: SubmitErrorHandler<ISignupForm> = (err, e) => console.error({ err, e })
 
     return (
         <Flex>
@@ -107,7 +27,76 @@ const SignUpTab = () => {
                     </Box>
                 </Center>
                 <Box>
-                    <form onChange={handleChange}>
+                    <Form onFormSubmit={onSubmit} onFormError={onError}>
+                        <Stack spacing='2'>
+                            <FormTextBox
+                                name='firstname'
+                                label='First Name'
+                                inputProps={{ placeholder: 'Ex: John' }}
+                                validationProps={{
+                                    required: 'First name is required.',
+                                }}
+                            />
+                            <FormTextBox
+                                name='lastname'
+                                label='Last Name'
+                                inputProps={{ placeholder: 'Ex: Doe' }}
+                                validationProps={{
+                                    required: 'Last name is required.',
+                                }}
+                            />
+                            <FormTextBox
+                                name='email'
+                                label='Email'
+                                inputProps={{ placeholder: 'Ex: john@doe.com' }}
+                                validationProps={{
+                                    pattern: {
+                                        value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i,
+                                        message: 'Enter a valid email.',
+                                    },
+                                    required: 'Email is required.',
+                                }}
+                            />
+                            <FormTextBox
+                                name='username'
+                                label='Username'
+                                inputProps={{ placeholder: 'Ex: johndoe' }}
+                                validationProps={{
+                                    required: 'Username is required.',
+                                    maxLength: {
+                                        value: 15,
+                                        message: 'Username must be under 15 characters.',
+                                    },
+                                }}
+                            />
+                            <FormTextBox
+                                name='password'
+                                label='Password'
+                                inputProps={{ placeholder: '***********', type: 'password' }}
+                                validationProps={{
+                                    required: 'Password is required.',
+                                    minLength: {
+                                        value: 7,
+                                        message: 'Password must be longer than 6 characters.',
+                                    },
+                                }}
+                            />
+                            {/* <FormTextBox
+                                name='password2'
+                                label='Confirm Password'
+                                inputProps={{ placeholder: '***********', type: 'password' }}
+                                validationProps={{
+                                    required: 'Please confirm your password.',
+                                }}
+                            /> */}
+                            <Center>
+                                <Button size='lg' colorScheme='cyan' mt='24px' type='submit'>
+                                    Complete sign up
+                                </Button>
+                            </Center>
+                        </Stack>
+                    </Form>
+                    {/* <form onChange={handleChange}>
                         <FormControl isInvalid={isError1} isRequired>
                             <FormLabel>First Name</FormLabel>
                             <Input
@@ -211,12 +200,7 @@ const SignUpTab = () => {
                                 <FormErrorMessage>Password re-entry is required</FormErrorMessage>
                             )}
                         </FormControl>
-                    </form>
-                    <Center>
-                        <Button size='lg' colorScheme='cyan' mt='24px' onClick={onClick}>
-                            Complete sign up
-                        </Button>
-                    </Center>
+                    </form> */}
                 </Box>
             </Box>
         </Flex>

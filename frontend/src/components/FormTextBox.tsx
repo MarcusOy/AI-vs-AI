@@ -1,37 +1,37 @@
-import { FormControl, FormLabel, Input, InputProps } from '@chakra-ui/react'
-import { useForm, Controller, SubmitHandler, useFormContext } from 'react-hook-form'
+import {
+    FormControl,
+    FormControlProps,
+    FormErrorMessage,
+    FormHelperText,
+    FormLabel,
+    Input,
+    InputProps,
+} from '@chakra-ui/react'
+import { useFormContext, RegisterOptions, FieldValues, FieldPath } from 'react-hook-form'
 import React from 'react'
 import { IFormControlProps } from './Form'
 
 interface IFormTextBoxProps extends IFormControlProps {
+    label?: string
+    helperText?: string
+    controlProps?: FormControlProps
     inputProps: InputProps
+    validationProps?: RegisterOptions<FieldValues, FieldPath<FieldValues>>
 }
 
 export const FormTextBox = (p: IFormTextBoxProps) => {
-    const { control } = useFormContext()
+    const { register, formState } = useFormContext()
+
+    const fieldError = formState.errors[p.name]
+    console.log({ name: p.name, fieldError })
+
     return (
-        <Controller
-            control={control}
-            name={p.name}
-            defaultValue={p.defaultValue}
-            render={({
-                field: { onChange, onBlur, value, name, ref },
-                fieldState: { isTouched, isDirty, error },
-                formState,
-            }) => (
-                <Input
-                    name={name}
-                    ref={ref}
-                    onChange={onChange}
-                    onFocus={() => {
-                        if (!isTouched) isTouched = true
-                    }}
-                    onBlur={onBlur}
-                    value={value}
-                    {...p.inputProps}
-                />
-            )}
-        />
+        <FormControl {...p.controlProps} isInvalid={fieldError != undefined}>
+            {p.label && <FormLabel>{p.label}</FormLabel>}
+            <Input {...register(p.name, p.validationProps)} {...p.inputProps} />
+            {p.helperText && <FormHelperText>{p.helperText}</FormHelperText>}
+            {fieldError && <FormErrorMessage>{fieldError.message?.toString()}</FormErrorMessage>}
+        </FormControl>
     )
 }
 
