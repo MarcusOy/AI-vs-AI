@@ -21,12 +21,12 @@ services:
       - 8080:8080
 
   # Backend (for docker buid testing only)
-  backend:
-    image: ava
-    environment:
-      AVA__VERSION: 0.1
-      # Connection string uses Docker DNS name for the database (db)
-      AVA__CONNECTIONSTRING: "Server=db;Database=app;Uid=ava;Pwd=!ava_app!;"
-      AVA__JWTKEY: AVerySecretJWTKeyThatNoOneShouldKnow
-    ports:
-      - 5000:80
+  # backend:
+  #   image: ava
+  #   environment:
+  #     AVA__VERSION: 0.1
+  #     # Connection string uses Docker DNS name for the database (db)
+  #     AVA__CONNECTIONSTRING: "Server=db;Database=app;Uid=ava;Pwd=!ava_app!;"
+  #     AVA__JWTKEY: AVerySecretJWTKeyThatNoOneShouldKnow
+  #   ports:
+  #     - 5000:80

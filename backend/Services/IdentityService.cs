@@ -15,7 +15,7 @@ namespace AVA.API.Services
     public interface IIdentityService
     {
         Task<User> Register(string firstName, string lastName, string username, string password);
-        Task<TokenPair> Authenticate(string username, string password, string code);
+        Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
         User CurrentUser { get; }
     }
@@ -67,7 +67,7 @@ namespace AVA.API.Services
 
             return newUser;
         }
-        public async Task<TokenPair> Authenticate(string username, string password, string code)
+        public async Task<TokenPair> Authenticate(string username, string password)
         {
             var u = _dbContext.Users
                 .Where(u => u.Active)
@@ -122,8 +122,15 @@ namespace AVA.API.Services
         {
             get
             {
+                if (!_context.User.Claims.Any())
+                    throw new AuthenticationException("User is not logged in.");
+
                 var userid = new Guid(_context.User.Claims
                         .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+
+                if (userid == null)
+                    throw new AuthenticationException("Malformed user. Please log in again");
+
                 return _dbContext.Users
                     .FirstOrDefault(u => u.Id == userid);
             }
@@ -142,7 +149,7 @@ namespace AVA.API.Services
                 new Claim(ClaimTypes.Name, user.Username),
             };
 
-            var expiry = DateTime.UtcNow.AddMinutes(15);
+            var expiry = DateTime.UtcNow.AddMinutes(5);
 
             var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

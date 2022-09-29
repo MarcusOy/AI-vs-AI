@@ -28,8 +28,8 @@ Created a Virtual Network:
 
 - within Backend resource group
 - named avanet
-- uses 10.0.1.0/24 address range (251 addresses)
-- only has 1 subnet (entire 10.0.1.0/24 space)
+- uses 10.0.0.0/16 address range (65k addresses)
+- has default subnet of (10.0.0.0/24)
 
 Created Azure Database for MySQL:
 
@@ -45,3 +45,36 @@ Created Azure Database for MySQL:
 - with connection to avanet
 - with default subnet
 - after provisioning, created database called app
+
+Created Backend Container App:
+
+- within Backend resource group
+- named avabackend
+- in East US region
+- with new environment named avaenvironment
+  - with virtual network avanet
+  - with new subnet 10.0.2.0/23 called containers
+  - with external virtual ip
+- without quickstart image
+  - with container name avabackend-dev
+  - with image source of Azure Container Registry
+  - with registry avacontainers.azurecr.io
+  - with image name avabackend
+  - with image tag dev
+  - with CPU and Memory of 0.25 CPU cores, 0.5 Gi memory
+  - with applicable environment variables
+  - with ingress traffic set as Accepting traffic from anywhere
+  - with target port 443
+
+Created RabbitMQ Container App:
+
+- within Simulation resource group
+- named avabroker
+- in East US region
+- without quickstart image
+  - with container name avabroker
+  - with image source of Docker Hub
+  - with registry docker.io
+  - with image name rabbitmq:3-management
+  - with CPU and Memory of 0.25 CPU cores, 0.5 Gi memory
+  - with environment variables of RABBITMQ_DEFAULT_USER and RABBITMQ_DEFAULT_PASS (ava and !ava_app!)
