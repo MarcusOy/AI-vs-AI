@@ -1,17 +1,17 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
     Box,
     Flex,
-    FormControl,
-    FormLabel,
-    Input,
     Center,
     Heading,
     Button,
     Stack,
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
 } from '@chakra-ui/react'
-import { Link } from 'react-router-dom'
-import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form'
+import { SubmitHandler, SubmitErrorHandler } from 'react-hook-form'
 import Form from '../components/Form'
 import FormTextBox from '../components/FormTextBox'
 import useAVAFetch from '../helpers/useAVAFetch'
@@ -23,7 +23,7 @@ interface ILoginForm {
 }
 
 const LoginTab = () => {
-    const { data, isLoading, error, execute } = useAVAFetch(
+    const { isLoading, error, execute } = useAVAFetch(
         '/Login',
         { method: 'POST' },
         { manual: true }, // makes sure this request fires on user action
@@ -46,9 +46,23 @@ const LoginTab = () => {
                 <Box>
                     <Form onFormSubmit={onSubmit} onFormError={onError}>
                         <Stack spacing='2'>
-                            <FormTextBox name='username' inputProps={{ placeholder: 'Username' }} />
+                            {error && (
+                                <Alert status='error'>
+                                    <AlertIcon />
+                                    <AlertTitle>Login Failed.</AlertTitle>
+                                    <AlertDescription>{error?.message}</AlertDescription>
+                                </Alert>
+                            )}
+                            <FormTextBox
+                                name='username'
+                                label='Username'
+                                controlProps={{ isRequired: true }}
+                                inputProps={{ placeholder: 'Ex: johndoe' }}
+                            />
                             <FormTextBox
                                 name='password'
+                                label='Password'
+                                controlProps={{ isRequired: true }}
                                 inputProps={{ placeholder: '***********', type: 'password' }}
                             />
                             <Button

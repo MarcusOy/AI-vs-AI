@@ -8,7 +8,7 @@ interface IFormProps<T> {
 }
 
 export interface IFormControlProps {
-    name: any
+    name: string
     defaultValue?: any
 }
 
