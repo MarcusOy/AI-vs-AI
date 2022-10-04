@@ -17,6 +17,7 @@ namespace AVA.API.Services
         Task<User> Register(string firstName, string lastName, string username, string password);
         Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
+        Task<User> UpdateAsync(User user);
         User CurrentUser { get; }
     }
 
@@ -116,6 +117,14 @@ namespace AVA.API.Services
                 AuthToken = newAuthToken.Token,
                 RefreshToken = newRefreshToken.Token
             };
+        }
+
+        public async Task<User> UpdateAsync(User user)
+        {
+            _dbContext.Update(user);
+            await _dbContext.SaveChangesAsync();
+
+            return user;
         }
 
         public User CurrentUser
