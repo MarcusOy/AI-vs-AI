@@ -13,7 +13,7 @@ export interface IFormControlProps {
 }
 
 const Form = <T,>(p: IFormProps<T>) => {
-    const methods = useForm<T>()
+    const methods = useForm<T>({ mode: 'onBlur' })
 
     return (
         <FormProvider {...methods}>

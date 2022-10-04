@@ -14,7 +14,7 @@ namespace AVA.API.Services
 {
     public interface IIdentityService
     {
-        Task<User> Register(string firstName, string lastName, string username, string password);
+        Task<User> Register(string firstName, string lastName, string email, string username, string password);
         Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
         Task<User> UpdateAsync(User user);
@@ -38,7 +38,7 @@ namespace AVA.API.Services
             _settings = settings.Value;
         }
 
-        public async Task<User> Register(string firstName, string lastName, string username, string password)
+        public async Task<User> Register(string firstName, string lastName, string email, string username, string password)
         {
             if (String.IsNullOrEmpty(username))
                 throw new InvalidOperationException("Must provide a username.");
@@ -58,9 +58,10 @@ namespace AVA.API.Services
                 FirstName = firstName,
                 LastName = lastName,
                 Username = username,
+                Email = email,
                 Password = p,
                 Salt = s.AsString,
-                Active = false,
+                Active = true, // TODO: do email confirmation??
             };
 
             await _dbContext.Users.AddAsync(newUser);

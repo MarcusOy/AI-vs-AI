@@ -21,9 +21,7 @@ interface IFormTextBoxProps extends IFormControlProps {
 
 export const FormTextBox = (p: IFormTextBoxProps) => {
     const { register, formState } = useFormContext()
-
     const fieldError = formState.errors[p.name]
-    console.log({ name: p.name, fieldError })
 
     return (
         <FormControl {...p.controlProps} isInvalid={fieldError != undefined}>

@@ -1,28 +1,16 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import {
     Input,
     Flex,
     Box,
-    FormControl,
-    FormLabel,
     Button,
     Center,
     Heading,
-    FormErrorMessage,
-    FormHelperText,
-    Alert,
-    AlertIcon,
-    Stack,
-    Grid,
-    GridItem,
     ButtonGroup,
     Spacer,
-    Editable,
-    EditableInput,
-    EditablePreview,
     Textarea,
-    Select
+    Select,
 } from '@chakra-ui/react'
 
 const userData = {
@@ -72,7 +60,7 @@ const profilePage = () => {
                         <Spacer />
                         <ButtonGroup gap='2' paddingTop={10}>
                             <Button colorScheme='red'>Delete Account</Button>
-                            <Button colorScheme='cyan'>
+                            <Button>
                                 <Link to='/'>Log Out</Link>
                             </Button>
                         </ButtonGroup>
