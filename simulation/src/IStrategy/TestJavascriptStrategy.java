@@ -1,14 +1,13 @@
-package Strategy;
+package IStrategy;
 
 import API.API;
 import Simulation.GameState;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import javax.script.*;
 
-public class TestJavascriptStrategy implements Strategy {
+public class TestJavascriptStrategy implements IStrategy {
     /**
      * API containing helper functions
      */

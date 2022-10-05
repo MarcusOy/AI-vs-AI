@@ -1,6 +1,6 @@
 package Simulation;
 
-import Strategy.Strategy;
+import IStrategy.Strategy;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -11,7 +11,7 @@ public class Battle {
     private UUID id;
     private Strategy attackingStrategy;
     private Strategy defendingStrategy;
-    private Status status;
+    private GameStatus status;
     private int iterations;
     private int attackerWins;
     private int defenderWins;
@@ -30,7 +30,7 @@ public class Battle {
         this.iterations = iterations;
         battleGames = new ArrayList<>();
         willAttackerStartWhite = Math.random() < 0.5; // 50% odds the attacker will start white
-        status = Status.READY;
+        status = GameStatus.READY;
     }
 
     // returns the newly created BattleGame
@@ -54,7 +54,7 @@ public class Battle {
 
     // handles the completion of the Battle
     public void complete() {
-        status = Status.COMPLETE;
+        status = GameStatus.COMPLETE;
     }
 
     public String printBattleGames() {

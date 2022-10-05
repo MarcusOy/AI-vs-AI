@@ -1,4 +1,4 @@
-package Strategy;
+package IStrategy;
 
 import javax.script.*;
 public class EvalMoveString {

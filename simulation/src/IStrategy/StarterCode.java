@@ -1,12 +1,11 @@
-package Strategy;
+package IStrategy;
 
 import API.API;
 import Simulation.GameState;
-import Strategy.Strategy;
 
 import java.util.ArrayList;
 
-public class StarterCode implements Strategy {
+public class StarterCode implements IStrategy {
     /**
      * API containing helper functions
      */

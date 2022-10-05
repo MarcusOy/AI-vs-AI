@@ -1,7 +1,7 @@
-package Strategy;
+package IStrategy;
 
 import Simulation.GameState;
 
-public interface Strategy {
+public interface IStrategy {
     public String getMove(GameState gameState);
 }

@@ -1,12 +1,11 @@
-package Strategy;
+package IStrategy;
 
 import API.API;
 import Simulation.GameState;
-import Strategy.Strategy;
 
 import java.util.ArrayList;
 
-public class EasyAI implements Strategy {
+public class EasyAI implements IStrategy {
     private int turnNumber = 0;
     /**
      * API containing helper functions

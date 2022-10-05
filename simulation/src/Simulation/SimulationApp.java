@@ -1,10 +1,13 @@
 package Simulation;
 
-import Strategy.RandomAI;
-import Strategy.EasyAI;
+import IStrategy.RandomAI;
+import IStrategy.EasyAI;
 import API.API;
-import Strategy.Strategy;
+import IStrategy.Strategy;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.*;
 import java.util.Scanner;
 
 /*
@@ -99,8 +102,8 @@ public class SimulationApp {
     
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
-        attackingStrategy = new RandomAI();
-        defendingStrategy = new EasyAI();
+        /*attackingStrategy = new RandomAI();
+        defendingStrategy = new EasyAI();*/
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -193,7 +196,7 @@ public class SimulationApp {
         // ATTACKER set to AI mode
         String moveString = "";
         try {
-            moveString = attackingStrategy.getMove(gameState);
+            moveString = processStrategySource(attackingStrategy);//attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             if (DEBUG)
@@ -215,7 +218,7 @@ public class SimulationApp {
         // DEFENDER set to AI mode
         String moveString = "";
         try {
-            moveString = defendingStrategy.getMove(gameState);
+            moveString = processStrategySource(defendingStrategy);//defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
             if (DEBUG)
@@ -223,6 +226,27 @@ public class SimulationApp {
         }
 
         return moveString;
+    }
+
+    static String processStrategySource(Strategy strategy) {
+        /*// sets up evaluator
+        ScriptEngineManager factory = new ScriptEngineManager();
+        ScriptEngine engine = factory.getEngineByName("JavaScript");
+        // allows the strategy's source code to access the gameState as a global variable
+        engine.put("gameState", gameState);
+
+        // evaluates the script
+        try {
+            String script = "function constantMove() { return 'A1, A2' }";
+
+            engine.eval(script);
+
+            Invocable inv = (Invocable) engine;
+            return "" + inv.invokeFunction("constantMove");
+        } catch (Exception e) {
+            return null;
+        }*/
+        return "A8, A7";
     }
 
     //adjusts the gameState based upon the moveString
