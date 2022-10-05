@@ -58,9 +58,17 @@ public class AccountController : Controller
     }
 
     [HttpGet, Route("/Account/WhoAmI"), Authorize]
-    public User WhoAmI()
+    public User Get()
+        => _idService.CurrentUser;
+
+    [HttpGet, Route("/Account/{id}"), Authorize]
+    public async Task<User> Get(string id)
     {
-        return _idService.CurrentUser;
+        var u = await _idService.GetUserAsync(new Guid(id));
+
+        // remove semi-sensitive fields
+        u.Email = "***";
+        return u;
     }
 
     [HttpPost, Route("/Account"), Authorize]

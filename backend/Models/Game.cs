@@ -23,5 +23,6 @@ public class Game : BaseEntity
     public List<Strategy> Strategies { get; set; }
 
     // User Relationship (Game is favorited by many users)
+    [JsonIgnore]
     public List<User> UsersWhoFavorited { get; set; }
 }

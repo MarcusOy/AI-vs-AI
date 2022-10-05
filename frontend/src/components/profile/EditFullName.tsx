@@ -21,13 +21,13 @@ import {
 } from '@chakra-ui/react'
 import FocusLock from 'react-focus-lock'
 import React from 'react'
-import { AVAStore } from '../data/DataStore'
-import Form from './Form'
+import { AVAStore } from '../../data/DataStore'
+import Form from '../Form'
 import { SubmitErrorHandler, SubmitHandler } from 'react-hook-form'
-import FormTextBox from './FormTextBox'
-import useAVAFetch from '../helpers/useAVAFetch'
-import { User } from '../models/user'
-import IdentityService from '../data/IdentityService'
+import FormTextBox from '../FormTextBox'
+import useAVAFetch from '../../helpers/useAVAFetch'
+import { User } from '../../models/user'
+import IdentityService from '../../data/IdentityService'
 
 const EditFullName = () => {
     const { onOpen, onClose, isOpen } = useDisclosure()
@@ -84,7 +84,6 @@ const EditFullNameForm = ({ onCancel }) => {
             firstName: data.firstName,
             lastName: data.lastName,
         }
-        console.log({ newUser })
         const response = await execute({ data: newUser })
         if (response.status == 200) {
             IdentityService.refreshIdentity()

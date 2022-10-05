@@ -1,13 +1,13 @@
 import React from 'react'
 import { Center, Box, Text } from '@chakra-ui/react'
-const FeedPage = () => {
+const ProfileSubmissionsTab = () => {
     return (
         <Center>
             <Box maxW='32rem'>
-                <Text>Feed page</Text>
+                <Text>Submissions tab</Text>
             </Box>
         </Center>
     )
 }
 
-export default FeedPage
+export default ProfileSubmissionsTab
