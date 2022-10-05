@@ -20,16 +20,6 @@ public class AccountController : Controller
         IsEssential = true
     };
 
-    // [Route("/register")]
-    // public ActionResult register(User u)
-    // {
-    //     // The incoming message will be a new user object to add to the database
-
-    //     // TODO - Add the new user to the database
-
-    //     return Ok("User is added");
-    // }
-
     private readonly IIdentityService _idService;
 
     public AccountController(IIdentityService idService)
@@ -90,16 +80,6 @@ public class AccountController : Controller
         await _idService.DeleteAsync(_idService.CurrentUser.Id);
         return Ok("User is deleted.");
     }
-
-    // [Route("/getAccount")]
-    // public ActionResult displayAccount(User u)
-    // {
-    //     // The incoming message will be a user object to display information from
-
-    //     // TODO - send the user information to the client
-
-    //     return Ok("User info goes here");
-    // }
 
     public class SignupForm
     {

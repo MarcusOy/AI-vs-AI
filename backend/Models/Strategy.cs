@@ -10,7 +10,7 @@ public class Strategy : BaseEntity
 {
     [Required]
     public Guid Id { get; set; }
-    [Required]
+    [Required, StringLength(50)]
     public string Name { get; set; }
     public string SourceCode { get; set; }
     public StrategyStatus Status { get; set; }

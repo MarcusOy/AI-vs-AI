@@ -127,9 +127,11 @@ namespace AVA.API.Services
             var originalUser = _dbContext.Users
                 .FirstOrDefault(u => user.Id == u.Id);
 
-            // do trust these fields!!!!
+            // trust only these incoming fields
             originalUser.FirstName = user.FirstName;
             originalUser.LastName = user.LastName;
+            originalUser.Bio = user.Bio;
+            originalUser.FavoriteGameId = user.FavoriteGameId;
 
             _dbContext.Update(originalUser);
             await _dbContext.SaveChangesAsync();

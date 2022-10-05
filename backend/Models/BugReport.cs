@@ -10,7 +10,7 @@ public class BugReport : BaseEntity
 {
     [Required]
     public Guid Id { get; set; }
-    [Required]
+    [Required, StringLength(5000)]
     public string Description { get; set; }
     public string Regarding { get; set; }
 
