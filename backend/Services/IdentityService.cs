@@ -17,6 +17,7 @@ namespace AVA.API.Services
         Task<User> Register(string firstName, string lastName, string email, string username, string password);
         Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
+        Task<User> GetUserAsync(Guid id);
         Task<User> UpdateAsync(User user);
         Task<User> DeleteAsync(Guid userId);
         User CurrentUser { get; }
@@ -121,15 +122,35 @@ namespace AVA.API.Services
             };
         }
 
+        public async Task<User> GetUserAsync(Guid id)
+        {
+            var user = await _dbContext.Users
+                .Where(u => u.Active)
+                .Include(u => u.FavoriteGame)
+                .Include(u => u.Strategies)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null)
+                throw new InvalidOperationException("User with provided id does not exist.");
+
+            return user;
+        }
+
 
         public async Task<User> UpdateAsync(User user)
         {
             var originalUser = _dbContext.Users
+                .Where(u => u.Active)
                 .FirstOrDefault(u => user.Id == u.Id);
 
-            // do trust these fields!!!!
+            if (originalUser is null)
+                throw new InvalidOperationException("User to update does not exist.");
+
+            // trust only these incoming fields
             originalUser.FirstName = user.FirstName;
             originalUser.LastName = user.LastName;
+            originalUser.Bio = user.Bio;
+            originalUser.FavoriteGameId = user.FavoriteGameId;
 
             _dbContext.Update(originalUser);
             await _dbContext.SaveChangesAsync();

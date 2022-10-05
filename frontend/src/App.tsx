@@ -1,9 +1,9 @@
 import { Stack, Link as ChakraLink, Text, Spinner, Center } from '@chakra-ui/react'
 import { AVAStore } from './data/DataStore'
 import React, { useEffect } from 'react'
-import LoginSignupPage from './pages/LoginSignupPage'
+import LoginSignupPage from './pages/auth/AuthPage'
 import WelcomePage from './pages/WelcomePage'
-import ProfilePage from './pages/ProfilePage'
+import ProfilePage from './pages/profile/ProfilePage'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useAVAFetch from './helpers/useAVAFetch'
 import IdentityService from './data/IdentityService'
@@ -48,7 +48,23 @@ function App() {
                         <Routes>
                             <Route path='/' element={<Navigate to='/Feed' />} />
                             <Route path='/Feed' element={<FeedPage />} />
-                            <Route path='/Profile' element={<ProfilePage />} />
+                            <Route
+                                path='/Profile'
+                                element={<Navigate to={`/Profile/${whoAmI.id}/View`} />}
+                            />
+                            <Route
+                                path='/Profile/Strategies'
+                                element={<Navigate to={`/Profile/${whoAmI.id}/Strategies`} />}
+                            />
+                            <Route
+                                path='/Profile/Battles'
+                                element={<Navigate to={`/Profile/${whoAmI.id}/Battles`} />}
+                            />
+                            <Route
+                                path='/Profile/Submissions'
+                                element={<Navigate to={`/Profile/${whoAmI.id}/Submissions`} />}
+                            />
+                            <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
                             <Route path='/Programming' element={<Programming/>}/>
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
@@ -56,7 +72,7 @@ function App() {
                     ) : (
                         <Routes>
                             <Route path='/' element={<WelcomePage />} />
-                            <Route path='/Auth/:mode' element={<LoginSignupPage />} />
+                            <Route path='/Auth/:tab' element={<LoginSignupPage />} />
 
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />

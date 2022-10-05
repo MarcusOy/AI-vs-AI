@@ -14,15 +14,29 @@ public static class SeedData
 
     private static ModelBuilder HasExampleUsers(this ModelBuilder builder)
     {
+        var systemSalt = SecurityHelpers.GenerateSalt();
         var marcusSalt = SecurityHelpers.GenerateSalt();
         var kyleSalt = SecurityHelpers.GenerateSalt();
+
         builder.Entity<User>().HasData(
+            new User
+            {
+                Id = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
+                FirstName = "System",
+                LastName = "User",
+                Username = "system",
+                Email = "marcus.orciuch@gmail.com",
+                Password = SecurityHelpers.GenerateHashedPassword("!strong_password!", systemSalt.AsBytes), // TODO: make this dynamic
+                Salt = systemSalt.AsString,
+                Active = true
+            },
             new User
             {
                 Id = new Guid("47424124-8ee0-4897-a68e-66231b1b4534"),
                 FirstName = "Marcus",
                 LastName = "Orciuch",
                 Username = "marcus",
+                Email = "morciuch@purdue.edu",
                 Password = SecurityHelpers.GenerateHashedPassword("password", marcusSalt.AsBytes),
                 Salt = marcusSalt.AsString,
                 Active = true
@@ -33,6 +47,7 @@ public static class SeedData
                 FirstName = "Kyle",
                 LastName = "Orciuch",
                 Username = "kyle",
+                Email = "korciuch@purdue.edu",
                 Password = SecurityHelpers.GenerateHashedPassword("password", kyleSalt.AsBytes),
                 Salt = kyleSalt.AsString,
                 Active = true
