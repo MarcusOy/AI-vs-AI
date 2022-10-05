@@ -49,7 +49,7 @@ function Programming() {
                   Submission Statistics
                 </Tab>
               </TabList>
-              <TabPanels height='82vh'>
+              <TabPanels height='75vh'>
                 <TabPanel>
                   <img src='/10x10 chess board.png' className='App-logo' alt='logo'/>
                 </TabPanel>
@@ -79,7 +79,7 @@ function Programming() {
               </TabPanels>
             </Tabs>
           </Box>
-          <Box width='55%' height='85vh'>
+          <Box width='55%' height='77vh'>
             <Editor
             defaultLanguage="javascript"
             defaultValue={localStorage.getItem('draftAvailable') === 'true' ? localStorage.getItem('draft') || initialValue : initialValue}
@@ -103,7 +103,7 @@ function Programming() {
           </Button>
         </GridItem>
         <GridItem colStart={9}>
-          <Button margin='3'>
+          <Button margin='3' disabled>
             Run Strategy
           </Button>
           <Button margin='3' disabled>

@@ -12,6 +12,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
+import Programming from './pages/Programming'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -48,7 +49,7 @@ function App() {
                             <Route path='/' element={<Navigate to='/Feed' />} />
                             <Route path='/Feed' element={<FeedPage />} />
                             <Route path='/Profile' element={<ProfilePage />} />
-
+                            <Route path='/Programming' element={<Programming/>}/>
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>
