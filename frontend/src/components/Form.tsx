@@ -8,12 +8,12 @@ interface IFormProps<T> {
 }
 
 export interface IFormControlProps {
-    name: any
+    name: string
     defaultValue?: any
 }
 
 const Form = <T,>(p: IFormProps<T>) => {
-    const methods = useForm<T>()
+    const methods = useForm<T>({ mode: 'onBlur' })
 
     return (
         <FormProvider {...methods}>

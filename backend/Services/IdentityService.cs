@@ -14,9 +14,11 @@ namespace AVA.API.Services
 {
     public interface IIdentityService
     {
-        Task<User> Register(string firstName, string lastName, string username, string password);
+        Task<User> Register(string firstName, string lastName, string email, string username, string password);
         Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
+        Task<User> UpdateAsync(User user);
+        Task<User> DeleteAsync(Guid userId);
         User CurrentUser { get; }
     }
 
@@ -37,7 +39,7 @@ namespace AVA.API.Services
             _settings = settings.Value;
         }
 
-        public async Task<User> Register(string firstName, string lastName, string username, string password)
+        public async Task<User> Register(string firstName, string lastName, string email, string username, string password)
         {
             if (String.IsNullOrEmpty(username))
                 throw new InvalidOperationException("Must provide a username.");
@@ -57,9 +59,10 @@ namespace AVA.API.Services
                 FirstName = firstName,
                 LastName = lastName,
                 Username = username,
+                Email = email,
                 Password = p,
                 Salt = s.AsString,
-                Active = false,
+                Active = true, // TODO: do email confirmation??
             };
 
             await _dbContext.Users.AddAsync(newUser);
@@ -116,6 +119,36 @@ namespace AVA.API.Services
                 AuthToken = newAuthToken.Token,
                 RefreshToken = newRefreshToken.Token
             };
+        }
+
+
+        public async Task<User> UpdateAsync(User user)
+        {
+            var originalUser = _dbContext.Users
+                .FirstOrDefault(u => user.Id == u.Id);
+
+            // do trust these fields!!!!
+            originalUser.FirstName = user.FirstName;
+            originalUser.LastName = user.LastName;
+
+            _dbContext.Update(originalUser);
+            await _dbContext.SaveChangesAsync();
+
+            return originalUser;
+        }
+
+        public async Task<User> DeleteAsync(Guid userId)
+        {
+            var user = _dbContext.Users
+                .FirstOrDefault(u => u.Id == userId);
+
+            if (user is null)
+                throw new InvalidOperationException("User does not exist.");
+
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
+
+            return user;
         }
 
         public User CurrentUser

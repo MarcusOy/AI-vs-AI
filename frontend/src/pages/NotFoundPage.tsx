@@ -12,9 +12,9 @@ const NotFoundPage = () => {
                 <Text fontSize='lg'>
                     It looks like the page you were looking for was not found.
                 </Text>
-                <Link color='teal.500'>
+                <Text color='teal.500'>
                     <RouterLink to='/'>Go back to the home page.</RouterLink>
-                </Link>
+                </Text>
             </Stack>
         </Center>
     )
