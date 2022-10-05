@@ -3,7 +3,7 @@ import { AVAStore } from './data/DataStore'
 import React, { useEffect } from 'react'
 import LoginSignupPage from './pages/LoginSignupPage'
 import WelcomePage from './pages/WelcomePage'
-import Profile from './pages/Profile'
+import ProfilePage from './pages/ProfilePage'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useAVAFetch from './helpers/useAVAFetch'
 import IdentityService from './data/IdentityService'
@@ -15,12 +15,12 @@ import FeedPage from './pages/FeedPage'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
-    const { whoAmI, hasSuccessfullyLoggedIn, hasSuccessfullyLoggedOut } = AVAStore.useState()
+    const { whoAmI, whoAmIUpdateNumber } = AVAStore.useState()
 
     // trigger WhoAmI query on login and logout
     useEffect(() => {
         execute()
-    }, [hasSuccessfullyLoggedIn, hasSuccessfullyLoggedOut])
+    }, [whoAmIUpdateNumber])
 
     // set identity in global state
     useEffect(() => {
@@ -36,7 +36,6 @@ function App() {
         )
 
     const isLoggedIn = whoAmI != undefined
-
     console.log({ whoAmI, isLoggedIn })
 
     return (
@@ -48,7 +47,7 @@ function App() {
                         <Routes>
                             <Route path='/' element={<Navigate to='/Feed' />} />
                             <Route path='/Feed' element={<FeedPage />} />
-                            <Route path='/Profile' element={<Profile />} />
+                            <Route path='/Profile' element={<ProfilePage />} />
 
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
@@ -57,7 +56,6 @@ function App() {
                         <Routes>
                             <Route path='/' element={<WelcomePage />} />
                             <Route path='/Auth/:mode' element={<LoginSignupPage />} />
-                            <Route path='/Profile' element={<Profile />} />
 
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />

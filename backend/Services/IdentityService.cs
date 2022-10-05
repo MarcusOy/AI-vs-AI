@@ -18,6 +18,7 @@ namespace AVA.API.Services
         Task<TokenPair> Authenticate(string username, string password);
         Task<TokenPair> Reauthenticate(string refreshToken);
         Task<User> UpdateAsync(User user);
+        Task<User> DeleteAsync(Guid userId);
         User CurrentUser { get; }
     }
 
@@ -120,9 +121,31 @@ namespace AVA.API.Services
             };
         }
 
+
         public async Task<User> UpdateAsync(User user)
         {
-            _dbContext.Update(user);
+            var originalUser = _dbContext.Users
+                .FirstOrDefault(u => user.Id == u.Id);
+
+            // do trust these fields!!!!
+            originalUser.FirstName = user.FirstName;
+            originalUser.LastName = user.LastName;
+
+            _dbContext.Update(originalUser);
+            await _dbContext.SaveChangesAsync();
+
+            return originalUser;
+        }
+
+        public async Task<User> DeleteAsync(Guid userId)
+        {
+            var user = _dbContext.Users
+                .FirstOrDefault(u => u.Id == userId);
+
+            if (user is null)
+                throw new InvalidOperationException("User does not exist.");
+
+            _dbContext.Users.Remove(user);
             await _dbContext.SaveChangesAsync();
 
             return user;

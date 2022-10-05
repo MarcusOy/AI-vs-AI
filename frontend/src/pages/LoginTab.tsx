@@ -33,7 +33,7 @@ const LoginTab = () => {
     const onSubmit: SubmitHandler<ILoginForm> = async (data) => {
         const response = await execute({ data })
         if (response.status == 200) {
-            IdentityService.onLogin()
+            IdentityService.refreshIdentity()
             navigate('/')
         }
     }
