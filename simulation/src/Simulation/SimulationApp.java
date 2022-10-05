@@ -8,7 +8,17 @@ import IStrategy.Strategy;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.*;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
 
 /*
    ----------------------------------------------------------------------------
@@ -27,27 +37,147 @@ import java.util.Scanner;
 //   - the default AI is random, but this can be adjusted locally for testing
 // - displaying detailed gamestate and debug info
 public class SimulationApp {
+    public final static String QUEUE_NAME = "test";
+
     static Strategy attackingStrategy;
     static Strategy defendingStrategy;
 
-    static boolean CONSOLE_APP = true;
-    static boolean DEBUG = true;
-    static boolean ATTACKER_MANUAL = false;
-    static boolean DEFENDER_MANUAL = false;
+    static boolean CONSOLE_APP;
+    static boolean DEBUG;
+    static boolean ATTACKER_MANUAL;
+    static boolean DEFENDER_MANUAL;
 
     static final int BOARD_LENGTH = 10;
 
     static GameState gameState; // the gameState of the current game
     static Scanner scan; // scanner used to interact with the console (can be used for manual play)
 
+    static int numGames;
+
     // Runs a battle with an infinite number of BattleGames, starting a fresh BattleGame when the previous completes
-    public static void main(String[] args) {
-        // ask for console setup info
+    public static void main(String[] args) throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+        // set up stdin input
         scan = new Scanner(System.in);
-        System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
-                           "This mode prints out important information and prompts for input.\n" +
-                            "This mode is the only way to play manually.");
-        CONSOLE_APP = scan.nextLine().equals("y");
+
+        // establishes connection to message broker queue
+        ConnectionFactory factory = new ConnectionFactory();
+        setupConnection(factory);
+        //System.out.println(factory.getClientProperties());
+        Connection connection = factory.newConnection();
+        System.out.println("created connection");
+        Channel channel = connection.createChannel();
+
+        // Creates queue if not already created an prepares to listen for messages
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        System.out.println(" [*] Waiting for messages.");
+
+        // Sends callback to sender
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), "UTF-8");
+            System.out.println(" [x] Received '" + message + "'");
+
+            // processes message
+            if (processMessage(message)) {
+                // runs battle if message was properly parsed
+                runBattle();
+            }
+            System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+        };
+
+        // listens for messages
+        System.out.println("listening");
+        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+        System.out.println("after consuming");
+
+        SimTestProducer p1 = new SimTestProducer();
+        /*int i = 1;
+        for (int i = 0; i < 4; i++) {
+            //while (true) {
+            int startSecond = LocalTime.now().toSecondOfDay();
+            while (LocalTime.now().toSecondOfDay() < startSecond + 4) { }
+
+            // creates producers
+            p1.createConnection(7);
+            //i += 2;
+        }*/
+
+        System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+        while (true) {
+            String inString = scan.nextLine();
+            int inputNumGames = 1;
+            try {
+                inputNumGames = Integer.parseInt(inString);
+
+                if (inputNumGames <= 0)
+                    inputNumGames = 1;
+                else if (inputNumGames % 2 != 1)
+                    inputNumGames -= 1;
+            } catch (Exception e) {
+
+            }
+            p1.createConnection(inputNumGames);
+        }
+    }
+
+    // gets the URI for connection config
+    public static void setupConnection(ConnectionFactory factory) {
+        //factory.setUsername(USER);
+        //factory.setPassword(PASS);
+        //factory.setHost(HOST);
+        //factory.setPort(PORT);
+    }
+
+    // processes the message sent to the app to create a new battle
+    // Returns true if no parsing errors
+    static boolean processMessage(String message) {
+        // expects message in format "<attackerStrategy>, <defenderStrategy>, <numberOfGames>"
+        String usage = "Message must be in format \"<attackerStrategy>, <defenderStrategy>, <oddNumberOfGames>\"  -- EXAMPLE -- \"Strategy1, Strategy2, 7\"\n";
+
+        String[] split = message.split(", ");
+        if (split.length != 3) {
+            System.out.printf("ERROR: message \"%s\" does not have the correct number of arguments.\n" + usage);
+            return false;
+        }
+
+        /*ObjectMapper mapper = new ObjectMapper();
+        try {
+            attackingStrategy = mapper.readValue(split[0], Strategy.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            System.out.println("JSON parsing of attackingStrategy failed");
+            return false;
+        }
+        try {
+            defendingStrategy = mapper.readValue(split[1], Strategy.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            System.out.println("JSON parsing of defendingStrategy failed");
+            return false;
+        }*/
+        try {
+            numGames = Integer.parseInt(split[2]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.printf("parsing of numGames from \"%s\" failed\n", split[2]);
+            return false;
+        }
+
+        if (numGames % 2 != 1) {
+            System.out.println("numGames must be odd, not: " + numGames);
+            return false;
+        }
+
+        return true;
+    }
+
+    // runs a full battle
+    static void runBattle() {
+        // ask for console setup info
+        //scan = new Scanner(System.in);
+        /*System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
+                "This mode prints out important information and prompts for input.\n" +
+                "This mode is the only way to play manually.");
+        */CONSOLE_APP = false;/*scan.nextLine().equals("y");
 
         if (CONSOLE_APP) {
             System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
@@ -56,12 +186,12 @@ public class SimulationApp {
             System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
             DEFENDER_MANUAL = scan.nextLine().equals("y");
             System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "MANUAL" : "AI"));
-        }
+        }*/
         setupStrategies();
 
-        System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
-                           "This mode prints out more detailed status and error information.");
-        DEBUG = scan.nextLine().equals("y");
+        /*System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
+                "This mode prints out more detailed status and error information.");*/
+        DEBUG = false;/*scan.nextLine().equals("y");
         int numGames;
         while (true) {
             System.out.println("How many Games do you want in this Battle?  This must be an odd integer");
@@ -71,7 +201,7 @@ public class SimulationApp {
                 if (numGames % 2 == 1)
                     break;
             } catch (Exception e) { }
-        }
+        }*/
 
         // setup Battle
         Battle battle = new Battle(numGames, attackingStrategy, defendingStrategy);
@@ -97,9 +227,9 @@ public class SimulationApp {
 
         debugPrintln(battle.toString());
 
-        scan.close();
+        //scan.close();
     }
-    
+
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
         /*attackingStrategy = new RandomAI();
