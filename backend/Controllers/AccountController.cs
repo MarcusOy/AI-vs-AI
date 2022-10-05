@@ -46,7 +46,7 @@ public class AccountController : Controller
         HttpContext.Response.Cookies.Append(COOKIE_AUTH_TOKEN, tokens.AuthToken, COOKIE_OPTIONS);
         HttpContext.Response.Cookies.Append(COOKIE_REFRESH_TOKEN, tokens.RefreshToken, COOKIE_OPTIONS);
 
-        return Ok();
+        return Ok("User is now logged in.");
     }
 
     [HttpPost, Route("/Account/Signup")]
@@ -54,7 +54,7 @@ public class AccountController : Controller
     {
         await Task.Delay(1000);
         await _idService.Register(body.FirstName, body.LastName, body.Email, body.Username, body.Password);
-        return Ok();
+        return Ok("User is created.");
     }
 
     [HttpPost, Route("/Account/Logout"), Authorize]
@@ -64,7 +64,7 @@ public class AccountController : Controller
         HttpContext.Response.Cookies.Delete(COOKIE_AUTH_TOKEN);
         HttpContext.Response.Cookies.Delete(COOKIE_REFRESH_TOKEN);
 
-        return Ok();
+        return Ok("User is logged out.");
     }
 
     [HttpGet, Route("/Account/WhoAmI"), Authorize]
@@ -73,25 +73,23 @@ public class AccountController : Controller
         return _idService.CurrentUser;
     }
 
-    // [Route("/deleteAccount")]
-    // public ActionResult delete(User u)
-    // {
-    //     // The incoming message will be a user object to delete.
+    [HttpPost, Route("/Account"), Authorize]
+    public async Task<User> Update([FromBody] User u)
+    {
+        // TODO: redo this check when admin roles 
+        //       are introduced
+        if (u.Id != _idService.CurrentUser.Id)
+            throw new InvalidOperationException("Cannot edit other user.");
 
-    //     // TODO - remove the user specified from the database
+        return await _idService.UpdateAsync(u);
+    }
 
-    //     return Ok("User is deleted");
-    // }
-
-    // [Route("/editAccount")]
-    // public ActionResult editAccount(User u)
-    // {
-    //     // The incoming message will be a user object to update
-
-    //     // TODO - send the edited user to the database to be updated.
-
-    //     return Ok("User is updated");
-    // }
+    [HttpDelete, Route("/Account"), Authorize]
+    public async Task<ActionResult> Delete()
+    {
+        await _idService.DeleteAsync(_idService.CurrentUser.Id);
+        return Ok("User is deleted.");
+    }
 
     // [Route("/getAccount")]
     // public ActionResult displayAccount(User u)

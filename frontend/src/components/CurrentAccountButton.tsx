@@ -43,7 +43,7 @@ const CurrentAccountButton = () => {
                     <Avatar size='xs' mr='2' name={fullName} />
                     {fullName}
                 </MenuButton>
-                <MenuList>
+                <MenuList backgroundColor='chakra-body-bg'>
                     <MenuGroup title='Profile'>
                         <MenuItem onClick={() => navigate('/profile')}>My Profile</MenuItem>
                         <MenuItem onClick={() => navigate('/strategy')}>My Strategies</MenuItem>
