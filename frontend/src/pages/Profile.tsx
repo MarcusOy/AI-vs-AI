@@ -89,6 +89,11 @@ const profilePage = () => {
                             <Button colorScheme='green'>Confirm</Button>
                         </ButtonGroup>
                     </Flex>
+                    <ButtonGroup gap='2' paddingTop={10}>
+                        <Button colorScheme='pink' variant='solid'>
+                            <Link to='/report'>report a bug</Link>
+                        </Button>
+                    </ButtonGroup>
                 </Box>
             </Center>
         </div>

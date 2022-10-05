@@ -26,7 +26,7 @@ import useAVAFetch from './helpers/useAVAFetch'
 import IdentityService from './data/IdentityService'
 import { User } from './models/user'
 import NotFoundPage from './pages/NotFoundPage'
-
+import Report from './pages/ReportPage'
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/WhoAmI')
     const { whoAmI, hasSuccessfullyLoggedIn, hasSuccessfullyLoggedOut } = AVAStore.useState()
@@ -66,7 +66,7 @@ function App() {
                     <Route path='/' element={<Navigate to='/Feed' />} />
                     <Route path='/Feed' element={<LoginSignupPage />} />
                     <Route path='/Profile' element={<Profile />} />
-
+                    <Route path='/Report' element={<Report />} />
                     {/* 👇️ only match this when no other routes match */}
                     <Route path='*' element={<NotFoundPage />} />
                 </Routes>
@@ -75,7 +75,7 @@ function App() {
                     <Route path='/' element={<WelcomePage />} />
                     <Route path='/LoginSignup' element={<LoginSignupPage />} />
                     <Route path='/Profile' element={<Profile />} />
-
+                    <Route path='/Report' element={<Report />} />
                     {/* 👇️ only match this when no other routes match */}
                     <Route path='*' element={<NotFoundPage />} />
                 </Routes>
