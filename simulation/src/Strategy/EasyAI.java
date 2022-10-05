@@ -8,11 +8,18 @@ import java.util.ArrayList;
 
 public class EasyAI implements Strategy {
     private int turnNumber = 0;
+    /**
+     * API containing helper functions
+     */
+    private API api;
+
+    public EasyAI() {
+        api = new API();
+    }
 
     public String getMove(GameState gameState) {
         turnNumber++;
 
-        API api = new API();
         String board[][] = api.getBoard(gameState);
         String[] pieceLocations = api.getMyPieceLocations(api.getMyColor(gameState), board);
 
@@ -147,11 +154,10 @@ public class EasyAI implements Strategy {
                         return "CHECKMATED";
                     }
                     return moves.get((int) (Math.random() * moves.size()));
-
                 }
         }
-
-
+    }
+}
 
 	/*else
 		first move 4s into center, then move 2s into middle of back rank
@@ -171,7 +177,7 @@ public class EasyAI implements Strategy {
             }
         }
         return moves.get((int)(Math.random() * moves.size()));*/
-    }
+
     /*
     public boolean isFormationReady(GameState gameState) {
         API api = new API();
@@ -184,7 +190,7 @@ public class EasyAI implements Strategy {
             return (board[4][4].equals("b4") && board[4][5].equals("b4") && board[0][4].equals("b2") && board[0][5].equals("b2"));
         }
     }*/
-}
+
 
 
 

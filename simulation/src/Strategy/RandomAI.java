@@ -7,8 +7,16 @@ import Strategy.Strategy;
 import java.util.ArrayList;
 
 public class RandomAI implements Strategy {
+    /**
+     * API containing helper functions
+     */
+    private API api;
+
+    public RandomAI() {
+        api = new API();
+    }
+
     public String getMove(GameState gameState) {
-        API api = new API();
         String board[][] = api.getBoard(gameState);
         String[] pieceLocations = api.getMyPieceLocations(api.getMyColor(gameState), board);
 
