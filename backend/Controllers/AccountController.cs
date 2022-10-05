@@ -20,16 +20,6 @@ public class AccountController : Controller
         IsEssential = true
     };
 
-    // [Route("/register")]
-    // public ActionResult register(User u)
-    // {
-    //     // The incoming message will be a new user object to add to the database
-
-    //     // TODO - Add the new user to the database
-
-    //     return Ok("User is added");
-    // }
-
     private readonly IIdentityService _idService;
 
     public AccountController(IIdentityService idService)
@@ -46,15 +36,15 @@ public class AccountController : Controller
         HttpContext.Response.Cookies.Append(COOKIE_AUTH_TOKEN, tokens.AuthToken, COOKIE_OPTIONS);
         HttpContext.Response.Cookies.Append(COOKIE_REFRESH_TOKEN, tokens.RefreshToken, COOKIE_OPTIONS);
 
-        return Ok("User is now logged in.");
+        return Ok(tokens);
     }
 
     [HttpPost, Route("/Account/Signup")]
     public async Task<ActionResult> Signup([FromBody] SignupForm body)
     {
         await Task.Delay(1000);
-        await _idService.Register(body.FirstName, body.LastName, body.Email, body.Username, body.Password);
-        return Ok("User is created.");
+        var ret = await _idService.Register(body.FirstName, body.LastName, body.Email, body.Username, body.Password);
+        return Ok(ret);
     }
 
     [HttpPost, Route("/Account/Logout"), Authorize]
@@ -87,19 +77,9 @@ public class AccountController : Controller
     [HttpDelete, Route("/Account"), Authorize]
     public async Task<ActionResult> Delete()
     {
-        await _idService.DeleteAsync(_idService.CurrentUser.Id);
-        return Ok("User is deleted.");
+        var ret = await _idService.DeleteAsync(_idService.CurrentUser.Id);
+        return Ok(ret);
     }
-
-    // [Route("/getAccount")]
-    // public ActionResult displayAccount(User u)
-    // {
-    //     // The incoming message will be a user object to display information from
-
-    //     // TODO - send the user information to the client
-
-    //     return Ok("User info goes here");
-    // }
 
     public class SignupForm
     {
