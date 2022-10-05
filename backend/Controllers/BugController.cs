@@ -7,12 +7,12 @@ namespace AVA.API.Controllers;
 public class BugController : Controller
 {
 
-	private readonly IBugsService _bugsService;
+    private readonly IBugsService _bugsService;
 
-	public BugController(IBugsService bugsService) : base()
-	{
-		_bugsService = bugsService
-	}
+    public BugController(IBugsService bugsService) : base()
+    {
+        _bugsService = bugsService;
+    }
 
     [HttpPost, Route("/sendBug")]
     public async Task<ActionResult> sendBug([FromBody] BugReport b)

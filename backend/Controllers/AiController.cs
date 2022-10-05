@@ -6,19 +6,19 @@ namespace AVA.API.Controllers;
 
 public class AiController : Controller
 {
-	private readonly IStrategiesService _strategiesService;
+    private readonly IStrategiesService _strategiesService;
 
-	public AiController(IStrategiesService strategiesService) : base()
-	{
-		_strategiesService = strategiesService;
-	}
+    public AiController(IStrategiesService strategiesService) : base()
+    {
+        _strategiesService = strategiesService;
+    }
 
     [HttpPost, Route("/getAi")]
-    public async Task<ActionResult> getAi(int id)
+    public async Task<ActionResult> getAi(Guid id)
     {
         // The incoming message will be a strategy's id to send the code from
-        
-        var ret = await _strategiesService.Get(id)
+
+        var ret = _strategiesService.Get(id);
 
         return Ok(ret);
     }
