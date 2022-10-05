@@ -1,18 +1,25 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Box, Button, Center, Code, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
+import { Box, Button, Center, Code, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack } from '@chakra-ui/react'
+import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { useParams } from 'react-router-dom';
 import useAVAFetch from '../helpers/useAVAFetch'
 
 function Programming() {
   const initialValue = '// Enter Strategy Here'
   const [code, setCode] = useState(initialValue);
+  const [select, setSelect] = useState(false);
   const [buffer, setBuffer] = useState(0);
   const { id } = useParams();
   const { data } = useAVAFetch(id === undefined ? '/Games/1' : '/Games/');
   console.log(data);
 
-    
+  const editorRef = useRef(null);
+
+  function handleEditorDidMount(editor, monaco) {
+    console.log('Stored instance')
+    editorRef.current = editor;
+  }
   const updateSave = (value) => {
     setCode(value === undefined ? '' : value)
     if (buffer + 1 > 10) {
@@ -53,9 +60,19 @@ function Programming() {
                   <p>{data === undefined ? 'Game Description': data.longDescription}</p>
                 </TabPanel>
                 <TabPanel>
-                  <Code>
-                    {data === undefined ? 'Game Boilerplate': data.boilerplateCode}
-                  </Code>
+                  <VStack justifyContent={'center'}>
+                    <Code>
+                      {data === undefined ? 'Game Boilerplate': data.boilerplateCode}
+                    </Code>
+                    <Button rightIcon={<ArrowForwardIcon />} onClick={() => {
+                      if (editorRef !== null) {
+                        editorRef.current.setValue(data === undefined ? 'Game Boilerplate' : data.boilerplateCode)
+                      }
+                      }
+                    }>
+                      Move to Editor
+                    </Button>
+                  </VStack>
                 </TabPanel>
                 <TabPanel>
                 </TabPanel>
@@ -68,13 +85,14 @@ function Programming() {
             defaultValue={localStorage.getItem('draftAvailable') === 'true' ? localStorage.getItem('draft') || initialValue : initialValue}
             theme='vs-dark'
             onChange={(value) => updateSave(value)}
+            onMount={handleEditorDidMount}
             />
           </Box>
       </HStack>
       <Divider orientation='horizontal'/>
       <Grid>
         <GridItem>
-          <Button variant='outline' margin='3' color={'green'}>
+            <Button variant='outline' margin='3' color={select ? 'white' : 'green'} background={select ? 'green': ''} onClick={() => setSelect(!select)}>
             Easy Stock
           </Button>
           <Button variant='outline' margin='3' color={'orange'} disabled>
