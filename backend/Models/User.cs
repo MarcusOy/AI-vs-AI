@@ -10,15 +10,20 @@ public class User : BaseEntity
 {
     [Required]
     public Guid Id { get; set; }
-    [Required]
+    [Required, StringLength(15)]
     public string Username { get; set; }
+    [Required, StringLength(254)]
     public string Email { get; set; }
+    [Required, StringLength(50)]
     public string FirstName { get; set; }
+    [Required, StringLength(50)]
     public string LastName { get; set; }
     [Required, JsonIgnore]
     public string Password { get; set; }
     [Required, JsonIgnore]
     public string Salt { get; set; }
+    [StringLength(2000)]
+    public string Bio { get; set; }
     [Required]
     public Boolean Active { get; set; }
 
@@ -31,4 +36,8 @@ public class User : BaseEntity
 
     // BugReport Relationship (User creates bug reports)
     public List<BugReport> BugReports { get; set; }
+
+    // Game Relationship (User has a favorite game)
+    public int? FavoriteGameId { get; set; }
+    public Game FavoriteGame { get; set; }
 }

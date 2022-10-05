@@ -20,16 +20,6 @@ public class AccountController : Controller
         IsEssential = true
     };
 
-    // [Route("/register")]
-    // public ActionResult register(User u)
-    // {
-    //     // The incoming message will be a new user object to add to the database
-
-    //     // TODO - Add the new user to the database
-
-    //     return Ok("User is added");
-    // }
-
     private readonly IIdentityService _idService;
 
     public AccountController(IIdentityService idService)
@@ -68,9 +58,17 @@ public class AccountController : Controller
     }
 
     [HttpGet, Route("/Account/WhoAmI"), Authorize]
-    public User WhoAmI()
+    public User Get()
+        => _idService.CurrentUser;
+
+    [HttpGet, Route("/Account/{id}"), Authorize]
+    public async Task<User> Get(string id)
     {
-        return _idService.CurrentUser;
+        var u = await _idService.GetUserAsync(new Guid(id));
+
+        // remove semi-sensitive fields
+        u.Email = "***";
+        return u;
     }
 
     [HttpPost, Route("/Account"), Authorize]
@@ -90,16 +88,6 @@ public class AccountController : Controller
         await _idService.DeleteAsync(_idService.CurrentUser.Id);
         return Ok("User is deleted.");
     }
-
-    // [Route("/getAccount")]
-    // public ActionResult displayAccount(User u)
-    // {
-    //     // The incoming message will be a user object to display information from
-
-    //     // TODO - send the user information to the client
-
-    //     return Ok("User info goes here");
-    // }
 
     public class SignupForm
     {

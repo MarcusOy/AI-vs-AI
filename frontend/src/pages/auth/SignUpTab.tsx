@@ -12,11 +12,11 @@ import {
     Stack,
     useToast,
 } from '@chakra-ui/react'
-import Form from '../components/Form'
+import Form from '../../components/Form'
 import { SubmitErrorHandler, SubmitHandler } from 'react-hook-form'
-import FormTextBox from '../components/FormTextBox'
+import FormTextBox from '../../components/FormTextBox'
 import { useNavigate } from 'react-router-dom'
-import useAVAFetch from '../helpers/useAVAFetch'
+import useAVAFetch from '../../helpers/useAVAFetch'
 
 interface ISignupForm {
     firstname: string

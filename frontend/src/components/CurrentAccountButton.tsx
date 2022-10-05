@@ -45,10 +45,14 @@ const CurrentAccountButton = () => {
                 </MenuButton>
                 <MenuList backgroundColor='chakra-body-bg'>
                     <MenuGroup title='Profile'>
-                        <MenuItem onClick={() => navigate('/profile')}>My Profile</MenuItem>
-                        <MenuItem onClick={() => navigate('/strategy')}>My Strategies</MenuItem>
-                        <MenuItem onClick={() => navigate('/battle')}>My Battles</MenuItem>
-                        <MenuItem onClick={() => navigate('/submission')}>My Submissions</MenuItem>
+                        <MenuItem onClick={() => navigate('/Profile')}>My Profile</MenuItem>
+                        <MenuItem onClick={() => navigate('/Profile/Strategies')}>
+                            My Strategies
+                        </MenuItem>
+                        <MenuItem onClick={() => navigate('/Profile/Battles')}>My Battles</MenuItem>
+                        <MenuItem onClick={() => navigate('/Profile/Submissions')}>
+                            My Submissions
+                        </MenuItem>
                     </MenuGroup>
                     <MenuDivider />
                     <MenuGroup title='Help'>

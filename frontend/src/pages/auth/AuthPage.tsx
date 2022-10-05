@@ -4,10 +4,10 @@ import SignUpTab from './SignUpTab'
 import LoginTab from './LoginTab'
 import { useNavigate, useParams } from 'react-router-dom'
 
-const LoginSignUpPage = () => {
-    const { mode } = useParams()
+const AuthPage = () => {
+    const { tab } = useParams()
     const navigate = useNavigate()
-    const tabIndex = mode == 'Signup' ? 1 : 0
+    const tabIndex = tab == 'Signup' ? 1 : 0
 
     const handleTabsChange = (index) => {
         navigate('/Auth/' + (index == 1 ? 'Signup' : 'Login'))
@@ -45,4 +45,4 @@ const LoginSignUpPage = () => {
     )
 }
 
-export default LoginSignUpPage
+export default AuthPage

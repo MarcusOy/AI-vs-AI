@@ -5,6 +5,7 @@
 
 import { BaseEntity } from './base-entity';
 import { Strategy } from './strategy';
+import { User } from './user';
 
 export interface Game extends BaseEntity {
     id: number;
@@ -13,4 +14,5 @@ export interface Game extends BaseEntity {
     longDescription: string;
     boilerplateCode: string;
     strategies: Strategy[];
+    usersWhoFavorited: User[];
 }
