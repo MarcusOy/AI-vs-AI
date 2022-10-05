@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 
@@ -359,15 +360,18 @@ public class SimulationApp {
     }
 
     static String processStrategySource(Strategy strategy) {
-        /*// sets up evaluator
+        // sets up evaluator
         ScriptEngineManager factory = new ScriptEngineManager();
-        ScriptEngine engine = factory.getEngineByName("JavaScript");
+
+        List<ScriptEngineFactory> factories = factory.getEngineFactories();
+
+        ScriptEngine engine = factory.getEngineByName("nashorn");
         // allows the strategy's source code to access the gameState as a global variable
         engine.put("gameState", gameState);
 
         // evaluates the script
         try {
-            String script = "function constantMove() { return 'A1, A2' }";
+            String script = "function constantMove() { return 'A8, A7' }";
 
             engine.eval(script);
 
@@ -375,8 +379,7 @@ public class SimulationApp {
             return "" + inv.invokeFunction("constantMove");
         } catch (Exception e) {
             return null;
-        }*/
-        return "A8, A7";
+        }
     }
 
     //adjusts the gameState based upon the moveString
