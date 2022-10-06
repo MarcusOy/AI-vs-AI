@@ -3,11 +3,11 @@ package Simulation;
 import java.util.UUID;
 
 public class MassTransitMessage<T> {
-    private UUID messageId;
-    private UUID requestId;
-    private UUID correlationId;
-    private UUID conversationId;
-    private UUID initiatorId;
+    private String messageId;
+    private String requestId;
+    private String correlationId;
+    private String conversationId;
+    private String initiatorId;
     private String sourceAddress;
     private String destinationAddress;
     private String faultAddress;
@@ -22,11 +22,11 @@ public class MassTransitMessage<T> {
                                UUID conversationId, UUID initiatorId, String sourceAddress,
                                String destinationAddress, String faultAddress, String[] messageType,
                                T message) {
-        this.messageId = messageId;
-        this.requestId = requestId;
-        this.correlationId = correlationId;
-        this.conversationId = conversationId;
-        this.initiatorId = initiatorId;
+        this.messageId = messageId.toString();
+        this.requestId = requestId.toString();
+        this.correlationId = correlationId.toString();
+        this.conversationId = conversationId.toString();
+        this.initiatorId = initiatorId.toString();
         this.sourceAddress = sourceAddress;
         this.destinationAddress = destinationAddress;
         this.faultAddress = faultAddress;
