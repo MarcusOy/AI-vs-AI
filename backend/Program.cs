@@ -70,7 +70,9 @@ builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
 // Setting up domain services
 builder.Services.AddScoped<IGamesService, GamesService>();
+builder.Services.AddScoped<IStrategiesService, StrategiesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
+builder.Services.AddScoped<IBugsService, BugsService>();
 
 var app = builder.Build();
 #endregion
