@@ -23,10 +23,13 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /*
    ----------------------------------------------------------------------------
@@ -82,7 +85,7 @@ public class SimulationApp {
         Channel channel = connection.createChannel();
 
         // Creates queue if not already created an prepares to listen for messages
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        channel.queueDeclare(QUEUE_NAME, true, false, false, null);
         System.out.println(" [*] Waiting for messages.");
 
         // Sends callback to sender
@@ -156,6 +159,8 @@ public class SimulationApp {
         ObjectMapper mapper = new ObjectMapper();
         Battle sentBattle;
         try {
+            JSONObject json = new JSONObject(message);
+            JSONArray array = json.getJSONArray("messageType");
             MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message, new TypeReference<MassTransitMessage<SimulationRequest>>() { });
             sentBattle = sentMessage.message.pendingBattle;
         } catch (JsonProcessingException e) {
@@ -287,7 +292,7 @@ public class SimulationApp {
 
             final String RESP_QUEUE_NAME = "SimulationResults";
             // Creates queue if not already created an prepares to listen for messages
-            channel.queueDeclare(RESP_QUEUE_NAME, false, false, false, null);
+            channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
 
             // writes JSON obj
             ObjectMapper mapper = new ObjectMapper();
