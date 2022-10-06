@@ -14,6 +14,10 @@ public class MassTransitMessage<T> {
     private String[] messageType;
     public T message;
 
+    public MassTransitMessage () {
+
+    }
+    
     public MassTransitMessage (UUID messageId, UUID requestId, UUID correlationId,
                                UUID conversationId, UUID initiatorId, String sourceAddress,
                                String destinationAddress, String faultAddress, String[] messageType,
