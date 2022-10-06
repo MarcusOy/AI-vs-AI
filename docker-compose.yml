@@ -25,7 +25,8 @@ services:
     image: rabbitmq:3.11.0-management
     restart: always
     ports:
-      - 8081:15672
+      - 5672:5672
+      - 15672:15672
     environment:
       - RABBITMQ_DEFAULT_USER=ava
       - RABBITMQ_DEFAULT_PASS=!ava_app!
