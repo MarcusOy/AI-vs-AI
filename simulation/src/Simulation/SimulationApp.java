@@ -1,9 +1,6 @@
 package Simulation;
 
-import IStrategy.RandomAI;
-import IStrategy.EasyAI;
 import API.API;
-import IStrategy.Strategy;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -12,7 +9,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -22,14 +18,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /*
    ----------------------------------------------------------------------------
@@ -97,10 +91,10 @@ public class SimulationApp {
             Battle sentBattle = processMessage(message);
             if (sentBattle != null) {
                 // extracts values
-                attackingStrategyId = sentBattle.AttackingStrategyId;
-                attackingStrategySource = sentBattle.AttackingStrategy.SourceCode;
-                defendingStrategyId = sentBattle.DefendingStrategyId;
-                defendingStrategySource = sentBattle.DefendingStrategy.SourceCode;
+                attackingStrategyId = sentBattle.attackingStrategyId;
+                attackingStrategySource = sentBattle.attackingStrategy.sourceCode;
+                defendingStrategyId = sentBattle.defendingStrategyId;
+                defendingStrategySource = sentBattle.defendingStrategy.sourceCode;
                 numGames = sentBattle.getIterations();
 
                 if (numGames % 2 == 1) {
@@ -157,10 +151,9 @@ public class SimulationApp {
 
         // parses JSON
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Battle sentBattle;
         try {
-            JSONObject json = new JSONObject(message);
-            JSONArray array = json.getJSONArray("messageType");
             MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message, new TypeReference<MassTransitMessage<SimulationRequest>>() { });
             sentBattle = sentMessage.message.pendingBattle;
         } catch (JsonProcessingException e) {
@@ -246,7 +239,7 @@ public class SimulationApp {
 
         /*System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
                 "This mode prints out more detailed status and error information.");*/
-        DEBUG = false;/*scan.nextLine().equals("y");
+        DEBUG = true;/*scan.nextLine().equals("y");
         int numGames;
         while (true) {
             System.out.println("How many Games do you want in this Battle?  This must be an odd integer");
@@ -259,6 +252,7 @@ public class SimulationApp {
 
         // setup Battle
         Battle battle = sentBattle;
+        battle.init();
 
         while (numGames > 0) {
             //setup BattleGame
@@ -290,7 +284,7 @@ public class SimulationApp {
             System.out.println("created connection");
             Channel channel = connection.createChannel();
 
-            final String RESP_QUEUE_NAME = "SimulationResults";
+            final String RESP_QUEUE_NAME = "SimulationResponses";
             // Creates queue if not already created an prepares to listen for messages
             channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
 
@@ -299,15 +293,14 @@ public class SimulationApp {
             mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             String messageJSON;
             try {
-                SimulationRequest req = new SimulationRequest(battle);
-                MassTransitMessage<SimulationRequest> message = new MassTransitMessage<SimulationRequest>(UUID.randomUUID(),null, null, UUID.randomUUID(), null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, req);
+                SimulationResponse res = new SimulationResponse(battle);
+                MassTransitMessage<SimulationResponse> message = new MassTransitMessage(UUID.randomUUID().toString(),null, null, UUID.randomUUID().toString(), null, null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, res);
                 messageJSON = mapper.writeValueAsString(message);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of message failed");
                 return;
             }
-
 
             /*String delimiter = SimulationApp.MESSAGE_DELIMITER;
             String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;*/

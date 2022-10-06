@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddMassTransit(mt =>
 {
-    mt.AddConsumer<SimulationResultsConsumer>();
+    mt.AddConsumer<SimulationResponsesConsumer>();
 
     mt.UsingRabbitMq((context, cfg) =>
     {

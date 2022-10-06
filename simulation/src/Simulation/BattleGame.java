@@ -1,36 +1,34 @@
 package Simulation;
 
-import java.util.UUID;
 import java.util.ArrayList;
 
 // One specific game within the battle.
 public class BattleGame {
-    public int GameNumber;
-    public boolean DidAttackerWin;
+    public int gameNumber;
+    public boolean didAttackerWin;
 
-    public String BattleId;
-    public Battle Battle;
+    public String battleId;
 
-    public ArrayList<Turn> Turns;
+    public ArrayList<Turn> turns;
 
     private Color AttackerColor;
 
     public BattleGame(int gameNumber, String battleId, Color attackerColor) {
-        this.GameNumber = gameNumber;
-        this.BattleId = battleId;
+        this.gameNumber = gameNumber;
+        this.battleId = battleId;
         this.AttackerColor = attackerColor;
-        Turns = new ArrayList<>();
+        turns = new ArrayList<>();
     }
 
     public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
-        Turns.add(new Turn(battleId, GameNumber, Turns.size(), currentPlayerColor.equals(AttackerColor), moveString));
+        turns.add(new Turn(battleId, gameNumber, turns.size(), currentPlayerColor.equals(AttackerColor), moveString));
     }
 
     public void setWinner(Color winnerColor) {
-        DidAttackerWin = winnerColor.equals(AttackerColor);
+        didAttackerWin = winnerColor.equals(AttackerColor);
     }
 
-    public int getGameNumber() { return GameNumber; }
+    public int getGameNumber() { return gameNumber; }
 
     public Color getAttackerColor() { return AttackerColor; }
 
@@ -38,7 +36,7 @@ public class BattleGame {
 
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();
-        for (Turn t : Turns) {
+        for (Turn t : turns) {
             s.append("\n\t\t");
             s.append(t.toString());
         }
@@ -49,8 +47,8 @@ public class BattleGame {
     @Override
     public String toString() {
         return "BattleGame{" +
-                ", gameNumber=" + GameNumber +
-                ", didAttackerWin=" + DidAttackerWin +
+                ", gameNumber=" + gameNumber +
+                ", didAttackerWin=" + didAttackerWin +
                 ", attackerColor=" + AttackerColor +
                 ", turns=" +  getTurnsString() /*turns*/ +
                 '}';

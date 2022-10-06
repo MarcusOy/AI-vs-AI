@@ -31,6 +31,9 @@ public class AiController : Controller
     [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {
+        var attackGuid = Guid.NewGuid();
+        var defendGuid = Guid.NewGuid();
+
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
@@ -38,7 +41,23 @@ public class AiController : Controller
                 Id = Guid.NewGuid(),
                 Name = "Test Publish",
                 BattleStatus = BattleStatus.Pending,
-                Iterations = 1000
+                Iterations = 3,
+                AttackingStrategyId = attackGuid,
+                AttackingStrategy = new Strategy
+                {
+                    Id = attackGuid,
+                    Name = "William's Awesome Strategy",
+                    Status = StrategyStatus.Active,
+                    SourceCode = "function getMove() { return 'A8, A7' }"
+                },
+                DefendingStrategyId = defendGuid,
+                DefendingStrategy = new Strategy
+                {
+                    Id = defendGuid,
+                    Name = "Marcus's Stupid Strategy",
+                    Status = StrategyStatus.Active,
+                    SourceCode = "function getMove() { return 'A8, A7' }"
+                }
             }
         };
 

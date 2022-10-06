@@ -7,20 +7,21 @@ using Newtonsoft.Json;
 
 namespace AVA.API.Consumers
 {
-    public class SimulationResultsConsumer : IConsumer<SimulationResult>
+    public class SimulationResponsesConsumer : IConsumer<SimulationResponse>
     {
-        private readonly ILogger<SimulationResultsConsumer> _logger;
+        private readonly ILogger<SimulationResponsesConsumer> _logger;
         private readonly AVADbContext _dbContext;
-        public SimulationResultsConsumer(ILogger<SimulationResultsConsumer> logger,
+        public SimulationResponsesConsumer(ILogger<SimulationResponsesConsumer> logger,
                                          AVADbContext dbContext)
         {
             _logger = logger;
             _dbContext = dbContext;
         }
 
-        public async Task Consume(ConsumeContext<SimulationResult> context)
+        public async Task Consume(ConsumeContext<SimulationResponse> context)
         {
             _logger.LogInformation($"Simulation result recieved. {context.Message.ResultingBattle.Name}");
+            _logger.LogInformation(JsonConvert.SerializeObject(context.Message.ResultingBattle, Formatting.Indented));
         }
     }
 
@@ -29,7 +30,7 @@ namespace AVA.API.Consumers
         public Battle PendingBattle { get; set; }
     }
 
-    public class SimulationResult
+    public class SimulationResponse
     {
         public Battle ResultingBattle { get; set; }
     }

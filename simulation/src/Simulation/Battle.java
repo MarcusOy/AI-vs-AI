@@ -8,20 +8,23 @@ import java.util.UUID;
 // Stores all info related to a series of consecutive BattleGames
 // between the same two AI.
 public class Battle {
-    public String Id;
-    public String Name;
-    public BattleStatus BattleStatus;
-    public int Iterations;
-    public int AttackerWins;
-    public int DefenderWins;
-    public String StackTrace;
+    public String id;
+    public String name;
+    public int battleStatus;
+    // Pending = 0
+    // Success = 1
+    // Fail = -1
+    public int iterations;
+    public int attackerWins;
+    public int defenderWins;
+    public String stackTrace;
 
-    public String AttackingStrategyId;
-    public Strategy AttackingStrategy;
-    public String DefendingStrategyId;
-    public Strategy DefendingStrategy;
+    public String attackingStrategyId;
+    public Strategy attackingStrategy;
+    public String defendingStrategyId;
+    public Strategy defendingStrategy;
 
-    public ArrayList<BattleGame> BattleGames;
+    public ArrayList<BattleGame> battleGames;
 
     private int gamesCompleted;
 
@@ -30,47 +33,51 @@ public class Battle {
     private boolean willAttackerStartWhite;
 
     public Battle() {
-
+//        id = UUID.randomUUID().toString();
+        init();
     }
 
     public Battle(int iterations, String attackingStrategyId, String defendingStrategyId) {
-        Id = UUID.randomUUID().toString();
-        this.AttackingStrategyId = attackingStrategyId;
-        this.DefendingStrategyId = defendingStrategyId;
-        this.Iterations = iterations;
-        BattleGames = new ArrayList<>();
+        super();
+        this.attackingStrategyId = attackingStrategyId;
+        this.defendingStrategyId = defendingStrategyId;
+        this.iterations = iterations;
+    }
+
+    public void init() {
+        battleGames = new ArrayList<>();
         willAttackerStartWhite = Math.random() < 0.5; // 50% odds the attacker will start white
-        BattleStatus = Simulation.BattleStatus.READY;
+        battleStatus = 0;
     }
 
     // returns the newly created BattleGame
     public BattleGame addBattleGame() {
         // alternates attacker color every consecutive BattleGame
         Color attackerColor = getAttackerColor();
-        BattleGames.add(new BattleGame(BattleGames.size(), Id, attackerColor));
+        battleGames.add(new BattleGame(battleGames.size(), id, attackerColor));
 
-        return BattleGames.get(BattleGames.size() - 1);
+        return battleGames.get(battleGames.size() - 1);
     }
 
     // handles the ending of a BattleGame
     public void processGameWinner(BattleGame battleGame, Color winner) {
         if (battleGame.getAttackerColor().equals(winner))
-            AttackerWins++;
+            attackerWins++;
         else
-            DefenderWins++;
+            defenderWins++;
 
         gamesCompleted++;
     }
 
     // handles the completion of the Battle
     public void complete() {
-        BattleStatus = Simulation.BattleStatus.COMPLETE;
+        battleStatus = 1;
     }
 
     public String printBattleGames() {
         StringBuilder s = new StringBuilder();
 
-        for (BattleGame b : BattleGames) {
+        for (BattleGame b : battleGames) {
             s.append("\n\t");
             s.append(b.toString());
         }
@@ -79,14 +86,14 @@ public class Battle {
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
-    public int getIterations() { return Iterations; }
+    public int getIterations() { return iterations; }
 
-    public int getAttackerWins() { return AttackerWins; }
+    public int getAttackerWins() { return attackerWins; }
 
-    public int getDefenderWins() { return DefenderWins; }
+    public int getDefenderWins() { return defenderWins; }
 
     public Color getAttackerColor() {
         // used to make attacker start the color that willAttackerStartWhite dictates
@@ -98,14 +105,14 @@ public class Battle {
     @Override
     public String toString() {
         return "Battle{" +
-                "id=" + Id +
-                ", battleStatus=" + BattleStatus +
-                ", attackingStrategyId=" + AttackingStrategyId +
-                ", defendingStrategyId=" + DefendingStrategyId +
-                ", iterations=" + Iterations +
-                ", attackerWins=" + AttackerWins +
-                ", defenderWins=" + DefenderWins +
-                ", gamesCompleted=" + DefenderWins +
+                "id=" + id +
+                ", battleStatus=" + battleStatus +
+                ", attackingStrategyId=" + attackingStrategyId +
+                ", defendingStrategyId=" + defendingStrategyId +
+                ", iterations=" + iterations +
+                ", attackerWins=" + attackerWins +
+                ", defenderWins=" + defenderWins +
+                ", gamesCompleted=" + defenderWins +
                 ", battleGames=" + printBattleGames() /*battleGames*/ +
                 '}';
     }
