@@ -41,3 +41,11 @@ services:
   #     AVA__JWTKEY: AVerySecretJWTKeyThatNoOneShouldKnow
   #   ports:
   #     - 5000:80
+
+  # # Simulation (for docker buid testing only)
+  # backend:
+  #   image: sim
+  #   environment:
+  #     - RABBITMQ
+  #   ports:
+  #     - 5000:80
