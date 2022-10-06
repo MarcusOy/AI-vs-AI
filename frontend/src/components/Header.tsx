@@ -55,6 +55,9 @@ const Header = (props: IHeader) => {
                     />
                     {props.isLoggedIn == false ? (
                         <>
+                            <Link to='/report'>
+                                <Button colorScheme='yellow' variant='outline'>Report</Button>
+                            </Link>
                             <Link to='/Auth/Login'>
                                 <Button variant='outline'>Login</Button>
                             </Link>
