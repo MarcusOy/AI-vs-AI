@@ -24,6 +24,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import io.github.cdimascio.dotenv.Dotenv;
 
 /*
    ----------------------------------------------------------------------------
@@ -43,10 +44,10 @@ public class SimulationApp {
     public final static String QUEUE_NAME = "SimulationRequests";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
 
-    public static String HOST = "localhost";
-    public static String USER = "ava";
-    public static String PASS = "!ava_app!";
-    public static int PORT = 5672;
+    public static String ENV_HOST = "AVA__RABBITMQ__HOST";
+    public static String ENV_USER = "AVA__RABBITMQ__USER";
+    public static String ENV_PASS = "AVA__RABBITMQ__PASS";
+    public static String ENV_PORT = "AVA__RABBITMQ__PORT";
 
     static String attackingStrategyId;
     static String defendingStrategyId;
@@ -139,10 +140,12 @@ public class SimulationApp {
 
     // gets the URI for connection config
     public static void setupConnection(ConnectionFactory factory) {
-        factory.setUsername(USER);
-        factory.setPassword(PASS);
-        factory.setHost(HOST);
-        factory.setPort(PORT);
+        Dotenv dotenv = Dotenv.load();
+
+        factory.setUsername(dotenv.get(ENV_USER));
+        factory.setPassword(dotenv.get(ENV_PASS));
+        factory.setHost(dotenv.get(ENV_HOST));
+        factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
     }
 
     // processes the message sent to the app to create a new battle
