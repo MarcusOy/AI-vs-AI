@@ -13,6 +13,7 @@ import com.rabbitmq.client.Channel;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 public class SimTestProducer {
 
@@ -32,21 +33,23 @@ public class SimTestProducer {
 
             IStrategy attackingStrategy = new RandomAI();
             IStrategy defendingStrategy = new EasyAI();
-            String attackingStrategyJSON;
-            String defendingingStrategyJSON;
+            String attackingStrategySource;
+            String defendingingStrategySource;
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             //try {
-            attackingStrategyJSON = "attack";//mapper.writeValueAsString(attackingStrategy);
-            defendingingStrategyJSON = "defend";/*mapper.writeValueAsString(defendingStrategy);
+            attackingStrategySource = "function getMove() { return 'A8, A7' }";//mapper.writeValueAsString(attackingStrategy);
+            defendingingStrategySource = "function getMove() { return 'A1, A2' }";/*mapper.writeValueAsString(defendingStrategy);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of strategies failed");
                 return;
             }*/
 
-            String message = attackingStrategyJSON + ", " + defendingingStrategyJSON + ", " + numGames;
+
+            String delimiter = SimulationApp.MESSAGE_DELIMITER;
+            String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingingStrategySource + delimiter + numGames;
             channel.basicPublish("", SimulationApp.QUEUE_NAME, null, message.getBytes());
             System.out.println(" [x] Sent '" + message + "'");
         } catch (Exception e) {

@@ -16,7 +16,7 @@ public class Strategy {
     public User CreatedByUser;
 
     public int GameId;
-    public Game game;
+    public Game Game;
 
     public ArrayList<Battle> AttackerBattles;
     public ArrayList<Battle> DefenderBattles;

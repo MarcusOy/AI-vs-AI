@@ -4,7 +4,7 @@ import java.util.UUID;
 
 // The info associated with one player's move
 public class Turn {
-    private UUID battleId;
+    private String battleId;
     private int battleGameNumber;
     private int turnNumber; // the first turn of a game has turnNumber=0
     private boolean isAttackerTurn;
@@ -12,7 +12,7 @@ public class Turn {
                      // A valid moveString follows the form, "<fromCell>, <toCell>",
                      // but whatever was sent is stored, even if invalid.
 
-    public Turn(UUID battleId, int battleGameNumber, int turnNumber,
+    public Turn(String battleId, int battleGameNumber, int turnNumber,
                 boolean isAttackerTurn, String moveString) {
         this.battleId = battleId;
         this.battleGameNumber = battleGameNumber;

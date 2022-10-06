@@ -5,36 +5,40 @@ import java.util.ArrayList;
 
 // One specific game within the battle.
 public class BattleGame {
-    private UUID id;
-    private int gameNumber;
-    private boolean didAttackerWin;
-    private Color attackerColor;
-    private ArrayList<Turn> turns;
+    public int GameNumber;
+    public boolean DidAttackerWin;
 
-    public BattleGame(int gameNumber, Color attackerColor) {
-        id = UUID.randomUUID();
-        this.gameNumber = gameNumber;
-        this.attackerColor = attackerColor;
-        turns = new ArrayList<>();
+    public String BattleId;
+    public Battle Battle;
+
+    public ArrayList<Turn> Turns;
+
+    private Color AttackerColor;
+
+    public BattleGame(int gameNumber, String battleId, Color attackerColor) {
+        this.GameNumber = gameNumber;
+        this.BattleId = battleId;
+        this.AttackerColor = attackerColor;
+        Turns = new ArrayList<>();
     }
 
-    public void addTurn(UUID battleId, Color currentPlayerColor, String moveString) {
-        turns.add(new Turn(battleId, gameNumber, turns.size(), currentPlayerColor.equals(attackerColor), moveString));
+    public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
+        Turns.add(new Turn(battleId, GameNumber, Turns.size(), currentPlayerColor.equals(AttackerColor), moveString));
     }
 
     public void setWinner(Color winnerColor) {
-        didAttackerWin = winnerColor.equals(attackerColor);
+        DidAttackerWin = winnerColor.equals(AttackerColor);
     }
 
-    public int getGameNumber() { return gameNumber; }
+    public int getGameNumber() { return GameNumber; }
 
-    public Color getAttackerColor() { return attackerColor; }
+    public Color getAttackerColor() { return AttackerColor; }
 
-    public Color getDefenderColor() { return attackerColor == Color.WHITE ? Color.BLACK : Color.WHITE; }
+    public Color getDefenderColor() { return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE; }
 
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();
-        for (Turn t : turns) {
+        for (Turn t : Turns) {
             s.append("\n\t\t");
             s.append(t.toString());
         }
@@ -45,10 +49,9 @@ public class BattleGame {
     @Override
     public String toString() {
         return "BattleGame{" +
-                "id=" + id +
-                ", gameNumber=" + gameNumber +
-                ", didAttackerWin=" + didAttackerWin +
-                ", attackerColor=" + attackerColor +
+                ", gameNumber=" + GameNumber +
+                ", didAttackerWin=" + DidAttackerWin +
+                ", attackerColor=" + AttackerColor +
                 ", turns=" +  getTurnsString() /*turns*/ +
                 '}';
     }
