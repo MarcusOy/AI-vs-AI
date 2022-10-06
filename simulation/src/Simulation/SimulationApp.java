@@ -43,7 +43,7 @@ import com.rabbitmq.client.DeliverCallback;
 //   - the default AI is random, but this can be adjusted locally for testing
 // - displaying detailed gamestate and debug info
 public class SimulationApp {
-    public final static String QUEUE_NAME = "test";
+    public final static String QUEUE_NAME = "SimulationRequests";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
 
     public static String HOST = "localhost";
@@ -285,7 +285,7 @@ public class SimulationApp {
             System.out.println("created connection");
             Channel channel = connection.createChannel();
 
-            final String RESP_QUEUE_NAME = "SimulationResponse";
+            final String RESP_QUEUE_NAME = "SimulationResults";
             // Creates queue if not already created an prepares to listen for messages
             channel.queueDeclare(RESP_QUEUE_NAME, false, false, false, null);
 
