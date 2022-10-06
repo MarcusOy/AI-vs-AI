@@ -12,12 +12,16 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -27,8 +31,6 @@ import com.rabbitmq.client.DeliverCallback;
 /*
    ----------------------------------------------------------------------------
    NOTE - Modify setupStrategies() to test a new AI (Strategy).
-
-
               - New files with AI code must implement the Strategy interface.
               - The return value of Strategy.getMove() must follow the format,
                     "<cellFrom>, <cellTo>", where a cell is a string representing
@@ -41,8 +43,13 @@ import com.rabbitmq.client.DeliverCallback;
 //   - the default AI is random, but this can be adjusted locally for testing
 // - displaying detailed gamestate and debug info
 public class SimulationApp {
-    public final static String QUEUE_NAME = "test";
+    public final static String QUEUE_NAME = "SimulationRequests";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
+
+    public static String HOST = "localhost";
+    public static String USER = "ava";
+    public static String PASS = "!ava_app!";
+    public static int PORT = 5672;
 
     static String attackingStrategyId;
     static String defendingStrategyId;
@@ -84,9 +91,22 @@ public class SimulationApp {
             System.out.println(" [x] Received '" + message + "'");
 
             // processes message
-            if (processMessage(message)) {
-                // runs battle if message was properly parsed
-                runBattle();
+            Battle sentBattle = processMessage(message);
+            if (sentBattle != null) {
+                // extracts values
+                attackingStrategyId = sentBattle.AttackingStrategyId;
+                attackingStrategySource = sentBattle.AttackingStrategy.SourceCode;
+                defendingStrategyId = sentBattle.DefendingStrategyId;
+                defendingStrategySource = sentBattle.DefendingStrategy.SourceCode;
+                numGames = sentBattle.getIterations();
+
+                if (numGames % 2 == 1) {
+                    // runs battle if message was properly parsed
+                    runBattle(sentBattle);
+                }
+                else {
+                    System.out.println("numGames must be odd, not: " + numGames);
+                }
             }
             System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
         };
@@ -102,7 +122,6 @@ public class SimulationApp {
             //while (true) {
             int startSecond = LocalTime.now().toSecondOfDay();
             while (LocalTime.now().toSecondOfDay() < startSecond + 4) { }
-
             // creates producers
             p1.createConnection(7);
             //i += 2;
@@ -123,31 +142,42 @@ public class SimulationApp {
 
     // gets the URI for connection config
     public static void setupConnection(ConnectionFactory factory) {
-        //factory.setUsername(USER);
-        //factory.setPassword(PASS);
-        //factory.setHost(HOST);
-        //factory.setPort(PORT);
+        factory.setUsername(USER);
+        factory.setPassword(PASS);
+        factory.setHost(HOST);
+        factory.setPort(PORT);
     }
 
     // processes the message sent to the app to create a new battle
     // Returns true if no parsing errors
-    static boolean processMessage(String message) {
+    static Battle processMessage(String message) {
+
+        // parses JSON
+        ObjectMapper mapper = new ObjectMapper();
+        Battle sentBattle;
+        try {
+            MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message, new TypeReference<MassTransitMessage<SimulationRequest>>() { });
+            sentBattle = sentMessage.message.pendingBattle;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            System.out.println("JSON parsing of MassTransitMessage<SimulationRequest> failed: " + message);
+            return null;
+        }
+
         // expects message in format "<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>"
-        String usage = "Message must be in format "
+        /*String usage = "Message must be in format "
                        + "\"<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>\""
                        + "  -- EXAMPLE -- \"81703, { code; }, 92105, { code; }, 7\"\n";
-
         String[] split = message.split(MESSAGE_DELIMITER);
         if (split.length != 5) {
             System.out.printf("ERROR: message \"%s\" does not have the correct number of arguments.\n" + usage, message);
             return false;
         }
-
         if (split[0] == null) {
             System.out.println("attackingStrategyId is null");
             return false;
         }
-        attackingStrategyId = split[0];
+        attackingStrategyId = split[0];*/
         /*ObjectMapper mapper = new ObjectMapper();
         try {
             attackingStrategyId  = mapper.readValue(split[0], UUID.class);
@@ -157,17 +187,16 @@ public class SimulationApp {
             return false;
         }*/
 
-        if (split[1] == null) {
+        /*if (split[1] == null) {
             System.out.println("attackingSourceCode is null");
             return false;
         }
         attackingStrategySource = split[1];
-
         if (split[2] == null) {
             System.out.println("defendingStrategyId is null");
             return false;
         }
-        defendingStrategyId = split[2];
+        defendingStrategyId = split[2];*/
         /*try {
             defendingStrategyId = mapper.readValue(split[2], UUID.class);
         } catch (JsonProcessingException e) {
@@ -176,37 +205,30 @@ public class SimulationApp {
             return false;
         }*/
 
-        if (split[3] == null) {
+        /*if (split[3] == null) {
             System.out.println("defendingSourceCode is null");
             return false;
         }
         defendingStrategySource = split[3];
-
         try {
             numGames = Integer.parseInt(split[4]);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.printf("parsing of numGames from \"%s\" failed\n", split[2]);
             return false;
-        }
+        }*/
 
-        if (numGames % 2 != 1) {
-            System.out.println("numGames must be odd, not: " + numGames);
-            return false;
-        }
-
-        return true;
+        return sentBattle;
     }
 
     // runs a full battle
-    static void runBattle() {
+    static void runBattle(Battle sentBattle) {
         // ask for console setup info
         //scan = new Scanner(System.in);
         /*System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
                 "This mode prints out important information and prompts for input.\n" +
                 "This mode is the only way to play manually.");
         */CONSOLE_APP = false;/*scan.nextLine().equals("y");
-
         if (CONSOLE_APP) {
             System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
             ATTACKER_MANUAL = scan.nextLine().equals("y");
@@ -225,14 +247,13 @@ public class SimulationApp {
             System.out.println("How many Games do you want in this Battle?  This must be an odd integer");
             try {
                 numGames = Integer.parseInt(scan.nextLine());
-
                 if (numGames % 2 == 1)
                     break;
             } catch (Exception e) { }
         }*/
 
         // setup Battle
-        Battle battle = new Battle(numGames, attackingStrategyId, defendingStrategyId);
+        Battle battle = sentBattle;
 
         while (numGames > 0) {
             //setup BattleGame
@@ -254,6 +275,42 @@ public class SimulationApp {
         battle.complete();
 
         debugPrintln(battle.toString());
+
+        // sends message back to backend
+        ConnectionFactory factory = new ConnectionFactory();
+        setupConnection(factory);
+
+        try {
+            Connection connection = factory.newConnection();
+            System.out.println("created connection");
+            Channel channel = connection.createChannel();
+
+            final String RESP_QUEUE_NAME = "SimulationResults";
+            // Creates queue if not already created an prepares to listen for messages
+            channel.queueDeclare(RESP_QUEUE_NAME, false, false, false, null);
+
+            // writes JSON obj
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            String messageJSON;
+            try {
+                SimulationRequest req = new SimulationRequest(battle);
+                MassTransitMessage<SimulationRequest> message = new MassTransitMessage<SimulationRequest>(UUID.randomUUID(),null, null, UUID.randomUUID(), null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, req);
+                messageJSON = mapper.writeValueAsString(message);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                System.out.println("JSON writing of message failed");
+                return;
+            }
+
+
+            /*String delimiter = SimulationApp.MESSAGE_DELIMITER;
+            String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;*/
+            channel.basicPublish("", RESP_QUEUE_NAME, null, messageJSON.getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("ERROR: message out FAILED");
+        }
 
         //scan.close();
     }
@@ -281,7 +338,7 @@ public class SimulationApp {
             if (CONSOLE_APP)
                 System.out.println(playerString(gameState.currentPlayer) + "'s turn");
             String moveString = currentColor().equals(battleGame.getAttackerColor())
-                                ? getAttackerMoveString() : getDefenderMoveString();
+                    ? getAttackerMoveString() : getDefenderMoveString();
 
             // stores moveString in new turn, even if invalid
             battleGame.addTurn(battle.getId(), currentColor(), moveString);
@@ -561,14 +618,11 @@ public class SimulationApp {
 
         /*if (!isCellValid(cell))
             return 0;
-
         int col = cellToCol(cell);
         int row = cellToRow(cell);
-
         String cellVal = board[col][row];
         if (cellVal.equals(""))
             return 0;
-
         return Integer.parseInt(cellVal.substring(1));*/
     }
 
