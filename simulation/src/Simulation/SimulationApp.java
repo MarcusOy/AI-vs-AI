@@ -82,7 +82,7 @@ public class SimulationApp {
         Channel channel = connection.createChannel();
 
         // Creates queue if not already created an prepares to listen for messages
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        channel.queueDeclare(QUEUE_NAME, true, false, false, null);
         System.out.println(" [*] Waiting for messages.");
 
         // Sends callback to sender
@@ -287,7 +287,7 @@ public class SimulationApp {
 
             final String RESP_QUEUE_NAME = "SimulationResults";
             // Creates queue if not already created an prepares to listen for messages
-            channel.queueDeclare(RESP_QUEUE_NAME, false, false, false, null);
+            channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
 
             // writes JSON obj
             ObjectMapper mapper = new ObjectMapper();
