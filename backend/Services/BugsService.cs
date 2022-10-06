@@ -36,6 +36,8 @@ namespace AVA.API.Services
         public BugReport Get(Guid id)
         {
             BugReport b = _dbContext.BugReports
+                .Include(b => b.CreatedByUser
+                    .FirstOrDefault(u => u.Id == b.CreatedByUserId))
                .FirstOrDefault(b => b.Id == id);
 
             if (b is null)

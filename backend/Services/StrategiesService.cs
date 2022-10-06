@@ -38,6 +38,14 @@ namespace AVA.API.Services
         public Strategy Get(Guid id)
         {
             Strategy s = _dbContext.Strategies
+                .Include(s => s.CreatedByUser
+                    .FirstOrDefault(u => u.Id == s.CreatedByUserId))
+                .Include(s => s.Game
+                    .FirstOrDefault(g => g.Id == s.GameId))
+                .Include(s => s.AttackerBattles
+                    .Where(b => b.AttackingStrategyId == s.Id))
+                .Include(s => s.DefenderBattles
+                    .Where(b => b.DefendingStrategyId == s.Id))
                .FirstOrDefault(s => s.Id == id);
 
             if (s is null)
