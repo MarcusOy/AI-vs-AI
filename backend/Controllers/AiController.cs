@@ -1,16 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AVA.API.Models;
+using AVA.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace DefaultNamespace;
+namespace AVA.API.Controllers;
 
 public class AiController : Controller
 {
-    [Route("/getAi")]
-    public ActionResult getAi(Guid id)
+    private readonly IStrategiesService _strategiesService;
+
+    public AiController(IStrategiesService strategiesService) : base()
+    {
+        _strategiesService = strategiesService;
+    }
+
+    [HttpPost, Route("/getAi")]
+    public async Task<ActionResult> getAi(Guid id)
     {
         // The incoming message will be a strategy's id to send the code from
-        
-        // TODO - Send the ai code to the client
 
-        return Ok("AI code goes here");
+        var ret = _strategiesService.Get(id);
+
+        return Ok(ret);
     }
 }

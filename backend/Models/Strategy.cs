@@ -1,14 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using TypeGen.Core.TypeAnnotations;
 
 namespace AVA.API.Models;
 
+[ExportTsInterface]
 public class Strategy : BaseEntity
 {
     [Required]
     public Guid Id { get; set; }
-    [Required]
+    [Required, StringLength(50)]
     public string Name { get; set; }
     public string SourceCode { get; set; }
     public StrategyStatus Status { get; set; }

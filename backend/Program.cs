@@ -5,7 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using AVA.API.Data;
 using AVA.API.Helpers;
 using AVA.API.Services;
-using Newtonsoft.Json;
+using AVA.API.Controllers;
+using AVA.API.Middleware;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -51,6 +52,7 @@ var tokenValidator = new TokenValidationParameters
     ValidateAudience = false,
     ValidateLifetime = true,
     ValidIssuer = "AVA",
+    ClockSkew = TimeSpan.Zero,
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtKey))
 };
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -58,35 +60,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     o.TokenValidationParameters = tokenValidator;
     o.RequireHttpsMetadata = false;
     o.SaveToken = true;
+    o.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ServerSideJWTMiddleware.OnMessageRecieved,
+        OnAuthenticationFailed = ServerSideJWTMiddleware.OnAuthenticationFailed
+    };
 });
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
 // Setting up domain services
-// builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();
 #endregion
 #region Configure
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseStatusCodePages();
-}
-
-app.UseHttpsRedirection();
 app.UseWebSockets();
 app.UseRouting();
 
 app.UseCors(x => x
-    .AllowAnyOrigin()
+    .AllowCredentials()
+    .WithOrigins(
+        "https://localhost:3000", // local development url
+        "https://ai-vs-ai.vercel.app/", // production url
+        "https://ai-vs-ai-git-dev-marcusoy.vercel.app/" // remote development url
+    )
     .AllowAnyMethod()
     .AllowAnyHeader());
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseEndpoints(endpoints => endpoints.MapControllers());
 
 // Initialize the database using the InitializationService
@@ -94,5 +100,5 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<IInitializationService>()
         .InitializeDatabase();
 
-app.Run();
+app.Run("https://0.0.0.0:443");
 #endregion

@@ -1,13 +1,13 @@
 import { Store } from 'pullstate'
+import { User } from '../models/user'
 
 interface IStore {
-    isDarkMode: boolean
-    counter: number
+    whoAmI?: User
+    whoAmIUpdateNumber: number
 }
 
 const initialState: IStore = {
-    isDarkMode: false,
-    counter: 0,
+    whoAmIUpdateNumber: 0,
 }
 
 export const AVAStore = new Store<IStore>(initialState)
