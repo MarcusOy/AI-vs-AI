@@ -54,7 +54,7 @@ public class Battle {
     public BattleGame addBattleGame() {
         // alternates attacker color every consecutive BattleGame
         Color attackerColor = getAttackerColor();
-        battleGames.add(new BattleGame(battleGames.size(), id, attackerColor));
+        battleGames.add(new BattleGame(battleGames.size() + 1, id, attackerColor));
 
         return battleGames.get(battleGames.size() - 1);
     }

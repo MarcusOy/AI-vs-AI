@@ -21,7 +21,7 @@ public class BattleGame {
     }
 
     public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
-        turns.add(new Turn(battleId, gameNumber, turns.size(), currentPlayerColor.equals(AttackerColor), moveString));
+        turns.add(new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
     }
 
     public void setWinner(Color winnerColor) {

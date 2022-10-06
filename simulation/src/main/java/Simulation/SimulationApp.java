@@ -14,6 +14,9 @@ import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import IStrategy.IStrategy;
+import IStrategy.EasyAI;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,6 +28,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.commons.cli.*;
 
 /*
    ----------------------------------------------------------------------------
@@ -54,10 +58,14 @@ public class SimulationApp {
     static String attackingStrategySource;
     static String defendingStrategySource;
 
+    static IStrategy stockAttacker;
+    static IStrategy stockDefender;
+
     static boolean CONSOLE_APP;
     static boolean DEBUG;
     static boolean ATTACKER_MANUAL;
     static boolean DEFENDER_MANUAL;
+    static boolean NO_COMMUNICATION;
 
     static final int BOARD_LENGTH = 10;
 
@@ -68,74 +76,137 @@ public class SimulationApp {
 
     // Runs a battle with an infinite number of BattleGames, starting a fresh BattleGame when the previous completes
     public static void main(String[] args) throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
-        // set up stdin input
-        scan = new Scanner(System.in);
+        // parse command line arguments
+        if (parseCLI(args)) {
+            // ends app if parseCLI() returns true
+            return;
+        }
 
-        // establishes connection to message broker queue
-        ConnectionFactory factory = new ConnectionFactory();
-        setupConnection(factory);
-        //System.out.println(factory.getClientProperties());
-        Connection connection = factory.newConnection();
-        System.out.println("created connection");
-        Channel channel = connection.createChannel();
+        if (!NO_COMMUNICATION) {
+            // establishes connection to message broker queue
+            ConnectionFactory factory = new ConnectionFactory();
+            setupConnection(factory);
+            //System.out.println(factory.getClientProperties());
+            Connection connection = factory.newConnection();
+            System.out.println("created RabbitMQ connection");
+            Channel channel = connection.createChannel();
 
-        // Creates queue if not already created an prepares to listen for messages
-        channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-        System.out.println(" [*] Waiting for messages.");
+            // Creates queue if not already created an prepares to listen for messages
+            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            System.out.println(" [*] Waiting for messages.");
 
-        // Sends callback to sender
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println(" [x] Received '" + message + "'");
+            // Sends callback to sender
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
 
-            // processes message
-            Battle sentBattle = processMessage(message);
-            if (sentBattle != null) {
-                // extracts values
-                attackingStrategyId = sentBattle.attackingStrategyId;
-                attackingStrategySource = sentBattle.attackingStrategy.sourceCode;
-                defendingStrategyId = sentBattle.defendingStrategyId;
-                defendingStrategySource = sentBattle.defendingStrategy.sourceCode;
-                numGames = sentBattle.getIterations();
+                // processes message
+                Battle sentBattle = processMessage(message);
+                prepareAndRunBattle(sentBattle);
+                System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+            };
 
-                if (numGames % 2 == 1) {
-                    // runs battle if message was properly parsed
-                    runBattle(sentBattle);
-                }
-                else {
-                    System.out.println("numGames must be odd, not: " + numGames);
-                }
-            }
+            // listens for messages
+            System.out.println("listening");
+            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            System.out.println("after consume call");
+
+            /*SimTestProducer p1 = new SimTestProducer();
+
             System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
-        };
+            while (true) {
+                String inString = scan.nextLine();
+                int inputNumGames = 1;
+                try {
+                    inputNumGames = Integer.parseInt(inString);
+                    p1.createConnection(inputNumGames);
+                } catch (Exception e) {
+                    System.out.println("invalid number of games - must be an odd digit");
+                }
+            }*/
+        }
+        else /* if (NO_COMMUNICATION) */ {
+            // uses stdin to start battles
+            // Strategies are either stock Strategies or manual-input from stdin
 
-        // listens for messages
-        System.out.println("listening");
-        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
-        System.out.println("after consuming");
+            // set up stdin input
+            scan = new Scanner(System.in);
 
-        SimTestProducer p1 = new SimTestProducer();
-        /*int i = 1;
-        for (int i = 0; i < 4; i++) {
-            //while (true) {
-            int startSecond = LocalTime.now().toSecondOfDay();
-            while (LocalTime.now().toSecondOfDay() < startSecond + 4) { }
-            // creates producers
-            p1.createConnection(7);
-            //i += 2;
-        }*/
+            while (true) {
+                // gets a valid number of games
+                while (true) {
+                    System.out.println("\n\nHow many Games do you want in this Battle?  This must be an odd integer");
+                    try {
+                        numGames = Integer.parseInt(scan.nextLine());
+                        if (numGames % 2 == 1)
+                            break;
+                    } catch (Exception e) {  }
+                    System.out.println("invalid number of games");
+                }
 
-        System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
-        while (true) {
-            String inString = scan.nextLine();
-            int inputNumGames = 1;
-            try {
-                inputNumGames = Integer.parseInt(inString);
-                p1.createConnection(inputNumGames);
-            } catch (Exception e) {
-                System.out.println("invalid number of games - must be an odd digit");
+                // processes the Battle
+                String attackerIdString = ATTACKER_MANUAL ? "manual" : "stock";
+                String defenderIdString = DEFENDER_MANUAL ? "manual" : "stock";
+                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString);
+                newBattle.id = UUID.randomUUID().toString();
+                prepareAndRunBattle(newBattle);
             }
         }
+    }
+
+    // parses the arguments passed to the program for flags
+    // Returns true if the program should exit
+    static boolean parseCLI(String[] args) {
+        CommandLineParser parser = new BasicParser();
+        Options options = new Options();
+
+        options.addOption("c", "console", false, "This mode prints out important information and prompts for input.  " +
+                           "This mode is the only way to play manually. (use -ma and -md flags for manual play)");
+        options.addOption("d", "debug", false, "Prints out more detailed status and error information.");
+        options.addOption("ma", "manualattacker", false, "Makes the attacker require manual input for moves.  (Also triggers the -n and -c flags)");
+        options.addOption("md", "manualdefender", false, "Makes the defender require manual input for moves.  (Also triggers the -n and -c flags)");
+        options.addOption("n", "nocommunication", false, "Makes SimulationApp run without RabbitMQ connections, using stdin instead");
+        options.addOption("h", "help", false, "Shows usage");
+        options.addOption("u", "usage", false, "Shows usage");
+
+        try {
+            CommandLine commandLine = parser.parse(options, args);
+
+            boolean passedNoArgs = args == null || args.length == 0;
+
+            if (passedNoArgs || commandLine.hasOption("h") || commandLine.hasOption("u")) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("SimulationApp", options);
+
+                if (!passedNoArgs)
+                    return true;
+            }
+            else {
+                DEBUG = commandLine.hasOption("d");
+                ATTACKER_MANUAL = commandLine.hasOption("ma");
+                DEFENDER_MANUAL = commandLine.hasOption("md");
+                CONSOLE_APP = ATTACKER_MANUAL || DEFENDER_MANUAL || commandLine.hasOption("c");
+                NO_COMMUNICATION = ATTACKER_MANUAL || DEFENDER_MANUAL || commandLine.hasOption("n");
+
+                if (CONSOLE_APP)
+                    System.out.print("CONSOLE_APP mode, ");
+                if (DEBUG)
+                    System.out.print("DEBUG mode, ");
+                if (ATTACKER_MANUAL)
+                    System.out.print("ATTACKER_MANUAL mode, ");
+                if (DEFENDER_MANUAL)
+                    System.out.print("DEFENDER_MANUAL mode, ");
+                if (NO_COMMUNICATION)
+                    System.out.println("NO_COMMUNICATION mode, ");
+                System.out.println();
+            }
+        } catch (ParseException e) {
+            System.out.println("Argument parsing failed... closing SimulationApp");
+            e.printStackTrace();
+            return true;
+        }
+
+        return false;
     }
 
     // gets the URI for connection config
@@ -222,6 +293,29 @@ public class SimulationApp {
         return sentBattle;
     }
 
+    // prepares for a battle and runs it if sentBattle is valid
+    static void prepareAndRunBattle(Battle sentBattle) {
+        if (sentBattle != null) {
+            // extracts values
+            attackingStrategyId = sentBattle.attackingStrategyId;
+            defendingStrategyId = sentBattle.defendingStrategyId;
+
+            if (sentBattle.attackingStrategy != null)
+                attackingStrategySource = sentBattle.attackingStrategy.sourceCode;
+            if (sentBattle.defendingStrategy != null)
+                defendingStrategySource = sentBattle.defendingStrategy.sourceCode;
+            numGames = sentBattle.getIterations();
+
+            if (numGames % 2 == 1) {
+                // runs battle if message was properly parsed
+                runBattle(sentBattle);
+            }
+            else {
+                System.out.println("numGames must be odd, not: " + numGames);
+            }
+        }
+    }
+
     // runs a full battle
     static void runBattle(Battle sentBattle) {
         // ask for console setup info
@@ -229,7 +323,7 @@ public class SimulationApp {
         /*System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
                 "This mode prints out important information and prompts for input.\n" +
                 "This mode is the only way to play manually.");
-        */CONSOLE_APP = false;/*scan.nextLine().equals("y");
+        CONSOLE_APP = false;//scan.nextLine().equals("y");
         if (CONSOLE_APP) {
             System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
             ATTACKER_MANUAL = scan.nextLine().equals("y");
@@ -241,8 +335,8 @@ public class SimulationApp {
         setupStrategies();
 
         /*System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
-                "This mode prints out more detailed status and error information.");*/
-        DEBUG = true;/*scan.nextLine().equals("y");
+                "This mode prints out more detailed status and error information.");
+        DEBUG = true;//scan.nextLine().equals("y");
         int numGames;
         while (true) {
             System.out.println("How many Games do you want in this Battle?  This must be an odd integer");
@@ -278,39 +372,42 @@ public class SimulationApp {
 
         debugPrintln(battle.toString());
 
-        // sends message back to backend
-        ConnectionFactory factory = new ConnectionFactory();
-        setupConnection(factory);
+        // sends the resulting battle to the backend if there is RabbitMQ connection allowed
+        if (!NO_COMMUNICATION) {
+            // sends message back to backend
+            ConnectionFactory factory = new ConnectionFactory();
+            setupConnection(factory);
 
-        try {
-            Connection connection = factory.newConnection();
-            System.out.println("created connection");
-            Channel channel = connection.createChannel();
-
-            final String RESP_QUEUE_NAME = "SimulationResponses";
-            // Creates queue if not already created an prepares to listen for messages
-            channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
-
-            // writes JSON obj
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-            String messageJSON;
             try {
-                SimulationResponse res = new SimulationResponse(battle);
-                MassTransitMessage<SimulationResponse> message = new MassTransitMessage(UUID.randomUUID().toString(),null, null, UUID.randomUUID().toString(), null, null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, res);
-                messageJSON = mapper.writeValueAsString(message);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                System.out.println("JSON writing of message failed");
-                return;
-            }
+                Connection connection = factory.newConnection();
+                System.out.println("created connection");
+                Channel channel = connection.createChannel();
+
+                final String RESP_QUEUE_NAME = "SimulationResponses";
+                // Creates queue if not already created an prepares to listen for messages
+                channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
+
+                // writes JSON obj
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+                String messageJSON;
+                try {
+                    SimulationResponse res = new SimulationResponse(battle);
+                    MassTransitMessage<SimulationResponse> message = new MassTransitMessage(UUID.randomUUID().toString(),null, null, UUID.randomUUID().toString(), null, null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, res);
+                    messageJSON = mapper.writeValueAsString(message);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                    System.out.println("JSON writing of message failed");
+                    return;
+                }
 
             /*String delimiter = SimulationApp.MESSAGE_DELIMITER;
             String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;*/
-            channel.basicPublish("", RESP_QUEUE_NAME, null, messageJSON.getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("ERROR: message out FAILED");
+                channel.basicPublish("", RESP_QUEUE_NAME, null, messageJSON.getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("ERROR: message out FAILED");
+            }
         }
 
         //scan.close();
@@ -318,8 +415,8 @@ public class SimulationApp {
 
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
-        /*attackingStrategy = new RandomAI();
-        defendingStrategy = new EasyAI();*/
+        stockAttacker = new EasyAI();
+        stockDefender = new EasyAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -393,7 +490,7 @@ public class SimulationApp {
             alternatePlayer();
         }
 
-        System.out.printf("---------------- FINAL BOARD STATE (%d/%d)----------------", battleGame.getGameNumber(), battle.getIterations() - 1);
+        System.out.printf("---------------- FINAL BOARD STATE (%d/%d)----------------", battleGame.getGameNumber(), battle.getIterations());
         printBoard();
         System.out.printf("%s Wins!!!\n", winner.name());
 
@@ -412,7 +509,11 @@ public class SimulationApp {
         // ATTACKER set to AI mode
         String moveString = "";
         try {
-            moveString = processStrategySource(attackingStrategySource);//attackingStrategy.getMove(gameState);
+            // ATTACKER is a stock AI
+            if (NO_COMMUNICATION)
+                return stockAttacker.getMove(gameState);
+            else // ATTACKER is sent from backend
+                moveString = processStrategySource(attackingStrategySource);//attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             if (DEBUG)
@@ -434,7 +535,11 @@ public class SimulationApp {
         // DEFENDER set to AI mode
         String moveString = "";
         try {
-            moveString = processStrategySource(defendingStrategySource);//defendingStrategy.getMove(gameState);
+            // DEFENDER is a stock AI
+            if (NO_COMMUNICATION)
+                return stockDefender.getMove(gameState);
+            else // DEFENDER is sent from backend
+                moveString = processStrategySource(defendingStrategySource);//defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
             if (DEBUG)
