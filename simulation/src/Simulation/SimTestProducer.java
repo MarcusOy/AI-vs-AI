@@ -34,13 +34,13 @@ public class SimTestProducer {
             IStrategy attackingStrategy = new RandomAI();
             IStrategy defendingStrategy = new EasyAI();
             String attackingStrategySource;
-            String defendingingStrategySource;
+            String defendingStrategySource;
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             //try {
             attackingStrategySource = "function getMove() { return 'A8, A7' }";//mapper.writeValueAsString(attackingStrategy);
-            defendingingStrategySource = "function getMove() { return 'A1, A2' }";/*mapper.writeValueAsString(defendingStrategy);
+            defendingStrategySource = "function getMove() { return 'A1, A2' }";/*mapper.writeValueAsString(defendingStrategy);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of strategies failed");
@@ -49,7 +49,7 @@ public class SimTestProducer {
 
 
             String delimiter = SimulationApp.MESSAGE_DELIMITER;
-            String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingingStrategySource + delimiter + numGames;
+            String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;
             channel.basicPublish("", SimulationApp.QUEUE_NAME, null, message.getBytes());
             System.out.println(" [x] Sent '" + message + "'");
         } catch (Exception e) {
