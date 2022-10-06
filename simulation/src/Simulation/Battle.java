@@ -29,6 +29,10 @@ public class Battle {
     // Decided randomly in constructor
     private boolean willAttackerStartWhite;
 
+    public Battle() {
+
+    }
+
     public Battle(int iterations, String attackingStrategyId, String defendingStrategyId) {
         Id = UUID.randomUUID().toString();
         this.AttackingStrategyId = attackingStrategyId;
