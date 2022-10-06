@@ -1,9 +1,12 @@
-﻿// using Microsoft.AspNetCore.Mvc;
+﻿// using AVA.API.Models;
+// using AVA.API.Services;
+// using Microsoft.AspNetCore.Mvc;
 
-// namespace DefaultNamespace;
+// namespace AVA.API.Controllers;
 
 // public class BattleController : Controller
 // {
+
 //     [Route("/battlePerson")]
 //     public ActionResult startBattle(Strategy s1, Strategy s2)
 //     {

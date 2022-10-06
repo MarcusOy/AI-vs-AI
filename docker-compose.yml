@@ -20,7 +20,17 @@ services:
     ports:
       - 8080:8080
 
-  # Backend (for docker buid testing only)
+  # RabbitMQ message broker
+  rabbitmq:
+    image: rabbitmq:3.11.0-management
+    restart: always
+    ports:
+      - 8081:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=ava
+      - RABBITMQ_DEFAULT_PASS=!ava_app!
+
+  # # Backend (for docker buid testing only)
   # backend:
   #   image: ava
   #   environment:
