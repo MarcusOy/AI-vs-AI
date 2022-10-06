@@ -23,10 +23,13 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /*
    ----------------------------------------------------------------------------
@@ -156,6 +159,8 @@ public class SimulationApp {
         ObjectMapper mapper = new ObjectMapper();
         Battle sentBattle;
         try {
+            JSONObject json = new JSONObject(message);
+            JSONArray array = json.getJSONArray("messageType");
             MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message, new TypeReference<MassTransitMessage<SimulationRequest>>() { });
             sentBattle = sentMessage.message.pendingBattle;
         } catch (JsonProcessingException e) {
