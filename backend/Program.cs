@@ -69,7 +69,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
 // Setting up domain services
-// builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();

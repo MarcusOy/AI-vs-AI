@@ -20,73 +20,83 @@ public class AccountController : Controller
         IsEssential = true
     };
 
-    // [Route("/register")]
-    // public ActionResult register(User u)
-    // {
-    //     // The incoming message will be a new user object to add to the database
-
-    //     // TODO - Add the new user to the database
-
-    //     return Ok("User is added");
-    // }
-
     private readonly IIdentityService _idService;
-    private readonly AVADbContext _dbContext;
 
-    public AccountController(IIdentityService idService, AVADbContext dbContext)
+    public AccountController(IIdentityService idService)
     {
         _idService = idService;
-        _dbContext = dbContext;
     }
 
-    [HttpPost, Route("/Login")]
+    [HttpPost, Route("/Account/Login")]
     public async Task<ActionResult> Login([FromBody] LoginPair pair)
     {
+        await Task.Delay(1000);
         var tokens = await _idService.Authenticate(pair.Username, pair.Password);
 
         HttpContext.Response.Cookies.Append(COOKIE_AUTH_TOKEN, tokens.AuthToken, COOKIE_OPTIONS);
         HttpContext.Response.Cookies.Append(COOKIE_REFRESH_TOKEN, tokens.RefreshToken, COOKIE_OPTIONS);
 
-        return Ok();
+        return Ok(tokens);
     }
 
-    [HttpGet, Route("/WhoAmI"), Authorize]
-    public User WhoAmI()
+    [HttpPost, Route("/Account/Signup")]
+    public async Task<ActionResult> Signup([FromBody] SignupForm body)
     {
-        return _dbContext.Users
-            .Where(u => u.Active)
-            .FirstOrDefault(u => u.Username == _idService.CurrentUser.Username);
+        await Task.Delay(1000);
+        var ret = await _idService.Register(body.FirstName, body.LastName, body.Email, body.Username, body.Password);
+        return Ok(ret);
     }
 
-    // [Route("/deleteAccount")]
-    // public ActionResult delete(User u)
-    // {
-    //     // The incoming message will be a user object to delete.
+    [HttpPost, Route("/Account/Logout"), Authorize]
+    public async Task<ActionResult> Logout()
+    {
+        await Task.Delay(1000);
+        HttpContext.Response.Cookies.Delete(COOKIE_AUTH_TOKEN);
+        HttpContext.Response.Cookies.Delete(COOKIE_REFRESH_TOKEN);
 
-    //     // TODO - remove the user specified from the database
+        return Ok("User is logged out.");
+    }
 
-    //     return Ok("User is deleted");
-    // }
+    [HttpGet, Route("/Account/WhoAmI"), Authorize]
+    public User Get()
+        => _idService.CurrentUser;
 
-    // [Route("/editAccount")]
-    // public ActionResult editAccount(User u)
-    // {
-    //     // The incoming message will be a user object to update
+    [HttpGet, Route("/Account/{id}"), Authorize]
+    public async Task<User> Get(string id)
+    {
+        var u = await _idService.GetUserAsync(new Guid(id));
 
-    //     // TODO - send the edited user to the database to be updated.
+        // remove semi-sensitive fields
+        u.Email = "***";
+        return u;
+    }
 
-    //     return Ok("User is updated");
-    // }
+    [HttpPost, Route("/Account"), Authorize]
+    public async Task<User> Update([FromBody] User u)
+    {
+        // TODO: redo this check when admin roles 
+        //       are introduced
+        if (u.Id != _idService.CurrentUser.Id)
+            throw new InvalidOperationException("Cannot edit other user.");
 
-    // [Route("/getAccount")]
-    // public ActionResult displayAccount(User u)
-    // {
-    //     // The incoming message will be a user object to display information from
+        return await _idService.UpdateAsync(u);
+    }
 
-    //     // TODO - send the user information to the client
+    [HttpDelete, Route("/Account"), Authorize]
+    public async Task<ActionResult> Delete()
+    {
+        var ret = await _idService.DeleteAsync(_idService.CurrentUser.Id);
+        return Ok(ret);
+    }
 
-    //     return Ok("User info goes here");
-    // }
+    public class SignupForm
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
 
     public class LoginPair
     {

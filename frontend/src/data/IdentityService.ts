@@ -2,9 +2,9 @@ import { User } from '../models/user'
 import { AVAStore } from './DataStore'
 
 class IdentityService {
-    static onLogin() {
+    static refreshIdentity() {
         AVAStore.update((s) => {
-            s.hasSuccessfullyLoggedIn = true
+            s.whoAmIUpdateNumber++
         })
     }
 
@@ -17,8 +17,7 @@ class IdentityService {
     static unsetIdentity() {
         AVAStore.update((s) => {
             s.whoAmI = undefined
-            s.hasSuccessfullyLoggedOut = false
-            s.hasSuccessfullyLoggedIn = false
+            s.whoAmIUpdateNumber++
         })
     }
 }

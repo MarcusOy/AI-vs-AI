@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="AI-vs-AI:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>AI-vs-AI</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="simulation.war">
+      <element id="artifact" artifact-name="AI-vs-AI:war exploded" />
+    </root>
+  </artifact>
+</component>

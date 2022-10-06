@@ -24,7 +24,7 @@ public class ExceptionMiddleware
 
             if (ex is ApplicationException)
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            else if (ex is InvalidOperationException)
+            else if (ex is InvalidOperationException || ex is FormatException)
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             else if (ex is AuthenticationException)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;

@@ -1,16 +1,26 @@
-﻿// using Microsoft.AspNetCore.Mvc;
+﻿using AVA.API.Models;
+using AVA.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace DefaultNamespace;
+namespace AVA.API.Controllers;
 
-// public class BugController : Controller
-// {
-//     [Route("/sendBug")]
-//     public ActionResult sendBug(Bug b)
-//     {
-//         // The incomming message should be a bug object that will be sent to the database
+public class BugController : Controller
+{
 
-//         // TODO - send the bug report to the database
+    private readonly IBugsService _bugsService;
 
-//         return Ok("Bug Report Recieved");
-//     }
-// }
+    public BugController(IBugsService bugsService) : base()
+    {
+        _bugsService = bugsService;
+    }
+
+    [HttpPost, Route("/sendBug")]
+    public async Task<ActionResult> sendBug([FromBody] BugReport b)
+    {
+        // The incomming message should be a bug object that will be sent to the database
+
+        var ret = await _bugsService.CreateAsync(b);
+
+        return Ok(ret);
+    }
+}

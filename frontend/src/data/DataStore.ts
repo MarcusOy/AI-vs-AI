@@ -3,13 +3,11 @@ import { User } from '../models/user'
 
 interface IStore {
     whoAmI?: User
-    hasSuccessfullyLoggedIn: boolean
-    hasSuccessfullyLoggedOut: boolean
+    whoAmIUpdateNumber: number
 }
 
 const initialState: IStore = {
-    hasSuccessfullyLoggedIn: false,
-    hasSuccessfullyLoggedOut: false,
+    whoAmIUpdateNumber: 0,
 }
 
 export const AVAStore = new Store<IStore>(initialState)

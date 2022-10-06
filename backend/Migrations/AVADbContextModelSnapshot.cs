@@ -154,7 +154,8 @@ namespace AVA.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(5000)
+                        .HasColumnType("varchar(5000)");
 
                     b.Property<string>("Regarding")
                         .HasColumnType("longtext");
@@ -186,15 +187,18 @@ namespace AVA.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("LongDescription")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("ShortDescription")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime(6)");
@@ -229,7 +233,7 @@ namespace AVA.Migrations
                             Id = 3,
                             BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedOn = new DateTime(2022, 9, 21, 16, 48, 4, 901, DateTimeKind.Utc).AddTicks(1760),
+                            DeletedOn = new DateTime(2022, 10, 5, 15, 33, 53, 358, DateTimeKind.Utc).AddTicks(2344),
                             LongDescription = "\r\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Chess",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
@@ -257,7 +261,8 @@ namespace AVA.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("SourceCode")
                         .HasColumnType("longtext");
@@ -321,6 +326,10 @@ namespace AVA.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("Bio")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
 
@@ -328,13 +337,22 @@ namespace AVA.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<int?>("FavoriteGameId")
+                        .HasColumnType("int");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -349,22 +367,39 @@ namespace AVA.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FavoriteGameId");
 
                     b.ToTable("Users");
 
                     b.HasData(
                         new
                         {
+                            Id = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
+                            Active = true,
+                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "marcus.orciuch@gmail.com",
+                            FirstName = "System",
+                            LastName = "User",
+                            Password = "q70yWSmKYTbPRf8xo3BcjAXj/fU/axL5qURJOdLjT/0=",
+                            Salt = "nuQWgXy76L3Ek1eEBOCIqQ==",
+                            UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "system"
+                        },
+                        new
+                        {
                             Id = new Guid("47424124-8ee0-4897-a68e-66231b1b4534"),
                             Active = true,
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "morciuch@purdue.edu",
                             FirstName = "Marcus",
                             LastName = "Orciuch",
-                            Password = "P2gM+LRHPEgo+OC3KbbFVeGydBnUMp3M3ROX/1muxZU=",
-                            Salt = "TCqAwI/s5V1MgyMBUE5Ayg==",
+                            Password = "HdKkOjw0kt6hW3dgev78+5PcPCltspMlk0m7ssUOWCM=",
+                            Salt = "MyxZoNvnA9W8g38CjwYvSw==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "marcus"
                         },
@@ -373,10 +408,11 @@ namespace AVA.Migrations
                             Id = new Guid("45e74982-2aac-46d3-ad81-ce7c5a116a79"),
                             Active = true,
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "korciuch@purdue.edu",
                             FirstName = "Kyle",
                             LastName = "Orciuch",
-                            Password = "OP0b+/uom3GWkydOVPqDTS+ascqbkPBTuMqUEdBcrdQ=",
-                            Salt = "jea/hpF1tKMwMBfBn6gVWw==",
+                            Password = "0EyoBaU5G5RKqDQ9GWEvv2uEMhZsj9mfreCfSRKlzWM=",
+                            Salt = "gyG3jTvLAN5xs35sC++N0w==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "kyle"
                         });
@@ -478,6 +514,15 @@ namespace AVA.Migrations
                     b.Navigation("BattleGame");
                 });
 
+            modelBuilder.Entity("AVA.API.Models.User", b =>
+                {
+                    b.HasOne("AVA.API.Models.Game", "FavoriteGame")
+                        .WithMany("UsersWhoFavorited")
+                        .HasForeignKey("FavoriteGameId");
+
+                    b.Navigation("FavoriteGame");
+                });
+
             modelBuilder.Entity("AVA.API.Models.Battle", b =>
                 {
                     b.Navigation("BattleGames");
@@ -491,6 +536,8 @@ namespace AVA.Migrations
             modelBuilder.Entity("AVA.API.Models.Game", b =>
                 {
                     b.Navigation("Strategies");
+
+                    b.Navigation("UsersWhoFavorited");
                 });
 
             modelBuilder.Entity("AVA.API.Models.Strategy", b =>
