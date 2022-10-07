@@ -4,7 +4,7 @@ import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem,
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { Link, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import { devComplete, developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
+import { devComplete, developerAi, easyAi, emptyStarter, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
@@ -23,7 +23,7 @@ function Programming() {
     let strategy;
     if (whoAmI !== undefined && whoAmI.strategies.length > 0) {
         whoAmI.strategies.forEach((strat, index) => {
-            if (strat.id === '1') {
+            if (strat.id === id) {
                  strategy = strat
             } else if (index === whoAmI.strategies.length - 1) {
                 strategy = useAVAFetch('/getAi/' + id).data
@@ -82,7 +82,6 @@ function Programming() {
         // @ts-ignore
         setSubmissions((past) => [...past, 'Stats for Previous Submission display here'])
         setSelect(!select)
-        IdentityService.refreshIdentity()
     }
 
     return (
@@ -119,6 +118,11 @@ function Programming() {
                                 {strategy !== undefined && <HStack justifyContent={'center'} gap='2'>
                                     <h1>View Complete Developer Code</h1>
                                     <CodeModal codeName='Developer Ai' code={devComplete} />
+                                </HStack>
+                                }
+                                {strategy !== undefined && <HStack  m='2' justifyContent={'center'} gap='2'>
+                                    <h1>View Incomplete Starter Code</h1>
+                                    <CodeModal codeName='Initial Ai with Comments' code={emptyStarter} />
                                 </HStack>
                                 }
                                 <Center>
