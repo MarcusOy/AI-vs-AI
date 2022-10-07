@@ -47,10 +47,10 @@ function Programming() {
         if (editorRef !== null && editorRef.current !== null) {
             // @ts-ignore
             editorRef.current.setValue(
-                strategy === undefined ? code : code,
+                strategy === undefined ? code : strategy.sourceCode,
             )
         }
-        setCode(strategy === undefined ? code : code)
+        setCode(strategy === undefined ? code : strategy.sourceCode)
     }, [strategy])
     useEffect(() => {
         if (strategy !== undefined) {
@@ -106,7 +106,7 @@ function Programming() {
                         </TabList>
                         <TabPanels height='72vh'>
                             <TabPanel>
-                                {data !== undefined && strategy !== undefined  && <Image src='/chessboard.png' alt='logo' />}
+                                {data !== undefined && strategy !== undefined  && <Image src='/Finished_Board.png' alt='logo' />}
                             </TabPanel>
                             <TabPanel>
                                 <Center>
@@ -158,7 +158,7 @@ function Programming() {
                     <Editor
                         defaultLanguage='javascript'
                         defaultValue={
-                             code
+                             localStorage.getItem(strategy?.id) || code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}

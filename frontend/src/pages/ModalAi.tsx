@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { Strategy } from '../models/strategy'
 import { StrategyStatus } from '../models/strategy-status'
 import IdentityService from '../data/IdentityService'
+import { devComplete, helperFunctions } from '../helpers/hardcodeAi'
 
 const ModalAi = () => {
     const navigate = useNavigate()
@@ -43,7 +44,7 @@ const ModalAi = () => {
             const build: Strategy = {
                 gameId: 1,
                 name: 'Untitled Draft',
-                sourceCode: data.boilerplateCode,
+                sourceCode: helperFunctions + devComplete,
             }
             const response = await execute({ data: build })
             console.log(response)

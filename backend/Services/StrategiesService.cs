@@ -80,7 +80,7 @@ namespace AVA.API.Services
             strategy.Game = null;
 
             // populate source code with starter code
-            strategy.SourceCode = game.BoilerplateCode;
+            //strategy.SourceCode = game.BoilerplateCode;
 
             await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();
