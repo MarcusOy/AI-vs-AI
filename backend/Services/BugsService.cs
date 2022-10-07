@@ -47,7 +47,11 @@ namespace AVA.API.Services
 
         public async Task<BugReport> CreateAsync(BugReport bugReport)
         {
-            await _dbContext.AddAsync(bugReport);
+            // don't trust these fields
+            bugReport.CreatedByUser = null;
+            bugReport.CreatedByUserId = _identityService.CurrentUser.Id;
+
+            await _dbContext.BugReports.AddAsync(bugReport);
             await _dbContext.SaveChangesAsync();
 
             return bugReport;

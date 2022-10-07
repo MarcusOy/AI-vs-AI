@@ -7,9 +7,9 @@ import { BaseEntity } from './base-entity';
 import { User } from './user';
 
 export interface BugReport extends BaseEntity {
-    id: string;
+    id?: string;
     description: string;
     regarding: string;
-    createdByUserId: string;
-    createdByUser: User;
+    createdByUserId?: string;
+    createdByUser?: User;
 }

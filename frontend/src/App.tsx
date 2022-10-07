@@ -13,7 +13,7 @@ import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
 import Programming from './pages/Programming'
-import Report from './pages/ReportPage'
+import ReportBugModal from './components/ReportBugModal'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -49,7 +49,6 @@ function App() {
                         <Routes>
                             <Route path='/' element={<Navigate to='/Feed' />} />
                             <Route path='/Feed' element={<FeedPage />} />
-                            <Route path='/report' element={<Report />} />
                             <Route
                                 path='/Profile'
                                 element={<Navigate to={`/Profile/${whoAmI.id}/View`} />}
@@ -75,7 +74,6 @@ function App() {
                         <Routes>
                             <Route path='/' element={<WelcomePage />} />
                             <Route path='/Auth/:tab' element={<LoginSignupPage />} />
-                            <Route path='/report' element={<Report />} />
 
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
