@@ -5,25 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30a6eafa-95fa-4ee9-9f9a-556da4c32186" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_guava_guava_13_0_1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_mangofactory_typescript4j_0_4_0.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_io_commons_io_2_4.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_lang_commons_lang_2_5.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_commons_commons_lang3_3_1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_mozilla_rhino_1_7R4.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/API/JavaScript/EasyAI.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/API/JavaScript/prototype.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/IStrategy/TrueRandomAI.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simulation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/simulation.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/API/API.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/API/TypeScript/API.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/API/API.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/API/Java/API.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/IStrategy/EasyAI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/IStrategy/EasyAI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/IStrategy/RandomAI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/IStrategy/RandomAI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/IStrategy/StarterCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/IStrategy/StarterCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/IStrategy/TestJavascriptStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/IStrategy/TestJavascriptStrategy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/API/JavaScript/EasyAI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/API/JavaScript/EasyAI.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Simulation/SimulationApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Simulation/SimulationApp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -104,7 +87,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1665105869436</updated>
-      <workItem from="1665105877380" duration="22911000" />
+      <workItem from="1665105877380" duration="25503000" />
     </task>
     <servers />
   </component>
