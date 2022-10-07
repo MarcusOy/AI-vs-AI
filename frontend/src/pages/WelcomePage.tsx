@@ -10,7 +10,7 @@ const WelcomePage = () => {
                     A Real Good Platform, hope everyone enjoy AI vs AI --SWE from cs407
                 </Text>
                 <Center>
-                    <Button size='lg' colorScheme='cyan' mt='24px'>
+                    <Button size='lg' mt='24px'>
                         <Link to='/Auth/Login'>Login/Create a free account</Link>
                     </Button>
                 </Center>

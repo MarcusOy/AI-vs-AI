@@ -8,13 +8,15 @@ namespace AVA.API.Models;
 [ExportTsInterface]
 public class BugReport : BaseEntity
 {
-    [Required]
+    [Required, TsOptional]
     public Guid Id { get; set; }
     [Required, StringLength(5000)]
     public string Description { get; set; }
     public string Regarding { get; set; }
 
     // User Relationship (Bug report is created by user)
+    [TsOptional]
     public Guid CreatedByUserId { get; set; }
+    [TsOptional]
     public User CreatedByUser { get; set; }
 }
