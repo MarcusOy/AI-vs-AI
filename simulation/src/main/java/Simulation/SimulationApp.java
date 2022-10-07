@@ -360,7 +360,8 @@ public class SimulationApp {
                 if (sentBattle.defendingStrategy != null) {
                     defenderStockOverride = sentBattle.defendingStrategy.sourceCode == null;
 
-                    defendingEngine = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
+                    if (sentBattle.defendingStrategy.sourceCode != null)
+                        defendingEngine = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
                 } else if (JAVASCRIPT_STOCK) {
                     attackingEngine = evaluateSourceCode(getRandomAIJS());
                     defendingEngine = evaluateSourceCode(getRandomAIJS());
