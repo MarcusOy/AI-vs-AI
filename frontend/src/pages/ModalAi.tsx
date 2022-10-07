@@ -21,6 +21,7 @@ import useAVAFetch from '../helpers/useAVAFetch'
 import { useNavigate } from 'react-router-dom'
 import { Strategy } from '../models/strategy'
 import { StrategyStatus } from '../models/strategy-status'
+import IdentityService from '../data/IdentityService'
 
 const ModalAi = () => {
     const navigate = useNavigate()
@@ -35,8 +36,8 @@ const ModalAi = () => {
 
     const options = data === undefined ? ['1234 Chess'] : data
     const replacement = { name: 'Free Save' }
-    const strategies =
-        whoAmI?.strategies === null ? [replacement, replacement, replacement] : whoAmI?.strategies
+    const openStrats = [replacement, replacement, replacement];
+    const strategies = whoAmI?.strategies || []
     const handleSubmit = async (value) => {
         if (value.name === 'Free Save' && whoAmI !== undefined) {
             const build: Strategy = {
@@ -46,7 +47,10 @@ const ModalAi = () => {
             }
             const response = await execute({ data: build })
             console.log(response)
-            navigate('/Programming/' + response)
+            IdentityService.refreshIdentity()
+           // navigate('/Programming/' + response.data.id)
+        } else {
+            navigate('/Programming/' + value.id)
         }
     }
     return (
@@ -66,10 +70,25 @@ const ModalAi = () => {
                                         type='submit'
                                         onClick={() => handleSubmit(value)}
                                     >
-                                        {value === null ? 'Free Save #' + key : value.name}
+                                        {value.name}
                                     </Button>
                                 )
                             })}
+                            {openStrats.map((value, key) => {
+                                if (strategies?.length + key < 3) {
+                                    return (
+                                        <Button
+                                            key={key}
+                                            type='submit'
+                                            onClick={() => handleSubmit(value)}
+                                        >
+                                            {'Free Save #' + (key+1)}
+                                        </Button>
+                                    )
+                                }
+                            })
+
+                            }
                         </HStack>
                     </ModalBody>
 

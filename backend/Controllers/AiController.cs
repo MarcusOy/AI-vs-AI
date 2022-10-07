@@ -18,14 +18,14 @@ public class AiController : Controller
         _sendEndpointProvider = sendEndpointProvider;
     }
 
-    [HttpPost, Route("/getAi")]
-    public async Task<ActionResult> getAi(Guid id)
+    [HttpGet, Route("/getAi/{id}")]
+    public async Task<Strategy> getAi(String id)
     {
         // The incoming message will be a strategy's id to send the code from
 
-        var ret = _strategiesService.Get(id);
+        var ret = _strategiesService.Get(new Guid(id));
 
-        return Ok(ret);
+        return (ret);
     }
 
     [HttpGet, Route("/Strategy/TestPublish")]

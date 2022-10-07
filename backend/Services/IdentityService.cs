@@ -186,6 +186,7 @@ namespace AVA.API.Services
                     throw new AuthenticationException("Malformed user. Please log in again");
 
                 return _dbContext.Users
+                    .Include(c => c.Strategies)
                     .FirstOrDefault(u => u.Id == userid);
             }
         }

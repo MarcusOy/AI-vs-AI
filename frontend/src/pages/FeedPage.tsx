@@ -16,15 +16,15 @@ const FeedPage = () => {
                     </Link>
                 </Center> */}
             <Flex>
-                <Box/>
-                <Spacer/>
-                <Box display='flex' justifyContent='flex-end'>
-                    <Text>Feed page</Text>
+            <Box>
+                    <ModalAi />
                 </Box>
                 <Spacer/>
                 <Box>
-                    <ModalAi />
+                    <Text>Feed page</Text>
                 </Box>
+                <Spacer/>
+                
                 </Flex>
             </Box>
     )
