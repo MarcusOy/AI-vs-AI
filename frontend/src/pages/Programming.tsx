@@ -23,8 +23,8 @@ function Programming() {
     let strategy;
     if (whoAmI !== undefined && whoAmI.strategies.length > 0) {
         whoAmI.strategies.forEach((strat, index) => {
-            if (strat.id === id) {
-                strategy = strat
+            if (strat.id === '1') {
+                 strategy = strat
             } else if (index === whoAmI.strategies.length - 1) {
                 strategy = useAVAFetch('/getAi/' + id).data
             }
@@ -44,20 +44,17 @@ function Programming() {
         { manual: true },
     ).execute
     useEffect(() => {
-        if (editorRef !== null && editorRef.current !== null) {
-            // @ts-ignore
-            editorRef.current.setValue(
-                strategy === undefined ? code : strategy.sourceCode,
-            )
-        }
-        setCode(strategy === undefined ? code : strategy.sourceCode)
-    }, [strategy])
-    useEffect(() => {
         if (strategy !== undefined) {
-           setName(strategy.name)
+            if (editorRef !== null && editorRef.current !== null) {
+                // @ts-ignore
+                editorRef.current.setValue(
+                    strategy === undefined ? code : strategy.sourceCode,
+                )
+            }
+            setName(strategy.name)
+            setCode(strategy === undefined ? code : strategy.sourceCode)
         }
     }, [strategy])
-
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
@@ -93,7 +90,7 @@ function Programming() {
             <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
                 <Spacer/>
-                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 932, 0)]); }}>Hide Helper</Button>
+                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)]); }}>Hide Helper</Button>
                 </Flex>
             <HStack>
                 <Box width='45%' borderRadius='1g' borderWidth='1px'>
