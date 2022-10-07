@@ -1,6 +1,6 @@
 package IStrategy;
 
-import API.API;
+import API.Java.API;
 import Simulation.GameState;
 
 import javax.script.ScriptEngine;

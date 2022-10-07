@@ -1,6 +1,6 @@
 // cell values are NEVER null - they should be "" if empty
 
-const NUM_PIECES_PER_SIDE = 20; // int
+const NUM_PIECES_PER_SIDE: number = 20; // int
 const NUM_PAWNS_PER_SIDE = 9; // int
 const BOARD_LENGTH = 10; // int
 

@@ -1,4 +1,4 @@
-package API;
+package API.Java;
 
 import Simulation.GameState;
 
@@ -634,6 +634,47 @@ public class API {
 				}					
 			}
 		}		
+
+		return moves;
+	}
+
+	public String[] getValidMovesCheckMateIncluded(String cell, int myColor, String[][] board) {
+		int row = cellToRow(cell);
+		int col = cellToCol(cell);
+
+		String[] moves = new String[VALID_MOVES_ARRAY_LENGTH];
+
+		for (int i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {
+			moves[i] = "";
+		}
+
+		int currentArrayIndex = 0;
+		int moveDistance = getPieceMoveDistance(col, row, board);
+
+		if (moveDistance <= 0)
+			return moves;
+
+		for (int i = -moveDistance; i <= moveDistance; i += moveDistance) {
+			for (int j = -moveDistance; j <= moveDistance; j += moveDistance) {
+				int newCol = col + i;
+				int newRow = row + j;
+
+				if ((isCellValid(newCol, newRow) == TRUE)
+						&& isMyPiece(newCol, newRow, myColor, board) != TRUE) {
+					int pieceColor = getPieceColor(col, row, board);
+                    /*if (isPlayerInCheck(pieceColor, board) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
+                        continue;*/
+					/*if (isPlayerInCheck(pieceColor, board) == TRUE) {
+						int columnInCheck = whichColumnIsPlayerInCheck(pieceColor, board);
+						int rowToCheck = (pieceColor == WHITE) ? 9 : 0;
+						if (newCol != columnInCheck || newRow != rowToCheck)
+							continue;
+					}*/
+					moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);
+					currentArrayIndex++;
+				}
+			}
+		}
 
 		return moves;
 	}
