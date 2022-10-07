@@ -211,12 +211,21 @@ public class SimulationApp {
 
     // gets the URI for connection config
     public static void setupConnection(ConnectionFactory factory) {
-        Dotenv dotenv = Dotenv.load();
+        // read .env file if run locally
+        try {
+            Dotenv dotenv = Dotenv.load();
 
-        factory.setUsername(dotenv.get(ENV_USER));
-        factory.setPassword(dotenv.get(ENV_PASS));
-        factory.setHost(dotenv.get(ENV_HOST));
-        factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
+            factory.setUsername(dotenv.get(ENV_USER));
+            factory.setPassword(dotenv.get(ENV_PASS));
+            factory.setHost(dotenv.get(ENV_HOST));
+            factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
+        } catch (Exception ex) {
+            // read from environment vars if run in docker
+            factory.setUsername(System.getenv(ENV_USER));
+            factory.setPassword(System.getenv(ENV_PASS));
+            factory.setHost(System.getenv(ENV_HOST));
+            factory.setPort(Integer.parseInt(System.getenv(ENV_PORT)));
+        }
     }
 
     // processes the message sent to the app to create a new battle
