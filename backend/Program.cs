@@ -7,6 +7,8 @@ using AVA.API.Helpers;
 using AVA.API.Services;
 using AVA.API.Controllers;
 using AVA.API.Middleware;
+using MassTransit;
+using AVA.API.Consumers;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -39,6 +41,21 @@ builder.Services.AddDbContextPool<AVADbContext>(
 
 builder.Services.AddControllers();
 
+builder.Services.AddMassTransit(mt =>
+{
+    mt.AddConsumer<SimulationResponsesConsumer>();
+
+    mt.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(settings.RabbitMQ.Host, "/", h =>
+        {
+            h.Username(settings.RabbitMQ.User);
+            h.Password(settings.RabbitMQ.Password);
+        });
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
 // Added custom JWT Identity Authentication Service
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.Configure<AVASettings>(o => builder.Configuration.GetSection("AVA").Bind(o));
@@ -70,6 +87,7 @@ builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
 // Setting up domain services
 builder.Services.AddScoped<IGamesService, GamesService>();
+builder.Services.AddScoped<IStrategiesService, StrategiesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();
