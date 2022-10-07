@@ -20,18 +20,7 @@ function Programming() {
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
     console.log(whoAmI)
-    let strategy;
-    if (whoAmI !== undefined && whoAmI.strategies.length > 0) {
-        whoAmI.strategies.forEach((strat, index) => {
-            if (strat.id === id) {
-                 strategy = strat
-            } else if (index === whoAmI.strategies.length - 1) {
-                strategy = useAVAFetch('/getAi/' + id).data
-            }
-            })
-    } else {
-        strategy = useAVAFetch('/getAi/' + id).data
-    }
+    let strategy = useAVAFetch('/getAi/' + id).data
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy/Update',
