@@ -158,7 +158,7 @@ function Programming() {
                     <Editor
                         defaultLanguage='javascript'
                         defaultValue={
-                             localStorage.getItem(strategy?.id) || code
+                            code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}
