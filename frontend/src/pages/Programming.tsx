@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
+import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import { developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
+import { devComplete, developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
@@ -12,10 +12,11 @@ import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
 
 function Programming() {
-    const [code, setCode] = useState(helperFunctions)
+    const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
+    const [submissions, setSubmissions] = useState(['1']);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
     console.log(whoAmI)
@@ -75,15 +76,18 @@ function Programming() {
             createdByUserId: strategy.createdByUserId,
             id: strategy.id
         }
-        console.log(await execute({ data: build }))
-        IdentityService.refreshIdentity()
+        strategy = await execute({ data: build })
+        setSubmissions((past) => [...past, '1'])
+        // IdentityService.refreshIdentity()
     
     }
     return (
         <Box pt='0'>
-            <HStack>
+            <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
-                </HStack>
+                <Spacer/>
+                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 932, 0)]); }}>Hide Helper</Button>
+                </Flex>
             <HStack>
                 <Box width='45%' borderRadius='1g' borderWidth='1px'>
                     <Tabs variant='enclosed'>
@@ -110,24 +114,27 @@ function Programming() {
                             <TabPanel>
                                 {strategy !== undefined && <HStack justifyContent={'center'} gap='2'>
                                     <h1>View Complete Developer Code</h1>
-                                    <CodeModal codeName='Developer Ai' code={helperFunctions} />
+                                    <CodeModal codeName='Developer Ai' code={devComplete} />
                                 </HStack>
                                 }
                             </TabPanel>
                             <TabPanel>
                                 <Accordion allowToggle>
-                                    <AccordionItem>
-                                        <h2>
-                                            <AccordionButton>
-                                                <Box flex='1' textAlign='left'>
-                                                                            Past Submission
-                                                </Box>
-                                                <AccordionIcon />
-                                            </AccordionButton>
-                                        </h2>
-                                        <AccordionPanel pb={4}>
-                                        </AccordionPanel>
-                                    </AccordionItem>
+                                    {submissions.map((value, key) => {
+                                        return (<AccordionItem key={key}>
+                                            <h2>
+                                                <AccordionButton>
+                                                    <Box flex='1' textAlign='left'>
+                                                        Submission #{key+1}
+                                                    </Box>
+                                                    <AccordionIcon />
+                                                </AccordionButton>
+                                            </h2>
+                                            <AccordionPanel pb={4}>
+                                                {value}
+                                            </AccordionPanel>
+                                        </AccordionItem>)
+                                    })}
                                 </Accordion>
                             </TabPanel>
                         </TabPanels>

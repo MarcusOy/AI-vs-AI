@@ -1092,7 +1092,8 @@ function isCellValid(arg1: any, arg2: any): number {
 
     return TRUE;
 }
-
+`
+export const devComplete = `
 function getMove() {
     var board: string[][] = gameState.board;
     var pieceLocations: string[] = getMyPieceLocations(getMyColor());
