@@ -20,14 +20,7 @@ public class AiController : Controller
 
     [HttpGet, Route("/getAi/{id}")]
     public async Task<Strategy> getAi(String id)
-    {
-        // The incoming message will be a strategy's id to send the code from
-
-        var ret = _strategiesService.Get(new Guid(id));
-
-        return (ret);
-    }
-
+      => _strategiesService.Get(new Guid(id));
     [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {

@@ -18,7 +18,7 @@ public class StrategyController : Controller
     public async Task<Strategy> Create([FromBody] Strategy s)
         => await _strategyService.CreateAsync(s);
 
-    [HttpPost, Route("/Stategy"), Authorize]
+    [HttpPut, Route("/Strategy/Update"), Authorize]
     public async Task<Strategy> Update([FromBody] Strategy s)
         => await _strategyService.UpdateAsync(s);
 

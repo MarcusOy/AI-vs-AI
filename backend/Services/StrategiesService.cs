@@ -99,6 +99,7 @@ namespace AVA.API.Services
             originalStrategy.SourceCode = strategy.SourceCode;
 
             _dbContext.Strategies.Update(originalStrategy);
+            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;

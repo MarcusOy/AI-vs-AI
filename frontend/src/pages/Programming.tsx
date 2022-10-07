@@ -8,41 +8,54 @@ import { developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
+import { Strategy } from '../models/strategy';
+import { AVAStore } from '../data/DataStore'
 
 function Programming() {
-    const [code, setCode] = useState('')
+    const [code, setCode] = useState(helperFunctions)
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
     const { id } = useParams()
-    const strategy = useAVAFetch('/getAi/' + id).data
+    const { whoAmI } = AVAStore.useState()
+    console.log(whoAmI)
+    let strategy;
+    if (whoAmI !== undefined && whoAmI.strategies.length > 0) {
+        whoAmI.strategies.forEach((strat, index) => {
+            if (strat.id === id) {
+                strategy = strat
+            } else if (index === whoAmI.strategies.length - 1) {
+                strategy = useAVAFetch('/getAi/' + id).data
+            }
+            })
+    } else {
+        strategy = useAVAFetch('/getAi/' + id).data
+    }
     console.log(strategy)
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
-        '/Strategy',
-        { method: 'POST' },
+        '/Strategy/Update',
+        { method: 'PUT' },
         { manual: true },
     )
     useEffect(() => {
         if (editorRef !== null && editorRef.current !== null) {
             // @ts-ignore
-           /* editorRef.current.setValue(
-                data === undefined ? 'Game Boilerplate' : data.boilerplateCode,
-            ) */
+            editorRef.current.setValue(
+                strategy === undefined ? code : strategy.sourceCode,
+            )
         }
-        setCode(data === undefined ? '// Enter Strategy Here' : data.boilerplateCode)
-    }, [data])
+        // setCode(data === undefined ? '// Enter Strategy Here' : data.boilerplateCode)
+    }, [strategy])
     useEffect(() => {
-        if (strategy !== undefined && name === '') {
+        if (strategy !== undefined) {
            setName(strategy.name)
         }
     }, [strategy])
-    console.log(data)
 
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
-        console.log('Stored instance')
         editor.setHiddenAreas([new monaco.Range(1,0,932,0)]);
         editorRef.current = editor
     }
@@ -57,9 +70,15 @@ function Programming() {
         }
     }
     const runStrategy = async () => {
-        await execute({ data: strategy })
+        const build: Strategy = {
+            name: name,
+            sourceCode: code,
+            createdByUserId: strategy.createdByUserId,
+            id: strategy.id
+        }
+        console.log(await execute({ data: build }))
         IdentityService.refreshIdentity()
-        
+    
     }
     return (
         <Box pt='0'>
@@ -120,8 +139,8 @@ function Programming() {
                         defaultLanguage='typescript'
                         defaultValue={
                             localStorage.getItem('draftAvailable') === 'true'
-                                ? localStorage.getItem('draft') || helperFunctions
-                                : helperFunctions
+                                ? localStorage.getItem('draft') || code
+                                : code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}

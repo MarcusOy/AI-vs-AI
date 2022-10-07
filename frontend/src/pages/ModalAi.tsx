@@ -48,7 +48,7 @@ const ModalAi = () => {
             const response = await execute({ data: build })
             console.log(response)
             IdentityService.refreshIdentity()
-           // navigate('/Programming/' + response.data.id)
+            navigate('/Programming/' + response.data.id)
         } else {
             navigate('/Programming/' + value.id)
         }
