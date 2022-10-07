@@ -32,21 +32,25 @@ function Programming() {
     } else {
         strategy = useAVAFetch('/getAi/' + id).data
     }
-    console.log(strategy)
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy/Update',
         { method: 'PUT' },
         { manual: true },
     )
+    const run = useAVAFetch(
+        '/Strategy/TestPublish',
+        { method: 'POST'},
+        { manual: true },
+    ).execute
     useEffect(() => {
         if (editorRef !== null && editorRef.current !== null) {
             // @ts-ignore
             editorRef.current.setValue(
-                strategy === undefined ? code : strategy.sourceCode,
+                strategy === undefined ? code : code,
             )
         }
-        setCode(strategy === undefined ? code : strategy.sourceCode)
+        setCode(strategy === undefined ? code : code)
     }, [strategy])
     useEffect(() => {
         if (strategy !== undefined) {
@@ -57,7 +61,7 @@ function Programming() {
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
-        editor.setHiddenAreas([new monaco.Range(1,0,932,0)]);
+        editor.setHiddenAreas([new monaco.Range(1,0,490,0)]);
         editorRef.current = editor
     }
     const updateSave = (value) => {
@@ -77,12 +81,13 @@ function Programming() {
             id: strategy.id
         }
         strategy = await execute({ data: build })
+        console.log(await run({ data: build }))
         // @ts-ignore
         setSubmissions((past) => [...past, '1'])
         setSelect(!select)
         // IdentityService.refreshIdentity()
-    
     }
+
     return (
         <Box pt='0'>
             <Flex>
@@ -151,9 +156,9 @@ function Programming() {
                 </Box>
                 <Box width='55%' height='75vh'>
                     <Editor
-                        defaultLanguage='typescript'
+                        defaultLanguage='javascript'
                         defaultValue={
-                             localStorage.getItem(strategy?.id) || code
+                             code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}
