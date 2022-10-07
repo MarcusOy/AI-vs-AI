@@ -45,7 +45,7 @@ function Programming() {
                 strategy === undefined ? code : strategy.sourceCode,
             )
         }
-        // setCode(data === undefined ? '// Enter Strategy Here' : data.boilerplateCode)
+        setCode(strategy === undefined ? code : strategy.sourceCode)
     }, [strategy])
     useEffect(() => {
         if (strategy !== undefined) {
@@ -62,8 +62,7 @@ function Programming() {
     const updateSave = (value) => {
         setCode(value === undefined ? '' : value)
         if (buffer + 1 > 10) {
-            localStorage.setItem('draft', code)
-            localStorage.setItem('draftAvailable', 'true')
+            localStorage.setItem(strategy?.id, code)
             setBuffer(0)
         } else {
             setBuffer(buffer + 1)
@@ -138,9 +137,7 @@ function Programming() {
                     <Editor
                         defaultLanguage='typescript'
                         defaultValue={
-                            localStorage.getItem('draftAvailable') === 'true'
-                                ? localStorage.getItem('draft') || code
-                                : code
+                             localStorage.getItem(strategy?.id) || code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}
