@@ -5,13 +5,13 @@ import Simulation.GameState;
 
 import java.util.ArrayList;
 
-public class RandomAI implements IStrategy {
+public class TrueRandomAI implements IStrategy{
     /**
      * API containing helper functions
      */
     private API api;
 
-    public RandomAI() {
+    public TrueRandomAI() {
         api = new API();
     }
 
@@ -24,7 +24,7 @@ public class RandomAI implements IStrategy {
             if (piece.equals(""))
                 break;
 
-            String[] validMoves = api.getValidMoves(piece, api.getMyColor(gameState), board);
+            String[] validMoves = api.getValidMovesCheckMateIncluded(piece, api.getMyColor(gameState), board);
             for (String move : validMoves) {
                 if (move.equals(""))
                     break;
@@ -33,9 +33,9 @@ public class RandomAI implements IStrategy {
             }
         }
 
-        if (moves.size() == 0) {				//if you have no legal moves, that means you are checkmated
+        if (moves.size() == 0) {                //if you have no legal moves, that means you are checkmated
             return "CHECKMATED";
         }
-        return moves.get((int)(Math.random() * moves.size()));
+        return moves.get((int) (Math.random() * moves.size()));
     }
 }
