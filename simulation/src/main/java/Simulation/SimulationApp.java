@@ -70,6 +70,8 @@ public class SimulationApp {
     static boolean JAVASCRIPT_STOCK;
     static boolean DEMO_STOCK;
 
+    static boolean defenderStockOverride = true;
+
     static final int BOARD_LENGTH = 10;
 
     static GameState gameState; // the gameState of the current game
@@ -119,7 +121,7 @@ public class SimulationApp {
 
             /*
              * SimTestProducer p1 = new SimTestProducer();
-             * 
+             *
              * System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
              * while (true) {
              * String inString = scan.nextLine();
@@ -355,9 +357,12 @@ public class SimulationApp {
             try {
                 if (sentBattle.attackingStrategy != null)
                     attackingEngine = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
-                if (sentBattle.defendingStrategy != null)
-                    defendingEngine = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
-                else if (JAVASCRIPT_STOCK) {
+                if (sentBattle.defendingStrategy != null) {
+                    defenderStockOverride = sentBattle.defendingStrategy.sourceCode == null;
+
+                    if (sentBattle.defendingStrategy.sourceCode != null)
+                        defendingEngine = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
+                } else if (JAVASCRIPT_STOCK) {
                     attackingEngine = evaluateSourceCode(getRandomAIJS());
                     defendingEngine = evaluateSourceCode(getRandomAIJS());
                 }
@@ -613,9 +618,9 @@ public class SimulationApp {
         String moveString = "";
         try {
             // DEFENDER is a stock AI
-            if (NO_COMMUNICATION && !JAVASCRIPT_STOCK)
+            if (defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
-            else // DEFENDER is sent from backend
+            } else // DEFENDER is sent from backend
                 moveString = processStrategySource(defendingEngine);// defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
@@ -786,7 +791,7 @@ public class SimulationApp {
         boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell))
                 && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
                 || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell))
-                        && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
+                && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
 
         if (movingPieceNotFarEnough) {
             debugPrintln("Trying to move piece not far enough");

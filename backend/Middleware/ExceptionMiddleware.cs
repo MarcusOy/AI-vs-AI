@@ -28,8 +28,8 @@ public class ExceptionMiddleware
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             else if (ex is AuthenticationException)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            else
-                throw ex;
+            // else
+            //     throw ex;
 
             await context.Response.WriteAsync(ex.Message);
         }

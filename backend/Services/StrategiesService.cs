@@ -40,10 +40,8 @@ namespace AVA.API.Services
             Strategy s = _dbContext.Strategies
                 .Include(s => s.CreatedByUser)
                 .Include(s => s.Game)
-                .Include(s => s.AttackerBattles
-                    .Where(b => b.AttackingStrategyId == s.Id))
-                .Include(s => s.DefenderBattles
-                    .Where(b => b.DefendingStrategyId == s.Id))
+                .Include(s => s.AttackerBattles)
+                .Include(s => s.DefenderBattles)
                .FirstOrDefault(s => s.Id == id);
 
             if (s is null)
@@ -66,6 +64,12 @@ namespace AVA.API.Services
 
         public async Task<Strategy> CreateAsync(Strategy strategy)
         {
+            var game = await _dbContext.Games
+                .FirstOrDefaultAsync(g => g.Id == strategy.GameId);
+
+            if (game is null)
+                throw new InvalidOperationException("Invalid game id.");
+
             // don't trust these fields
             strategy.CreatedByUserId = _identityService.CurrentUser.Id;
             strategy.CreatedByUser = null;
@@ -74,6 +78,9 @@ namespace AVA.API.Services
             strategy.AttackerBattles = null;
             strategy.DefenderBattles = null;
             strategy.Game = null;
+
+            // populate source code with starter code
+            //strategy.SourceCode = game.BoilerplateCode;
 
             await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();
@@ -92,6 +99,7 @@ namespace AVA.API.Services
             originalStrategy.SourceCode = strategy.SourceCode;
 
             _dbContext.Strategies.Update(originalStrategy);
+            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;

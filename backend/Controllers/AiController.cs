@@ -18,20 +18,14 @@ public class AiController : Controller
         _sendEndpointProvider = sendEndpointProvider;
     }
 
-    [HttpPost, Route("/getAi")]
-    public async Task<ActionResult> getAi(Guid id)
+    [HttpGet, Route("/getAi/{id}")]
+    public async Task<Strategy> getAi(String id)
+      => _strategiesService.Get(new Guid(id));
+
+    [HttpPost, Route("/Strategy/TestPublish")]
+    public async Task<ActionResult> TestPublish([FromBody] Strategy s)
     {
-        // The incoming message will be a strategy's id to send the code from
-
-        var ret = _strategiesService.Get(id);
-
-        return Ok(ret);
-    }
-
-    [HttpGet, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish()
-    {
-        var attackGuid = Guid.NewGuid();
+        var attackGuid = s.Id;
         var defendGuid = Guid.NewGuid();
 
         var request = new SimulationRequest
@@ -41,20 +35,20 @@ public class AiController : Controller
                 Id = Guid.NewGuid(),
                 Name = "Test Publish",
                 BattleStatus = BattleStatus.Pending,
-                Iterations = 3,
+                Iterations = 9,
                 AttackingStrategyId = attackGuid,
                 AttackingStrategy = new Strategy
                 {
                     Id = attackGuid,
-                    Name = "William's Awesome Strategy",
+                    Name = s.Name,
                     Status = StrategyStatus.Active,
-                    SourceCode = "function getMove() { return 'A8, A7' }"
+                    SourceCode = s.SourceCode
                 },
                 DefendingStrategyId = defendGuid,
                 DefendingStrategy = new Strategy
                 {
                     Id = defendGuid,
-                    Name = "Marcus's Stupid Strategy",
+                    Name = "Stock Defender",
                     Status = StrategyStatus.Active,
                     SourceCode = "function getMove() { return 'A8, A7' }"
                 }

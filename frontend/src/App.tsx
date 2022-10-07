@@ -44,7 +44,7 @@ function App() {
         <BrowserRouter>
             <Header isLoggedIn={isLoggedIn} />
             <Stack display={['none', 'none', 'block']}>
-                <Stack pt='2rem' as='main' maxWidth='8xl' marginInline='auto'>
+                <Stack pt='1rem' as='main' maxWidth='8xl' marginInline='auto'>
                     {isLoggedIn ? (
                         <Routes>
                             <Route path='/' element={<Navigate to='/Feed' />} />
