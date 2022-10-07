@@ -116,6 +116,10 @@ const SignUpTab = () => {
                             value: 7,
                             message: 'Password must be longer than 6 characters.',
                         },
+                        pattern: {
+                            value: /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/,
+                            message: 'Password must contain a special symbol.',
+                        },
                     }}
                 />
                 <Center>
