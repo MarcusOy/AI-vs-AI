@@ -80,9 +80,9 @@ function Programming() {
         strategy = await execute({ data: build })
         console.log(await run({ data: build }))
         // @ts-ignore
-        setSubmissions((past) => [...past, '1'])
+        setSubmissions((past) => [...past, 'Stats for Previous Submission display here'])
         setSelect(!select)
-        // IdentityService.refreshIdentity()
+        IdentityService.refreshIdentity()
     }
 
     return (
