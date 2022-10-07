@@ -66,6 +66,12 @@ namespace AVA.API.Services
 
         public async Task<Strategy> CreateAsync(Strategy strategy)
         {
+            var game = await _dbContext.Games
+                .FirstOrDefaultAsync(g => g.Id == strategy.GameId);
+
+            if (game is null)
+                throw new InvalidOperationException("Invalid game id.");
+
             // don't trust these fields
             strategy.CreatedByUserId = _identityService.CurrentUser.Id;
             strategy.CreatedByUser = null;
@@ -74,6 +80,9 @@ namespace AVA.API.Services
             strategy.AttackerBattles = null;
             strategy.DefenderBattles = null;
             strategy.Game = null;
+
+            // populate source code with starter code
+            strategy.SourceCode = game.BoilerplateCode;
 
             await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();
