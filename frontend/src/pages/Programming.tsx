@@ -1,17 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack } from '@chakra-ui/react'
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService';
+import EditDraftName from '../components/EditDraftName';
 
 function Programming() {
     const [code, setCode] = useState('')
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
+    const [name, setName] = useState('')
     const { id } = useParams()
     const strategy = useAVAFetch('/getAi/' + id).data
     console.log(strategy)
@@ -30,6 +32,11 @@ function Programming() {
         }
         setCode(data === undefined ? '// Enter Strategy Here' : data.boilerplateCode)
     }, [data])
+    useEffect(() => {
+        if (strategy !== undefined && name === '') {
+           setName(strategy.name)
+        }
+    }, [strategy])
     console.log(data)
 
     const editorRef = useRef(null)
@@ -55,7 +62,10 @@ function Programming() {
         
     }
     return (
-        <Box>
+        <Box pt='0'>
+            <HStack>
+                <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
+                </HStack>
             <HStack>
                 <Box width='45%' borderRadius='1g' borderWidth='1px'>
                     <Tabs variant='enclosed'>
@@ -65,9 +75,9 @@ function Programming() {
                             <Tab>Documentation</Tab>
                             <Tab>Submission Statistics</Tab>
                         </TabList>
-                        <TabPanels height='75vh'>
+                        <TabPanels height='72vh'>
                             <TabPanel>
-                                <Image src='/chessboard.png' alt='logo' />
+                                {data !== undefined && strategy !== undefined  && <Image src='/chessboard.png' alt='logo' />}
                             </TabPanel>
                             <TabPanel>
                                 <Center>
@@ -105,7 +115,7 @@ function Programming() {
                         </TabPanels>
                     </Tabs>
                 </Box>
-                <Box width='55%' height='77vh'>
+                <Box width='55%' height='75vh'>
                     <Editor
                         defaultLanguage='typescript'
                         defaultValue={
