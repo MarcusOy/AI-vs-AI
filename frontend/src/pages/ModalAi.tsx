@@ -34,7 +34,6 @@ const ModalAi = () => {
         { method: 'PUT' },
         { manual: true },
     )
-    useEffect(IdentityService.refreshIdentity(), [])
 
     const options = data === undefined ? ['1234 Chess'] : data
     const replacement = { name: 'Free Save' }
