@@ -66,7 +66,16 @@ namespace AVA.API.Services
 
         public async Task<Strategy> CreateAsync(Strategy strategy)
         {
-            await _dbContext.AddAsync(strategy);
+            // don't trust these fields
+            strategy.CreatedByUserId = _identityService.CurrentUser.Id;
+            strategy.CreatedByUser = null;
+            strategy.Version = 1;
+            strategy.Status = StrategyStatus.Draft;
+            strategy.AttackerBattles = null;
+            strategy.DefenderBattles = null;
+            strategy.Game = null;
+
+            await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();
 
             return strategy;
@@ -74,17 +83,25 @@ namespace AVA.API.Services
 
         public async Task<Strategy> UpdateAsync(Strategy strategy)
         {
-            _dbContext.Update(strategy);
+            var originalStrategy = await _dbContext.Strategies
+                .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+                .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+
+            // trust these fields
+            originalStrategy.Name = strategy.Name;
+            originalStrategy.SourceCode = strategy.SourceCode;
+
+            _dbContext.Strategies.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
-            return strategy;
+            return originalStrategy;
         }
 
         public async Task<Strategy> DeleteAsync(Guid id)
         {
             Strategy g = Get(id);
 
-            _dbContext.Remove(g);
+            _dbContext.Strategies.Remove(g);
             await _dbContext.SaveChangesAsync();
 
             return g;
