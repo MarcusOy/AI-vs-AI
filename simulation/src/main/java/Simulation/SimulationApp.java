@@ -27,6 +27,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import io.github.cdimascio.dotenv.DotEnvException;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.cli.*;
 
@@ -211,12 +212,24 @@ public class SimulationApp {
 
     // gets the URI for connection config
     public static void setupConnection(ConnectionFactory factory) {
-        Dotenv dotenv = Dotenv.load();
+        System.out.println("Trying to get environment variables from .env...");
+        try {
+            Dotenv dotenv = Dotenv.load();
 
-        factory.setUsername(dotenv.get(ENV_USER));
-        factory.setPassword(dotenv.get(ENV_PASS));
-        factory.setHost(dotenv.get(ENV_HOST));
-        factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
+            factory.setUsername(dotenv.get(ENV_USER));
+            factory.setPassword(dotenv.get(ENV_PASS));
+            factory.setHost(dotenv.get(ENV_HOST));
+            factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
+            System.out.println("Variables from .env set.");
+        } catch (Exception ex) {
+            System.out.println("Failed to use .env file. Getting variables from OS environment...");
+            factory.setUsername(System.getenv(ENV_USER));
+            factory.setPassword(System.getenv(ENV_PASS));
+            factory.setHost(System.getenv(ENV_HOST));
+            factory.setPort(Integer.parseInt(System.getenv(ENV_PORT)));
+            System.out.println("Variables from OS environment set.");
+        }
+
     }
 
     // processes the message sent to the app to create a new battle

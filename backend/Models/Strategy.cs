@@ -8,7 +8,7 @@ namespace AVA.API.Models;
 [ExportTsInterface]
 public class Strategy : BaseEntity
 {
-    [Required]
+    [Required, TsOptional]
     public Guid Id { get; set; }
     [Required, StringLength(50)]
     public string Name { get; set; }

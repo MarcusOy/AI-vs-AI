@@ -13,16 +13,16 @@ public class StrategyController : Controller
         _strategyService = strategiesService;
     }
 
-    [HttpPost, Route("/createStrat")]
-    public async Task<ActionResult> createStrat(Strategy s)
+    [HttpPut, Route("/Strategy")]
+    public async Task<ActionResult> Create([FromBody] Strategy s)
     {
         var ret = await _strategyService.CreateAsync(s);
 
         return Ok(ret);
     }
 
-    [HttpPost, Route("/updateStrat")]
-    public async Task<ActionResult> updateStrat(Strategy s)
+    [HttpPost, Route("/Stategy")]
+    public async Task<ActionResult> Update(Strategy s)
     {
         var ret = await _strategyService.UpdateAsync(s);
 

@@ -10,7 +10,7 @@ import { Game } from './game';
 import { Battle } from './battle';
 
 export interface Strategy extends BaseEntity {
-    id: string;
+    id?: string;
     name: string;
     sourceCode: string;
     status: StrategyStatus;

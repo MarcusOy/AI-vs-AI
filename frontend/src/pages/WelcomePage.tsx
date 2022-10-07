@@ -11,7 +11,7 @@ const WelcomePage = () => {
                 </Text>
                 <Center>
                     <Button size='lg' colorScheme='cyan' mt='24px'>
-                        <Link to='/loginSignup'>Login/Create a free account</Link>
+                        <Link to='/Auth/Login'>Login/Create a free account</Link>
                     </Button>
                 </Center>
             </Box>
