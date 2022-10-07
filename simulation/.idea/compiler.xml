@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="AI-vs-AI" target="17" />
+      <module name="simulation" target="17" />
     </bytecodeTargetLevel>
   </component>
 </project>
