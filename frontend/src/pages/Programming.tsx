@@ -32,13 +32,17 @@ function Programming() {
     } else {
         strategy = useAVAFetch('/getAi/' + id).data
     }
-    console.log(strategy)
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy/Update',
         { method: 'PUT' },
         { manual: true },
     )
+    const run = useAVAFetch(
+        '/Strategy/TestPublish',
+        { method: 'POST'},
+        { manual: true },
+    ).execute
     useEffect(() => {
         if (editorRef !== null && editorRef.current !== null) {
             // @ts-ignore
@@ -77,12 +81,13 @@ function Programming() {
             id: strategy.id
         }
         strategy = await execute({ data: build })
+        console.log(await run({ data: build }))
         // @ts-ignore
         setSubmissions((past) => [...past, '1'])
         setSelect(!select)
         // IdentityService.refreshIdentity()
-    
     }
+
     return (
         <Box pt='0'>
             <Flex>
