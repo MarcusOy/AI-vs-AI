@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
 import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { devComplete, developerAi, easyAi, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
@@ -16,7 +16,7 @@ function Programming() {
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
-    const [submissions, setSubmissions] = useState(['1']);
+    const [submissions, setSubmissions] = useState([]);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
     console.log(whoAmI)
@@ -62,7 +62,7 @@ function Programming() {
     }
     const updateSave = (value) => {
         setCode(value === undefined ? '' : value)
-        if (buffer + 1 > 10) {
+        if (buffer + 1 > 5) {
             localStorage.setItem(strategy?.id, code)
             setBuffer(0)
         } else {
@@ -77,7 +77,9 @@ function Programming() {
             id: strategy.id
         }
         strategy = await execute({ data: build })
+        // @ts-ignore
         setSubmissions((past) => [...past, '1'])
+        setSelect(!select)
         // IdentityService.refreshIdentity()
     
     }
@@ -117,6 +119,13 @@ function Programming() {
                                     <CodeModal codeName='Developer Ai' code={devComplete} />
                                 </HStack>
                                 }
+                                <Center>
+                                    <a href="https://docs.google.com/document/d/1gTAEE-0M2rklHGBfeS9CtV1GIerUqjE-Yyp2TkZ8RTU/edit#heading=h.hp2c6iz21hyn" target="_blank" rel="noreferrer">
+                                    <Button>
+                                            Link to Documentation
+                                    </Button>
+                                    </a>
+                                </Center>
                             </TabPanel>
                             <TabPanel>
                                 <Accordion allowToggle>
