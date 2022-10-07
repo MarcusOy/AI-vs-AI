@@ -5,7 +5,6 @@ using TypeGen.Core.TypeAnnotations;
 
 namespace AVA.API.Models
 {
-    [ExportTsInterface]
     public class AuthToken : BaseEntity
     {
         [Required]

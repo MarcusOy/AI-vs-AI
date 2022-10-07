@@ -67,7 +67,7 @@ function App() {
                                 element={<Navigate to={`/Profile/${whoAmI.id}/Submissions`} />}
                             />
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
-                            <Route path='/Programming' element={<Programming/>}/>
+                            <Route path='/Programming/:id' element={<Programming />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>

@@ -2,14 +2,14 @@ package Simulation;
 
 import API.Java.API;
 
-/*import javax.script.ScriptEngine;
+import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.*;*/
-
+import javax.script.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -29,10 +29,9 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import io.github.cdimascio.dotenv.DotEnvException;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.cli.*;
-
-import javax.script.*;
 
 /*
    ----------------------------------------------------------------------------
@@ -78,8 +77,10 @@ public class SimulationApp {
 
     static int numGames;
 
-    // Runs a battle with an infinite number of BattleGames, starting a fresh BattleGame when the previous completes
-    public static void main(String[] args) throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+    // Runs a battle with an infinite number of BattleGames, starting a fresh
+    // BattleGame when the previous completes
+    public static void main(String[] args)
+            throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
         // parse command line arguments
         if (parseCLI(args)) {
             // ends app if parseCLI() returns true
@@ -90,7 +91,7 @@ public class SimulationApp {
             // establishes connection to message broker queue
             ConnectionFactory factory = new ConnectionFactory();
             setupConnection(factory);
-            //System.out.println(factory.getClientProperties());
+            // System.out.println(factory.getClientProperties());
             Connection connection = factory.newConnection();
             System.out.println("created RabbitMQ connection");
             Channel channel = connection.createChannel();
@@ -112,24 +113,26 @@ public class SimulationApp {
 
             // listens for messages
             System.out.println("listening");
-            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
+            });
             System.out.println("after consume call");
 
-            /*SimTestProducer p1 = new SimTestProducer();
-
-            System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
-            while (true) {
-                String inString = scan.nextLine();
-                int inputNumGames = 1;
-                try {
-                    inputNumGames = Integer.parseInt(inString);
-                    p1.createConnection(inputNumGames);
-                } catch (Exception e) {
-                    System.out.println("invalid number of games - must be an odd digit");
-                }
-            }*/
-        }
-        else /* if (NO_COMMUNICATION) */ {
+            /*
+             * SimTestProducer p1 = new SimTestProducer();
+             * 
+             * System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+             * while (true) {
+             * String inString = scan.nextLine();
+             * int inputNumGames = 1;
+             * try {
+             * inputNumGames = Integer.parseInt(inString);
+             * p1.createConnection(inputNumGames);
+             * } catch (Exception e) {
+             * System.out.println("invalid number of games - must be an odd digit");
+             * }
+             * }
+             */
+        } else /* if (NO_COMMUNICATION) */ {
             // uses stdin to start battles
             // Strategies are either stock Strategies or manual-input from stdin
 
@@ -144,7 +147,8 @@ public class SimulationApp {
                         numGames = Integer.parseInt(scan.nextLine());
                         if (numGames % 2 == 1)
                             break;
-                    } catch (Exception e) {  }
+                    } catch (Exception e) {
+                    }
                     System.out.println("invalid number of games");
                 }
 
@@ -165,13 +169,18 @@ public class SimulationApp {
         Options options = new Options();
 
         options.addOption("c", "console", false, "This mode prints out important information and prompts for input.  " +
-                           "This mode is the only way to play manually. (use -ma and -md flags for manual play)");
+                "This mode is the only way to play manually. (use -ma and -md flags for manual play)");
         options.addOption("d", "debug", false, "Prints out more detailed status and error information.");
-        options.addOption("ma", "manualattacker", false, "Makes the attacker require manual input for moves.  (Also triggers the -n and -c flags)");
-        options.addOption("md", "manualdefender", false, "Makes the defender require manual input for moves.  (Also triggers the -n and -c flags)");
-        options.addOption("n", "nocommunication", false, "Makes SimulationApp run without RabbitMQ connections, using stdin instead");
-        options.addOption("j", "javascriptstock", false, "Uses a hardcoded javascript Stock strategy for any non-manual strategy.  (Also triggers the -n flag)");
-        options.addOption("o", "demostock", false, "Uses a very easy stock strategy for quick manual demo.  (Also triggers the -n flag)");
+        options.addOption("ma", "manualattacker", false,
+                "Makes the attacker require manual input for moves.  (Also triggers the -n and -c flags)");
+        options.addOption("md", "manualdefender", false,
+                "Makes the defender require manual input for moves.  (Also triggers the -n and -c flags)");
+        options.addOption("n", "nocommunication", false,
+                "Makes SimulationApp run without RabbitMQ connections, using stdin instead");
+        options.addOption("j", "javascriptstock", false,
+                "Uses a hardcoded javascript Stock strategy for any non-manual strategy.  (Also triggers the -n flag)");
+        options.addOption("o", "demostock", false,
+                "Uses a very easy stock strategy for quick manual demo.  (Also triggers the -n flag)");
         options.addOption("h", "help", false, "Shows usage");
         options.addOption("u", "usage", false, "Shows usage");
 
@@ -186,15 +195,15 @@ public class SimulationApp {
 
                 if (!passedNoArgs)
                     return true;
-            }
-            else {
+            } else {
                 DEBUG = commandLine.hasOption("d");
                 ATTACKER_MANUAL = commandLine.hasOption("ma");
                 DEFENDER_MANUAL = commandLine.hasOption("md");
                 JAVASCRIPT_STOCK = commandLine.hasOption("j");
                 DEMO_STOCK = commandLine.hasOption("o");
                 CONSOLE_APP = ATTACKER_MANUAL || DEFENDER_MANUAL || commandLine.hasOption("c");
-                NO_COMMUNICATION = ATTACKER_MANUAL || DEFENDER_MANUAL ||  JAVASCRIPT_STOCK || DEMO_STOCK || commandLine.hasOption("n");
+                NO_COMMUNICATION = ATTACKER_MANUAL || DEFENDER_MANUAL || JAVASCRIPT_STOCK || DEMO_STOCK
+                        || commandLine.hasOption("n");
 
                 if (CONSOLE_APP)
                     System.out.print("CONSOLE_APP mode, ");
@@ -224,6 +233,7 @@ public class SimulationApp {
     // gets the URI for connection config
     public static void setupConnection(ConnectionFactory factory) {
         // read .env file if run locally
+        System.out.println("Trying to get environment variables from .env...");
         try {
             Dotenv dotenv = Dotenv.load();
 
@@ -231,13 +241,17 @@ public class SimulationApp {
             factory.setPassword(dotenv.get(ENV_PASS));
             factory.setHost(dotenv.get(ENV_HOST));
             factory.setPort(Integer.parseInt(dotenv.get(ENV_PORT)));
+            System.out.println("Variables from .env set.");
         } catch (Exception ex) {
             // read from environment vars if run in docker
+            System.out.println("Failed to use .env file. Getting variables from OS environment...");
             factory.setUsername(System.getenv(ENV_USER));
             factory.setPassword(System.getenv(ENV_PASS));
             factory.setHost(System.getenv(ENV_HOST));
             factory.setPort(Integer.parseInt(System.getenv(ENV_PORT)));
+            System.out.println("Variables from OS environment set.");
         }
+
     }
 
     // processes the message sent to the app to create a new battle
@@ -249,7 +263,9 @@ public class SimulationApp {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Battle sentBattle;
         try {
-            MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message, new TypeReference<MassTransitMessage<SimulationRequest>>() { });
+            MassTransitMessage<SimulationRequest> sentMessage = mapper.readValue(message,
+                    new TypeReference<MassTransitMessage<SimulationRequest>>() {
+                    });
             sentBattle = sentMessage.message.pendingBattle;
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -257,59 +273,76 @@ public class SimulationApp {
             return null;
         }
 
-        // expects message in format "<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>"
-        /*String usage = "Message must be in format "
-                       + "\"<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>\""
-                       + "  -- EXAMPLE -- \"81703, { code; }, 92105, { code; }, 7\"\n";
-        String[] split = message.split(MESSAGE_DELIMITER);
-        if (split.length != 5) {
-            System.out.printf("ERROR: message \"%s\" does not have the correct number of arguments.\n" + usage, message);
-            return false;
-        }
-        if (split[0] == null) {
-            System.out.println("attackingStrategyId is null");
-            return false;
-        }
-        attackingStrategyId = split[0];*/
-        /*ObjectMapper mapper = new ObjectMapper();
-        try {
-            attackingStrategyId  = mapper.readValue(split[0], UUID.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            System.out.println("JSON parsing of attackingStrategyId failed: " + split[0]);
-            return false;
-        }*/
+        // expects message in format "<attackerStrategyID>,
+        // <attackerStrategySourceCode>, <defenderStrategyID>,
+        // <defenderStrategySourceCode>, <numberOfGames>"
+        /*
+         * String usage = "Message must be in format "
+         * +
+         * "\"<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>\""
+         * + "  -- EXAMPLE -- \"81703, { code; }, 92105, { code; }, 7\"\n";
+         * String[] split = message.split(MESSAGE_DELIMITER);
+         * if (split.length != 5) {
+         * System.out.
+         * printf("ERROR: message \"%s\" does not have the correct number of arguments.\n"
+         * + usage, message);
+         * return false;
+         * }
+         * if (split[0] == null) {
+         * System.out.println("attackingStrategyId is null");
+         * return false;
+         * }
+         * attackingStrategyId = split[0];
+         */
+        /*
+         * ObjectMapper mapper = new ObjectMapper();
+         * try {
+         * attackingStrategyId = mapper.readValue(split[0], UUID.class);
+         * } catch (JsonProcessingException e) {
+         * e.printStackTrace();
+         * System.out.println("JSON parsing of attackingStrategyId failed: " +
+         * split[0]);
+         * return false;
+         * }
+         */
 
-        /*if (split[1] == null) {
-            System.out.println("attackingSourceCode is null");
-            return false;
-        }
-        attackingStrategySource = split[1];
-        if (split[2] == null) {
-            System.out.println("defendingStrategyId is null");
-            return false;
-        }
-        defendingStrategyId = split[2];*/
-        /*try {
-            defendingStrategyId = mapper.readValue(split[2], UUID.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            System.out.println("JSON parsing of defendingStrategyId failed: " + split[2]);
-            return false;
-        }*/
+        /*
+         * if (split[1] == null) {
+         * System.out.println("attackingSourceCode is null");
+         * return false;
+         * }
+         * attackingStrategySource = split[1];
+         * if (split[2] == null) {
+         * System.out.println("defendingStrategyId is null");
+         * return false;
+         * }
+         * defendingStrategyId = split[2];
+         */
+        /*
+         * try {
+         * defendingStrategyId = mapper.readValue(split[2], UUID.class);
+         * } catch (JsonProcessingException e) {
+         * e.printStackTrace();
+         * System.out.println("JSON parsing of defendingStrategyId failed: " +
+         * split[2]);
+         * return false;
+         * }
+         */
 
-        /*if (split[3] == null) {
-            System.out.println("defendingSourceCode is null");
-            return false;
-        }
-        defendingStrategySource = split[3];
-        try {
-            numGames = Integer.parseInt(split[4]);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.printf("parsing of numGames from \"%s\" failed\n", split[2]);
-            return false;
-        }*/
+        /*
+         * if (split[3] == null) {
+         * System.out.println("defendingSourceCode is null");
+         * return false;
+         * }
+         * defendingStrategySource = split[3];
+         * try {
+         * numGames = Integer.parseInt(split[4]);
+         * } catch (Exception e) {
+         * e.printStackTrace();
+         * System.out.printf("parsing of numGames from \"%s\" failed\n", split[2]);
+         * return false;
+         * }
+         */
 
         return sentBattle;
     }
@@ -339,8 +372,7 @@ public class SimulationApp {
             if (numGames % 2 == 1) {
                 // runs battle if message was properly parsed
                 runBattle(sentBattle);
-            }
-            else {
+            } else {
                 System.out.println("numGames must be odd, not: " + numGames);
             }
         }
@@ -349,40 +381,46 @@ public class SimulationApp {
     // runs a full battle
     static void runBattle(Battle sentBattle) {
         // ask for console setup info
-        //scan = new Scanner(System.in);
-        /*System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
-                "This mode prints out important information and prompts for input.\n" +
-                "This mode is the only way to play manually.");
-        CONSOLE_APP = false;//scan.nextLine().equals("y");
-        if (CONSOLE_APP) {
-            System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
-            ATTACKER_MANUAL = scan.nextLine().equals("y");
-            System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "MANUAL" : "AI"));
-            System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
-            DEFENDER_MANUAL = scan.nextLine().equals("y");
-            System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "MANUAL" : "AI"));
-        }*/
+        // scan = new Scanner(System.in);
+        /*
+         * System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
+         * "This mode prints out important information and prompts for input.\n" +
+         * "This mode is the only way to play manually.");
+         * CONSOLE_APP = false;//scan.nextLine().equals("y");
+         * if (CONSOLE_APP) {
+         * System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
+         * ATTACKER_MANUAL = scan.nextLine().equals("y");
+         * System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "MANUAL" : "AI"));
+         * System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
+         * DEFENDER_MANUAL = scan.nextLine().equals("y");
+         * System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "MANUAL" : "AI"));
+         * }
+         */
         setupStrategies();
 
-        /*System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
-                "This mode prints out more detailed status and error information.");
-        DEBUG = true;//scan.nextLine().equals("y");
-        int numGames;
-        while (true) {
-            System.out.println("How many Games do you want in this Battle?  This must be an odd integer");
-            try {
-                numGames = Integer.parseInt(scan.nextLine());
-                if (numGames % 2 == 1)
-                    break;
-            } catch (Exception e) { }
-        }*/
+        /*
+         * System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
+         * "This mode prints out more detailed status and error information.");
+         * DEBUG = true;//scan.nextLine().equals("y");
+         * int numGames;
+         * while (true) {
+         * System.out.
+         * println("How many Games do you want in this Battle?  This must be an odd integer"
+         * );
+         * try {
+         * numGames = Integer.parseInt(scan.nextLine());
+         * if (numGames % 2 == 1)
+         * break;
+         * } catch (Exception e) { }
+         * }
+         */
 
         // setup Battle
         Battle battle = sentBattle;
         battle.init();
 
         while (numGames > 0) {
-            //setup BattleGame
+            // setup BattleGame
             BattleGame currentBattleGame = battle.addBattleGame();
             gameState = new GameState();
 
@@ -402,7 +440,8 @@ public class SimulationApp {
 
         debugPrintln(battle.toString());
 
-        // sends the resulting battle to the backend if there is RabbitMQ connection allowed
+        // sends the resulting battle to the backend if there is RabbitMQ connection
+        // allowed
         if (!NO_COMMUNICATION) {
             // sends message back to backend
             ConnectionFactory factory = new ConnectionFactory();
@@ -423,7 +462,9 @@ public class SimulationApp {
                 String messageJSON;
                 try {
                     SimulationResponse res = new SimulationResponse(battle);
-                    MassTransitMessage<SimulationResponse> message = new MassTransitMessage(UUID.randomUUID().toString(),null, null, UUID.randomUUID().toString(), null, null, null, null, null, new String[] {"urn:message:AVA.API.Consumers:SimulationResponse"}, res);
+                    MassTransitMessage<SimulationResponse> message = new MassTransitMessage(
+                            UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
+                            null, null, new String[] { "urn:message:AVA.API.Consumers:SimulationResponse" }, res);
                     messageJSON = mapper.writeValueAsString(message);
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
@@ -431,8 +472,12 @@ public class SimulationApp {
                     return;
                 }
 
-            /*String delimiter = SimulationApp.MESSAGE_DELIMITER;
-            String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;*/
+                /*
+                 * String delimiter = SimulationApp.MESSAGE_DELIMITER;
+                 * String message = UUID.randomUUID() + delimiter + attackingStrategySource +
+                 * delimiter + UUID.randomUUID() + delimiter + defendingStrategySource +
+                 * delimiter + numGames;
+                 */
                 channel.basicPublish("", RESP_QUEUE_NAME, null, messageJSON.getBytes());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -440,13 +485,13 @@ public class SimulationApp {
             }
         }
 
-        //scan.close();
+        // scan.close();
     }
 
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
-        stockAttacker = DEMO_STOCK ? new TrueRandomAI(): new RandomAI();
-        stockDefender = DEMO_STOCK ? new TrueRandomAI(): new EasyAI();
+        stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
+        stockDefender = DEMO_STOCK ? new TrueRandomAI() : new EasyAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -454,7 +499,8 @@ public class SimulationApp {
     static Color playGame(Battle battle, BattleGame battleGame) {
         Color winner;
         if (CONSOLE_APP || DEBUG) {
-            System.out.printf("Game Starting.  ATTACKER - %s\t\t DEFENDER - %s\n", battleGame.getAttackerColor(), battleGame.getDefenderColor());
+            System.out.printf("Game Starting.  ATTACKER - %s\t\t DEFENDER - %s\n", battleGame.getAttackerColor(),
+                    battleGame.getDefenderColor());
             if (CONSOLE_APP)
                 waitms(3000);
             printBoard();
@@ -466,7 +512,8 @@ public class SimulationApp {
             if (CONSOLE_APP)
                 System.out.println(playerString(gameState.currentPlayer) + "'s turn");
             String moveString = currentColor().equals(battleGame.getAttackerColor())
-                    ? getAttackerMoveString() : getDefenderMoveString();
+                    ? getAttackerMoveString()
+                    : getDefenderMoveString();
 
             // stores moveString in new turn, even if invalid
             battleGame.addTurn(battle.getId(), currentColor(), moveString);
@@ -502,8 +549,7 @@ public class SimulationApp {
                 }
 
                 break;
-            }
-            else if (gameState.numBlackPawns == 0) // if black is only side without pawns
+            } else if (gameState.numBlackPawns == 0) // if black is only side without pawns
             {
                 winner = Color.WHITE;
                 debugPrintln("BLACK has no more pawns");
@@ -520,7 +566,8 @@ public class SimulationApp {
             alternatePlayer();
         }
 
-        System.out.printf("---------------- FINAL BOARD STATE (%d/%d)----------------", battleGame.getGameNumber(), battle.getIterations());
+        System.out.printf("---------------- FINAL BOARD STATE (%d/%d)----------------", battleGame.getGameNumber(),
+                battle.getIterations());
         printBoard();
         System.out.printf("%s Wins!!!\n", winner.name());
 
@@ -541,9 +588,9 @@ public class SimulationApp {
         try {
             // ATTACKER is a stock AI
             if (NO_COMMUNICATION && !JAVASCRIPT_STOCK)
-                moveString = stockAttacker.getMove(gameState);//return processStrategySource(attackingEngine);
+                moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
             else // ATTACKER is sent from backend
-                moveString = processStrategySource(attackingEngine);//attackingStrategy.getMove(gameState);
+                moveString = processStrategySource(attackingEngine);// attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             if (DEBUG)
@@ -567,9 +614,9 @@ public class SimulationApp {
         try {
             // DEFENDER is a stock AI
             if (NO_COMMUNICATION && !JAVASCRIPT_STOCK)
-                moveString = stockDefender.getMove(gameState);//return processStrategySource(defendingEngine);
+                moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
             else // DEFENDER is sent from backend
-                moveString = processStrategySource(defendingEngine);//defendingStrategy.getMove(gameState);
+                moveString = processStrategySource(defendingEngine);// defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
             if (DEBUG)
@@ -584,11 +631,12 @@ public class SimulationApp {
         // sets up evaluator
         ScriptEngineManager factory = new ScriptEngineManager();
 
-        //List<ScriptEngineFactory> factories = factory.getEngineFactories();
+        // List<ScriptEngineFactory> factories = factory.getEngineFactories();
 
         ScriptEngine engine = factory.getEngineByName("nashorn");
-        // allows the strategy's source code to access the gameState as a global variable
-        //engine.put("gameState", new GameState());
+        // allows the strategy's source code to access the gameState as a global
+        // variable
+        // engine.put("gameState", new GameState());
 
         // evaluates the script
         engine.eval(strategySource);
@@ -598,12 +646,15 @@ public class SimulationApp {
     // gets a moveString from evaluating the strategy's source code
     static String processStrategySource(ScriptEngine strategyEngine) {
         // for JS parsing
-        // allows the strategy's source code to access the gameState as a global variable
+        // allows the strategy's source code to access the gameState as a global
+        // variable
         strategyEngine.put("gameState", gameState);
 
         // invokes the script function to get moveString
         try {
-            //String script = "function getMove() { return 'A8, A7' }";
+            // String script = "function getMove() { return 'A8, A7' }";
+
+            // engine.eval(strategySource/*script*/);
 
             Invocable inv = (Invocable) strategyEngine;
             return "" + inv.invokeFunction("getMove");
@@ -613,7 +664,7 @@ public class SimulationApp {
         }
     }
 
-    //adjusts the gameState based upon the moveString
+    // adjusts the gameState based upon the moveString
     static void processMove(String moveString) {
         String[][] board = gameState.board;
         String[] moveCells = moveString.split(", ");
@@ -631,7 +682,8 @@ public class SimulationApp {
         String toPiece = board[toCol][toRow];
         Color fromColor = getPieceColor(fromCell, board);
         Color toColor = getPieceColor(toCell, board);
-        debugPrintf("Move String: \"%s\"\nMoving [%d][%d] (%s) to [%d][%d] (%s)\n", moveString, fromCol, fromRow, fromPiece, toCol, toRow, toPiece);
+        debugPrintf("Move String: \"%s\"\nMoving [%d][%d] (%s) to [%d][%d] (%s)\n", moveString, fromCol, fromRow,
+                fromPiece, toCol, toRow, toPiece);
 
         // copies piece to new location
         if (fromMoveDistance > toMoveDistance) { // attacker wins
@@ -642,7 +694,7 @@ public class SimulationApp {
             board[toCol][toRow] = "";
             processLosePiece(fromColor, fromMoveDistance);
             processLosePiece(toColor, toMoveDistance);
-        }else //if (fromMoveDistance < toMoveDistance) // defender wins
+        } else // if (fromMoveDistance < toMoveDistance) // defender wins
             processLosePiece(fromColor, fromMoveDistance);
 
         // removes piece from old location
@@ -681,8 +733,9 @@ public class SimulationApp {
         System.out.print("\n\n");
     }
 
-    // Returns true if the passed moveString is in the format "<fromCell>, <toCell>",
-    // using valid cells.  A player cannot land on their own pieces, and moves
+    // Returns true if the passed moveString is in the format "<fromCell>,
+    // <toCell>",
+    // using valid cells. A player cannot land on their own pieces, and moves
     // that try to take the piece further away from it
     public static boolean isMoveValid(String moveString, String[][] board) {
         String[] moveCells;
@@ -730,8 +783,10 @@ public class SimulationApp {
             return false;
         }
 
-        boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell)) && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
-                || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell)) && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
+        boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell))
+                && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
+                || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell))
+                        && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
 
         if (movingPieceNotFarEnough) {
             debugPrintln("Trying to move piece not far enough");
@@ -748,7 +803,7 @@ public class SimulationApp {
     }
 
     // returns true if the passed cell string is properly formatted
-    //  and refers to a valid cell on the game board
+    // and refers to a valid cell on the game board
     static boolean isCellValid(String cell) {
         if (cell == null || cell.length() != 2)
             return false;
@@ -762,14 +817,16 @@ public class SimulationApp {
     static int getPieceMoveDistance(String cell, String[][] board) {
         return (new API()).getPieceMoveDistance(cell, board);
 
-        /*if (!isCellValid(cell))
-            return 0;
-        int col = cellToCol(cell);
-        int row = cellToRow(cell);
-        String cellVal = board[col][row];
-        if (cellVal.equals(""))
-            return 0;
-        return Integer.parseInt(cellVal.substring(1));*/
+        /*
+         * if (!isCellValid(cell))
+         * return 0;
+         * int col = cellToCol(cell);
+         * int row = cellToRow(cell);
+         * String cellVal = board[col][row];
+         * if (cellVal.equals(""))
+         * return 0;
+         * return Integer.parseInt(cellVal.substring(1));
+         */
     }
 
     static Color getPieceColor(String cell, String[][] board) {
@@ -787,12 +844,14 @@ public class SimulationApp {
         return colorChar == 'w' ? Color.WHITE : Color.BLACK;
     }
 
-    // returns the translation of the cell's first character to it's corresponding index in board[]
+    // returns the translation of the cell's first character to it's corresponding
+    // index in board[]
     static int cellToCol(String cell) {
         return cell.charAt(0) - 'A';
     }
 
-    // returns the translation of the cell's second character to it's corresponding index in board[][]
+    // returns the translation of the cell's second character to it's corresponding
+    // index in board[][]
     static int cellToRow(String cell) {
         return Integer.parseInt(cell.substring(1, 2));
     }
@@ -845,7 +904,8 @@ public class SimulationApp {
 
     static void waitms(long msToWait) {
         long gameEndTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() < gameEndTime + msToWait) { }
+        while (System.currentTimeMillis() < gameEndTime + msToWait) {
+        }
     }
 
     static String getRandomAIJS() {
@@ -1192,14 +1252,17 @@ public class SimulationApp {
                 "    var moveDistance = getPieceMoveDistance(col, row);\n" +
                 "    if (moveDistance <= 0)\n" +
                 "        return moves;\n" +
-                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n" +
-                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n" +
+                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n"
+                +
+                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n"
+                +
                 "            var newCol = col + i;\n" +
                 "            var newRow = row + j;\n" +
                 "            if ((isCellValid(newCol, newRow) === TRUE)\n" +
                 "                && isMyPiece(newCol, newRow, myColor) != TRUE) {\n" +
                 "                var pieceColor = getPieceColor(col, row);\n" +
-                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n" +
+                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n"
+                +
                 "                    continue;*/\n" +
                 "                if (isPlayerInCheck(pieceColor) === TRUE) {\n" +
                 "                    var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);\n" +
@@ -1309,10 +1372,13 @@ public class SimulationApp {
                 "    if (cellValidRet != TRUE)\n" +
                 "        return ERR_FORMAT_MOVE_TO;\n" +
                 "    var pieceMoveDistance = getPieceMoveDistance(fromCell, null);\n" +
-                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n" +
+                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n"
+                +
                 "        return FALSE;\n" +
-                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n" +
-                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n" +
+                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n"
+                +
+                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n"
+                +
                 "        return FALSE;\n" +
                 "    return TRUE;\n" +
                 "}\n" +

@@ -42,10 +42,19 @@ services:
   #   ports:
   #     - 5000:80
 
-  # # Simulation (for docker buid testing only)
-  # backend:
-  #   image: sim
-  #   environment:
-  #     - RABBITMQ
-  #   ports:
-  #     - 5000:80
+  # Simulation (for docker buid testing only)
+  sim:
+    # image: sim
+    build:
+      context: ./Simulation
+      dockerfile: Dockerfile
+    environment:
+      - AVA__RABBITMQ__HOST=rabbitmq
+      - AVA__RABBITMQ__USER=ava
+      - AVA__RABBITMQ__PASS=!ava_app!
+      - AVA__RABBITMQ__PORT=5672
+    ports:
+      - 5000:80
+    depends_on:
+      - rabbitmq
+    dns: 8.8.8.8
