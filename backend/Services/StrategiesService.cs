@@ -40,10 +40,8 @@ namespace AVA.API.Services
             Strategy s = _dbContext.Strategies
                 .Include(s => s.CreatedByUser)
                 .Include(s => s.Game)
-                .Include(s => s.AttackerBattles
-                    .Where(b => b.AttackingStrategyId == s.Id))
-                .Include(s => s.DefenderBattles
-                    .Where(b => b.DefendingStrategyId == s.Id))
+                .Include(s => s.AttackerBattles)
+                .Include(s => s.DefenderBattles)
                .FirstOrDefault(s => s.Id == id);
 
             if (s is null)
