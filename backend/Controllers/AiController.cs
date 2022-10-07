@@ -50,7 +50,7 @@ public class AiController : Controller
                     Id = defendGuid,
                     Name = "Stock Defender",
                     Status = StrategyStatus.Active,
-                    SourceCode = "function getMove() { return 'A8, A7' }"
+                    SourceCode = null//"function getMove() { return 'A8, A7' }"
                 }
             }
         };

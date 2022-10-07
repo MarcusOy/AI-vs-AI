@@ -47,10 +47,10 @@ function Programming() {
         if (editorRef !== null && editorRef.current !== null) {
             // @ts-ignore
             editorRef.current.setValue(
-                strategy === undefined ? code : strategy.sourceCode,
+                strategy === undefined ? code : code,
             )
         }
-        setCode(strategy === undefined ? code : strategy.sourceCode)
+        setCode(strategy === undefined ? code : code)
     }, [strategy])
     useEffect(() => {
         if (strategy !== undefined) {
@@ -61,7 +61,7 @@ function Programming() {
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
-        editor.setHiddenAreas([new monaco.Range(1,0,932,0)]);
+        editor.setHiddenAreas([new monaco.Range(1,0,490,0)]);
         editorRef.current = editor
     }
     const updateSave = (value) => {
@@ -156,9 +156,9 @@ function Programming() {
                 </Box>
                 <Box width='55%' height='75vh'>
                     <Editor
-                        defaultLanguage='typescript'
+                        defaultLanguage='javascript'
                         defaultValue={
-                             localStorage.getItem(strategy?.id) || code
+                             code
                         }
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}
