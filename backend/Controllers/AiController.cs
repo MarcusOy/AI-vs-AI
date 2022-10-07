@@ -21,10 +21,10 @@ public class AiController : Controller
     [HttpGet, Route("/getAi/{id}")]
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
-    [HttpGet, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish()
+    [HttpGet, Route("/Strategy/TestPublish/{strategyId}/{strategySource}")]
+    public async Task<ActionResult> TestPublish(String strategyId, String strategySource)
     {
-        var attackGuid = Guid.NewGuid();
+        var attackGuid = new Guid(strategyId);
         var defendGuid = Guid.NewGuid();
 
         var request = new SimulationRequest
@@ -34,20 +34,20 @@ public class AiController : Controller
                 Id = Guid.NewGuid(),
                 Name = "Test Publish",
                 BattleStatus = BattleStatus.Pending,
-                Iterations = 3,
+                Iterations = 49,
                 AttackingStrategyId = attackGuid,
                 AttackingStrategy = new Strategy
                 {
                     Id = attackGuid,
-                    Name = "William's Awesome Strategy",
+                    Name = "Test Attacker",
                     Status = StrategyStatus.Active,
-                    SourceCode = "function getMove() { return 'A8, A7' }"
+                    SourceCode = strategySource
                 },
                 DefendingStrategyId = defendGuid,
                 DefendingStrategy = new Strategy
                 {
                     Id = defendGuid,
-                    Name = "Marcus's Stupid Strategy",
+                    Name = "Stock Defender",
                     Status = StrategyStatus.Active,
                     SourceCode = "function getMove() { return 'A8, A7' }"
                 }
