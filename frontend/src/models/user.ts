@@ -4,13 +4,12 @@
  */
 
 import { BaseEntity } from './base-entity';
-import { AuthToken } from './auth-token';
 import { Strategy } from './strategy';
 import { BugReport } from './bug-report';
 import { Game } from './game';
 
 export interface User extends BaseEntity {
-    id: string;
+    id?: string;
     username: string;
     email: string;
     firstName: string;
@@ -19,7 +18,6 @@ export interface User extends BaseEntity {
     salt: string;
     bio: string;
     active: boolean;
-    tokens: AuthToken[];
     strategies: Strategy[];
     bugReports: BugReport[];
     favoriteGameId: number;

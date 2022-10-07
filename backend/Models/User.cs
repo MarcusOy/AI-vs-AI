@@ -8,7 +8,7 @@ namespace AVA.API.Models;
 [ExportTsInterface]
 public class User : BaseEntity
 {
-    [Required]
+    [Required, TsOptional]
     public Guid Id { get; set; }
     [Required, StringLength(15)]
     public string Username { get; set; }
@@ -28,7 +28,7 @@ public class User : BaseEntity
     public Boolean Active { get; set; }
 
     // Token Relationship (User uses Tokens to authenticate and refresh authentication)
-    [JsonIgnore]
+    [JsonIgnore, TsIgnore]
     public List<AuthToken> Tokens { get; set; }
 
     // Strategy Relationship (User creates strategies)

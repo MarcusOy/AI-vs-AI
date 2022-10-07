@@ -6,10 +6,10 @@ namespace AVA.API.Models;
 [ExportTsInterface]
 public class BaseEntity
 {
-    [JsonIgnore]
+    [JsonIgnore, TsOptional]
     public DateTime CreatedOn { get; set; }
-    [JsonIgnore]
+    [JsonIgnore, TsOptional]
     public DateTime UpdatedOn { get; set; }
-    [JsonIgnore]
+    [JsonIgnore, TsOptional]
     public DateTime? DeletedOn { get; set; }
 }

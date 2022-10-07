@@ -4,7 +4,7 @@
  */
 
 export interface BaseEntity {
-    createdOn: Date;
-    updatedOn: Date;
-    deletedOn: Date;
+    createdOn?: Date;
+    updatedOn?: Date;
+    deletedOn?: Date;
 }
