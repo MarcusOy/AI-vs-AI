@@ -12,6 +12,7 @@ public class BattleGame : BaseEntity
     public int GameNumber { get; set; }
     [Required]
     public bool DidAttackerWin { get; set; }
+    public string StackTrace { get; set; }
 
     // Battle Relationship PK (Battle game is a part of a battle)
     [Required]

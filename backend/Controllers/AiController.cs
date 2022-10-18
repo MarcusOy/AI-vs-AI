@@ -1,4 +1,5 @@
 ﻿using AVA.API.Consumers;
+using AVA.API.Data;
 using AVA.API.Models;
 using AVA.API.Services;
 using MassTransit;
@@ -8,50 +9,41 @@ namespace AVA.API.Controllers;
 
 public class AiController : Controller
 {
+    private readonly AVADbContext _dbContext;
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
 
     public AiController(IStrategiesService strategiesService,
-                        ISendEndpointProvider sendEndpointProvider)
+                        ISendEndpointProvider sendEndpointProvider,
+                        AVADbContext dbContext)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
+        _dbContext = dbContext;
     }
 
     [HttpGet, Route("/getAi/{id}")]
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
-    [HttpPost, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish([FromBody] Strategy s)
+    [HttpGet, Route("/Strategy/TestPublish")]
+    public async Task<ActionResult> TestPublish()
     {
-        var attackGuid = s.Id;
-        var defendGuid = Guid.NewGuid();
+        var strategy = _dbContext.Strategies
+            .FirstOrDefault(s => s.Id == new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"));
 
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
             {
                 Id = Guid.NewGuid(),
-                Name = "Test Publish",
+                Name = "Stock Easy AI vs Stock Easy AI",
                 BattleStatus = BattleStatus.Pending,
                 Iterations = 9,
-                AttackingStrategyId = attackGuid,
-                AttackingStrategy = new Strategy
-                {
-                    Id = attackGuid,
-                    Name = s.Name,
-                    Status = StrategyStatus.Active,
-                    SourceCode = s.SourceCode
-                },
-                DefendingStrategyId = defendGuid,
-                DefendingStrategy = new Strategy
-                {
-                    Id = defendGuid,
-                    Name = "Stock Defender",
-                    Status = StrategyStatus.Active,
-                    SourceCode = "function getMove() { return 'A8, A7' }"
-                }
+                AttackingStrategyId = new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"),
+                AttackingStrategy = strategy,
+                DefendingStrategyId = new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"),
+                DefendingStrategy = strategy
             }
         };
 

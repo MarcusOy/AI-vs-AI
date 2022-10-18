@@ -34,24 +34,24 @@ services:
       - RABBITMQ_DEFAULT_PASS=!ava_app!
 
   # Backend (for docker buid testing only)
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: always
-    environment:
-      AVA__VERSION: 0.1
-      # Connection string uses Docker DNS name for the database (db)
-      AVA__CONNECTIONSTRING: "Server=db;Database=app;Uid=ava;Pwd=!ava_app!;"
-      AVA__JWTKEY: DevelopmentKey!!
-      AVA__RABBITMQ__HOST: rabbitmq
-      AVA__RABBITMQ__USER: ava
-      AVA__RABBITMQ__PASSWORD: "!ava_app!"
-    ports:
-      - 5000:80
-    depends_on:
-      - rabbitmq
-      - db
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   environment:
+  #     AVA__VERSION: 0.1
+  #     # Connection string uses Docker DNS name for the database (db)
+  #     AVA__CONNECTIONSTRING: "Server=db;Database=app;Uid=ava;Pwd=!ava_app!;"
+  #     AVA__JWTKEY: DevelopmentKey!!
+  #     AVA__RABBITMQ__HOST: rabbitmq
+  #     AVA__RABBITMQ__USER: ava
+  #     AVA__RABBITMQ__PASSWORD: "!ava_app!"
+  #   ports:
+  #     - 5000:80
+  #   depends_on:
+  #     - rabbitmq
+  #     - db
 
   # Simulation (for docker buid testing only)
   sim:

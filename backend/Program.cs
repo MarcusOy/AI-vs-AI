@@ -92,6 +92,7 @@ builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IStrategiesService, StrategiesService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();

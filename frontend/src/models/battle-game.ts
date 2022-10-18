@@ -10,6 +10,7 @@ import { Turn } from './turn';
 export interface BattleGame extends BaseEntity {
     gameNumber: number;
     didAttackerWin: boolean;
+    stackTrace: string;
     battleId: string;
     battle: Battle;
     turns: Turn[];
