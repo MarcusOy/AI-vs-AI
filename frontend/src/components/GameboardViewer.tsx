@@ -97,8 +97,8 @@ function easeOutQuintPos(
 
     // const pow = 1 - Math.pow(1 - t, 5)
     const pow = t
-    const x = newX - oldX * pow + oldX
-    const y = newY - oldY * pow + oldY
+    const x = (newX - oldX) * pow + oldX
+    const y = (newY - oldY) * pow + oldY
     return [x, y]
 }
 
