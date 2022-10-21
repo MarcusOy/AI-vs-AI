@@ -3,6 +3,7 @@ import { Box, Button, Heading, HStack, IconButton, useColorMode } from '@chakra-
 import { Link } from 'react-router-dom'
 import { ArrowUpDownIcon, BellIcon, MoonIcon, SearchIcon, SunIcon } from '@chakra-ui/icons'
 import CurrentAccountButton from './CurrentAccountButton'
+import ModalService from '../data/ModalService'
 
 interface IHeader {
     isLoggedIn: boolean
@@ -71,8 +72,9 @@ const Header = (props: IHeader) => {
                             />
                             <IconButton
                                 variant='ghost'
-                                icon={<SearchIcon w='5' h='5' />}
-                                aria-label={'Search database'}
+                                icon={<SearchIcon w='4' h='4' />}
+                                aria-label={'Search...'}
+                                onClick={() => ModalService.openSearchModal()}
                             />
                             <CurrentAccountButton />
                         </>

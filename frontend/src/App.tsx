@@ -13,11 +13,13 @@ import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
 import Programming from './pages/Programming'
-import ReportBugModal from './components/ReportBugModal'
+import ReportBugModal from './components/modals/ReportBugModal'
+import SearchModal from './components/modals/SearchModal'
+import ModalProvider from './components/modals/ModalProvider'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
-    const { whoAmI, whoAmIUpdateNumber } = AVAStore.useState()
+    const { whoAmI, whoAmIUpdateNumber, modals } = AVAStore.useState()
 
     // trigger WhoAmI query on login and logout
     useEffect(() => {
@@ -38,10 +40,11 @@ function App() {
         )
 
     const isLoggedIn = whoAmI != undefined
-    console.log({ whoAmI, isLoggedIn })
+    console.log({ whoAmI, isLoggedIn, modals })
 
     return (
         <BrowserRouter>
+            <ModalProvider />
             <Header isLoggedIn={isLoggedIn} />
             <Stack display={['none', 'none', 'block']}>
                 <Stack pt='1rem' as='main' maxWidth='8xl' marginInline='auto'>
