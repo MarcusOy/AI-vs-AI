@@ -95,8 +95,7 @@ function easeOutQuintPos(
     if (t < 0) t = 0
     if (t > 1) t = 1
 
-    // const pow = 1 - Math.pow(1 - t, 5)
-    const pow = t
+    const pow = 1 - Math.pow(1 - t, 5)
     const x = (newX - oldX) * pow + oldX
     const y = (newY - oldY) * pow + oldY
     return [x, y]
@@ -127,9 +126,13 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
     // update board when turn changes
     useEffect(() => {
         // if move slider is moved by one turn
-        if (props.currentTurn == prevTurn + 1) {
+        if (props.currentTurn > 0 && props.currentTurn == prevTurn + 1) {
+            // exchange entire board state out of turn minus 1
+            const { board, turnData: turns } = moveToTurn(props.turns, prevTurn)
+            setBoard(board)
+            setTurnData(turns)
             // do piece move animation
-            const turn = props.turns[props.currentTurn]
+            const turn = props.turns[prevTurn]
             const turnData = turn.turnData.split(', ')
 
             if (turnData.length != 2) return
@@ -143,10 +146,8 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
             setSourceRow(cellToRow(from))
             setTargetCol(cellToCol(to))
             setTargetRow(cellToRow(to))
-            setStartFrame(-1)
-            setEndFrame(-1)
-
-            console.log({ sourceCol, sourceRow, targetCol, targetRow })
+            setStartFrame(0)
+            setEndFrame(60)
         } else {
             // exchange entire board state out
             const { board, turnData } = moveToTurn(props.turns, props.currentTurn)
@@ -161,10 +162,10 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
         // Animation control
-        if (isAnimating && startFrame == -1 && endFrame == -1) {
-            setStartFrame(frameCount)
-            setStartFrame(frameCount + ANIMATION_DURATION)
-        }
+        // if (isAnimating && startFrame == -1 && endFrame == -1) {
+        //     setStartFrame(frameCount)
+        //     setStartFrame(frameCount + ANIMATION_DURATION)
+        // }
         // if (isAnimating && frameCount >= endFrame) {
         //     setIsAnimating(false)
         //     setMovingPiece('')
@@ -184,6 +185,7 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
     }
 
     const drawPieces = (ctx: CanvasRenderingContext2D, frameCount: number, board: string[][]) => {
+        let animatedPieceOpts: IPiece | undefined = undefined
         for (let row = 0; row < board.length; row++) {
             for (let col = 0; col < board[row].length; col++) {
                 const cell = board[col][row]
@@ -204,9 +206,11 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
                         targetY,
                         (frameCount - startFrame) / ANIMATION_DURATION,
                     )
-                    // console.log({ x, y, sourceX, sourceY, targetX, targetY, frameCount })
                     opts.posX = x
                     opts.posY = y
+
+                    animatedPieceOpts = opts
+                    continue
                 } else {
                     opts.cellX = col
                     opts.cellY = row
@@ -215,6 +219,9 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
                 drawPiece(ctx, frameCount, opts)
             }
         }
+
+        // draw animated piece on top
+        if (animatedPieceOpts != undefined) drawPiece(ctx, frameCount, animatedPieceOpts)
     }
 
     const drawPiece = (ctx: CanvasRenderingContext2D, frameCount: number, options: IPiece) => {
@@ -235,8 +242,10 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
         const mt = 20
         const cell = 261
         // for snap rendering
-        if (options.cellX != undefined && options.cellY != undefined)
-            ctx.translate(options.cellX * cell + ml, options.cellY * cell + mt)
+        if (options.cellX != undefined && options.cellY != undefined) {
+            const [x, y] = rowColToXY(options.cellY, options.cellX)
+            ctx.translate(x, y)
+        }
 
         // for animation rendering
         if (options.posX != undefined && options.posY != undefined)
@@ -289,8 +298,8 @@ export const rowColToXY = (row: number, col: number): number[] => {
     const mt = 20
     const cell = 261
 
-    const x = row * cell + ml
-    const y = col * cell + mt
+    const x = col * cell + ml
+    const y = row * cell + mt
 
     return [x, y]
 }

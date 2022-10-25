@@ -26,12 +26,12 @@ const ReplayPage = () => {
         data: bData,
         isLoading: bIsLoading,
         error: bError,
-    } = useAVAFetch('/Battle/ee78a4fe-d8b9-4047-b9e0-6469c1152180')
+    } = useAVAFetch('/Battle/24095136-3123-4eb0-88cf-bd3e875a3adc')
     const {
         data: gData,
         isLoading: gIsLoading,
         error: gError,
-    } = useAVAFetch('/Battle/ee78a4fe-d8b9-4047-b9e0-6469c1152180/7')
+    } = useAVAFetch('/Battle/24095136-3123-4eb0-88cf-bd3e875a3adc/7')
 
     // update turn slider helper text on turn data load
     useEffect(() => {
