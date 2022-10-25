@@ -12,6 +12,11 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     useDisclosure,
     useRadio,
     useRadioGroup,
@@ -23,19 +28,20 @@ import { Strategy } from '../models/strategy'
 import { StrategyStatus } from '../models/strategy-status'
 import IdentityService from '../data/IdentityService'
 import { devComplete, helperFunctions } from '../helpers/hardcodeAi'
+import { Game } from '../models/game'
 
 const ModalAi = () => {
     const navigate = useNavigate()
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { whoAmI } = AVAStore.useState()
-    const { data } = useAVAFetch('/Games/1')
+    const { data } = useAVAFetch('/Games/')
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy',
         { method: 'PUT' },
         { manual: true },
     )
 
-    const options = data === undefined ? ['1234 Chess'] : data
+    const options = data === undefined ? {name: '1234 Chess'} : data
     const replacement = { name: 'Free Save' }
     const openStrats = [replacement, replacement, replacement];
     const strategies = whoAmI?.strategies || []
@@ -54,6 +60,36 @@ const ModalAi = () => {
             navigate('/Programming/' + value.id)
         }
     }
+    const findDrafts = (game: Game) => {
+        return (<HStack m={4}>
+        {strategies?.map((value, key) => {
+            return (
+                <Button
+                    key={key}
+                    type='submit'
+                    onClick={() => handleSubmit(value)}
+                >
+                    {value.name}
+                </Button>
+            )
+        })}
+        {openStrats.map((value, key) => {
+            if (strategies?.length + key < 3) {
+                return (
+                    <Button
+                        key={key}
+                        type='submit'
+                        onClick={() => handleSubmit(value)}
+                    >
+                        {'Free Save #' + (key+1)}
+                    </Button>
+                )
+            }
+        })
+
+        }
+    </HStack>)
+    }
     return (
         <>
             <Button onClick={onOpen}>Draft AI</Button>
@@ -63,36 +99,19 @@ const ModalAi = () => {
                     <ModalHeader>Select a Draft Save</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <HStack m={4}>
-                            {strategies?.map((value, key) => {
-                                return (
-                                    <Button
-                                        key={key}
-                                        type='submit'
-                                        onClick={() => handleSubmit(value)}
-                                    >
-                                        {value.name}
-                                    </Button>
-                                )
-                            })}
-                            {openStrats.map((value, key) => {
-                                if (strategies?.length + key < 3) {
-                                    return (
-                                        <Button
-                                            key={key}
-                                            type='submit'
-                                            onClick={() => handleSubmit(value)}
-                                        >
-                                            {'Free Save #' + (key+1)}
-                                        </Button>
-                                    )
-                                }
-                            })
-
-                            }
-                        </HStack>
+                    <Tabs variant='enclosed'>
+                        <TabList>
+                                {options?.map((value, key) => {
+                                    return <Tab key={key}>value.name</Tab>
+                                })}
+                        </TabList>
+                        <TabPanels height='72vh'>
+                                {options?.map((value, key) => {
+                                    return <TabPanel key={key}>{findDrafts(value)}</TabPanel>
+                                })}
+                            </TabPanels>
+                            </Tabs>
                     </ModalBody>
-
                     <ModalFooter>
                         <Button colorScheme='blue' mr={3} onClick={onClose}>
                             Close
