@@ -41,7 +41,7 @@ const ModalAi = () => {
         { manual: true },
     )
 
-    const options = data === undefined ? {name: '1234 Chess'} : data
+    const options = data === undefined ? [{name: '1234 Chess', id: 1}] : data
     const replacement = { name: 'Free Save' }
     const openStrats = [replacement, replacement, replacement];
     const strategies = whoAmI?.strategies || []
@@ -61,20 +61,24 @@ const ModalAi = () => {
         }
     }
     const findDrafts = (game: Game) => {
+        let count = 0;
         return (<HStack m={4}>
-        {strategies?.map((value, key) => {
-            return (
-                <Button
-                    key={key}
-                    type='submit'
-                    onClick={() => handleSubmit(value)}
-                >
-                    {value.name}
-                </Button>
-            )
+            {strategies?.map((value, key) => {
+                if (value.gameId == game.id) {
+                    count++;
+                    return (
+                        <Button
+                            key={key}
+                            type='submit'
+                            onClick={() => handleSubmit(value)}
+                        >
+                            {value.name}
+                        </Button>
+                    )
+                }
         })}
         {openStrats.map((value, key) => {
-            if (strategies?.length + key < 3) {
+            if (count + key < 3) {
                 return (
                     <Button
                         key={key}
@@ -102,10 +106,10 @@ const ModalAi = () => {
                     <Tabs variant='enclosed'>
                         <TabList>
                                 {options?.map((value, key) => {
-                                    return <Tab key={key}>value.name</Tab>
+                                    return <Tab key={key} isDisabled={value.id !== 1}>{value.name}</Tab>
                                 })}
                         </TabList>
-                        <TabPanels height='72vh'>
+                        <TabPanels>
                                 {options?.map((value, key) => {
                                     return <TabPanel key={key}>{findDrafts(value)}</TabPanel>
                                 })}
