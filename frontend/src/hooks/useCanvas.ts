@@ -13,6 +13,8 @@ const useCanvas = (props: IUseCanvasProps) => {
         let frameCount = 0
         let animationFrameId = 0
 
+        console.log('Canvas rerender.')
+
         const render = () => {
             frameCount++
             props.draw(context, frameCount)

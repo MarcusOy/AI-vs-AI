@@ -63,7 +63,7 @@ const ReplayPage = () => {
                 onMouseLeave={() => setShowTooltip(false)}
             >
                 <SliderMark value={turns.length / 40} mt='1' ml='-2.5' fontSize='sm'>
-                    Turn 1
+                    Turn 0
                 </SliderMark>
                 <SliderMark value={turns.length / 2} mt='1' ml='-2.5' fontSize='sm'>
                     Turn {currentTurn}

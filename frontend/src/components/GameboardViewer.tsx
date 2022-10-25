@@ -2,23 +2,8 @@ import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import useCanvas from '../hooks/useCanvas'
 import { Turn } from '../models/turn'
-import ChessBoard, {
-    cellToCol,
-    cellToRow,
-    generateBoardFromTurns,
-    moveToTurn,
-} from '../data/ChessBoard'
+import { generateBoardFromTurns, IPiece, moveToTurn } from '../data/ChessBoard'
 import { BOARD_SIZES } from '../pages/ReplayPage'
-
-interface IPiece {
-    isWhite: boolean
-    number: number
-    cellX?: number
-    cellY?: number
-
-    posX?: number
-    posY?: number
-}
 
 const GAME_COLORS = {
     WHITE_PIECE: {
@@ -36,7 +21,7 @@ const GAME_COLORS = {
     HELPER_TEXT: '#111',
 }
 
-const ANIMATION_DURATION = 60
+const ANIMATION_DURATION = 30
 
 interface IGameboardViewerProps {
     type: 'Replay' | 'Interactive' | 'Non-interactive'
@@ -101,152 +86,109 @@ function easeOutQuintPos(
     return [x, y]
 }
 
-const GameboardViewer = (props: IGameboardViewerProps) => {
-    const [board, setBoard] = useState<string[][]>([])
-    const [turnData, setTurnData] = useState<string[]>([])
-    const [prevTurn, setPrevTurn] = useState(0)
+function easeInQuint(oldX: number, newX: number, t: number): number {
+    // Clamp time ratio
+    if (t < 0) t = 0
+    if (t > 1) t = 1
 
-    // animation state
-    const [isAnimating, setIsAnimating] = useState(false)
-    const [movingPiece, setMovingPiece] = useState('')
-    const [sourceCol, setSourceCol] = useState(-1)
-    const [sourceRow, setSourceRow] = useState(-1)
-    const [targetCol, setTargetCol] = useState(-1)
-    const [targetRow, setTargetRow] = useState(-1)
-    const [startFrame, setStartFrame] = useState(-1)
-    const [endFrame, setEndFrame] = useState(-1)
+    const pow = Math.pow(t, 5)
+    const x = (newX - oldX) * pow + oldX
+    return x
+}
+
+interface IPieceState {
+    prev: IPiece[]
+    curr: IPiece[]
+}
+
+const GameboardViewer = (props: IGameboardViewerProps) => {
+    const [pieceState, setPieceState] = useState<IPieceState>({
+        prev: [],
+        curr: [],
+    })
 
     // update board when turn data changes
     useEffect(() => {
-        const { board, turnData } = generateBoardFromTurns(props.turns)
-        setBoard(board)
-        setTurnData(turnData)
+        const { pieces } = generateBoardFromTurns(props.turns)
+        setPieceState({
+            prev: [],
+            curr: pieces,
+        })
     }, [props.turns])
 
     // update board when turn changes
     useEffect(() => {
-        // if move slider is moved by one turn
-        if (props.currentTurn > 0 && props.currentTurn == prevTurn + 1) {
-            // exchange entire board state out of turn minus 1
-            const { board, turnData: turns } = moveToTurn(props.turns, prevTurn)
-            setBoard(board)
-            setTurnData(turns)
-            // do piece move animation
-            const turn = props.turns[prevTurn]
-            const turnData = turn.turnData.split(', ')
-
-            if (turnData.length != 2) return
-            const [from, to] = turnData
-
-            console.log({ from, to })
-
-            setIsAnimating(true)
-            setMovingPiece(from)
-            setSourceCol(cellToCol(from))
-            setSourceRow(cellToRow(from))
-            setTargetCol(cellToCol(to))
-            setTargetRow(cellToRow(to))
-            setStartFrame(0)
-            setEndFrame(60)
-        } else {
-            // exchange entire board state out
-            const { board, turnData } = moveToTurn(props.turns, props.currentTurn)
-            setBoard(board)
-            setTurnData(turnData)
-        }
-        setPrevTurn(props.currentTurn)
+        // exchange entire board state out
+        const { pieces: newPieces } = moveToTurn(props.turns, props.currentTurn)
+        setPieceState({
+            prev: pieceState.curr,
+            curr: newPieces,
+        })
     }, [props.currentTurn])
 
     const draw = (ctx: CanvasRenderingContext2D, frameCount: number) => {
         // Clear canvas
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-        // Animation control
-        // if (isAnimating && startFrame == -1 && endFrame == -1) {
-        //     setStartFrame(frameCount)
-        //     setStartFrame(frameCount + ANIMATION_DURATION)
-        // }
-        // if (isAnimating && frameCount >= endFrame) {
-        //     setIsAnimating(false)
-        //     setMovingPiece('')
-        //     setSourceCol(-1)
-        //     setSourceRow(-1)
-        //     setTargetCol(-1)
-        //     setTargetRow(-1)
-        //     setStartFrame(-1)
-        //     setEndFrame(-1)
-        // }
-
         // Draw gameboard
         drawBoard(ctx, frameCount)
 
         // Draw pieces on the board
-        drawPieces(ctx, frameCount, board)
+        drawPieces(ctx, frameCount)
     }
 
-    const drawPieces = (ctx: CanvasRenderingContext2D, frameCount: number, board: string[][]) => {
-        let animatedPieceOpts: IPiece | undefined = undefined
-        for (let row = 0; row < board.length; row++) {
-            for (let col = 0; col < board[row].length; col++) {
-                const cell = board[col][row]
-                if (cell.length != 2) continue
+    const drawPieces = (ctx: CanvasRenderingContext2D, frameCount: number) => {
+        for (let p = 0; p < pieceState.curr.length; p++) {
+            const opts: IPiece = pieceState.curr[p]
+            const [targetX, targetY] = rowColToXY(pieceState.curr[p].row, pieceState.curr[p].col)
 
-                const opts: IPiece = {
-                    isWhite: cell[0].toLowerCase() == 'w',
-                    number: Number.parseInt(cell[1]),
-                }
-
-                if (isAnimating && col == sourceCol && row == sourceRow) {
-                    const [sourceX, sourceY] = rowColToXY(row, col)
-                    const [targetX, targetY] = rowColToXY(targetRow, targetCol)
-                    const [x, y] = easeOutQuintPos(
-                        sourceX,
-                        sourceY,
-                        targetX,
-                        targetY,
-                        (frameCount - startFrame) / ANIMATION_DURATION,
-                    )
-                    opts.posX = x
-                    opts.posY = y
-
-                    animatedPieceOpts = opts
-                    continue
-                } else {
-                    opts.cellX = col
-                    opts.cellY = row
-                }
-
+            // if previous state is not stored, snap to new state
+            if (pieceState.prev.length <= 0) {
+                opts.posX = targetX
+                opts.posY = targetY
+                opts.opacity = 1
                 drawPiece(ctx, frameCount, opts)
-            }
-        }
 
-        // draw animated piece on top
-        if (animatedPieceOpts != undefined) drawPiece(ctx, frameCount, animatedPieceOpts)
+                continue
+            }
+
+            // else, perform interpolation of positions and opacity
+            const [sourceX, sourceY] = rowColToXY(pieceState.prev[p].row, pieceState.prev[p].col)
+            const [x, y] = easeOutQuintPos(
+                sourceX,
+                sourceY,
+                targetX,
+                targetY,
+                (frameCount - 0) / ANIMATION_DURATION,
+            )
+            opts.posX = x
+            opts.posY = y
+            opts.opacity = easeInQuint(
+                pieceState.prev[p].isDead ? 0 : 1,
+                pieceState.curr[p].isDead ? 0 : 1,
+                (frameCount - 0) / ANIMATION_DURATION,
+            )
+
+            drawPiece(ctx, frameCount, opts)
+        }
     }
 
     const drawPiece = (ctx: CanvasRenderingContext2D, frameCount: number, options: IPiece) => {
         const canvasW = ctx.canvas.width
         const canvasH = ctx.canvas.height
-        // const cellSize = canvasW / 10
 
         const currentColors = options.isWhite ? GAME_COLORS.WHITE_PIECE : GAME_COLORS.BLACK_PIECE
 
         // save the previous translation context
         ctx.save()
 
+        // set opacity based on if a piece is alive
+        ctx.globalAlpha = options.opacity
+
         // scale canvas to fit piece in cell
         ctx.scale(0.23 * (canvasW / BOARD_SIZES.DEFAULT), 0.23 * (canvasH / BOARD_SIZES.DEFAULT))
 
         // move canvas to correct position
-        const ml = 55
-        const mt = 20
-        const cell = 261
-        // for snap rendering
-        if (options.cellX != undefined && options.cellY != undefined) {
-            const [x, y] = rowColToXY(options.cellY, options.cellX)
-            ctx.translate(x, y)
-        }
-
         // for animation rendering
         if (options.posX != undefined && options.posY != undefined)
             ctx.translate(options.posX, options.posY)
@@ -278,17 +220,20 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
 
         // add piece number
         if (ctx.canvas.width >= 500) {
-            ctx.font = 'bold 120px Courier New'
+            ctx.font = 'bold 130px Courier New'
             ctx.fillStyle = currentColors.TEXT
             ctx.textAlign = 'center'
-            ctx.fillText(options.number.toString(), 73, 180)
+            ctx.fillText(options.rank.toString(), 73, 180)
         }
 
         // restore the context before drawing piece
+        ctx.globalAlpha = 1
         ctx.restore()
     }
 
     const canvasRef = useCanvas({ draw })
+
+    console.log({ prev: pieceState.prev[35], curr: pieceState.curr[35] })
 
     return <canvas width={props.size} height={props.size} ref={canvasRef} />
 }
@@ -304,4 +249,4 @@ export const rowColToXY = (row: number, col: number): number[] => {
     return [x, y]
 }
 
-export default GameboardViewer
+export default React.memo(GameboardViewer)

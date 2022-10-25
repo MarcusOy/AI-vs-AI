@@ -106,6 +106,7 @@ app.UseCors(x => x
     .AllowCredentials()
     .WithOrigins(
         "https://localhost:3000", // local development url
+        "https://127.0.0.1:3000", // local development url
         "https://ai-vs-ai.vercel.app", // production url
         "https://ai-vs-ai-git-dev-marcusoy.vercel.app" // remote development url
     )
