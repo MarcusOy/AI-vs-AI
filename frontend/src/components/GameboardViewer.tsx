@@ -102,42 +102,53 @@ interface IPieceState {
 }
 
 const GameboardViewer = (props: IGameboardViewerProps) => {
-    const [pieceState, setPieceState] = useState<IPieceState>({
+    const state = useRef<IPieceState>({
         prev: [],
         curr: [],
     })
+    const [updateCounter, setUpdateCounter] = useState(0)
 
     // update board when turn data changes
     useEffect(() => {
         const { pieces } = generateBoardFromTurns(props.turns)
-        setPieceState({
+        state.current = {
             prev: [],
             curr: pieces,
-        })
+        }
     }, [props.turns])
 
     // update board when turn changes
     useEffect(() => {
         // exchange entire board state out
         const { pieces: newPieces } = moveToTurn(props.turns, props.currentTurn)
-        setPieceState({
-            prev: pieceState.curr,
+        state.current = {
+            prev: state.current.curr,
             curr: newPieces,
-        })
+        }
     }, [props.currentTurn])
 
     const draw = (ctx: CanvasRenderingContext2D, frameCount: number) => {
-        // Clear canvas
+        // clear canvas
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-        // Draw gameboard
+        // draw gameboard
         drawBoard(ctx, frameCount)
 
-        // Draw pieces on the board
+        // draw pieces on the board
         drawPieces(ctx, frameCount)
+
+        // animation control (to prevent stutter)
+        // if (isAnimating && frameCount == ANIMATION_DURATION) {
+        //     setPieceState({
+        //         prev: pieceState.curr,
+        //         curr: pieceState.curr,
+        //     })
+        //     isAnimating.current = false
+        // }
     }
 
     const drawPieces = (ctx: CanvasRenderingContext2D, frameCount: number) => {
+        const pieceState = state.current
         for (let p = 0; p < pieceState.curr.length; p++) {
             const opts: IPiece = pieceState.curr[p]
             const [targetX, targetY] = rowColToXY(pieceState.curr[p].row, pieceState.curr[p].col)
@@ -233,7 +244,7 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
 
     const canvasRef = useCanvas({ draw })
 
-    console.log({ prev: pieceState.prev[35], curr: pieceState.curr[35] })
+    console.log({ prev: state.current.prev[35], curr: state.current.curr[35] })
 
     return <canvas width={props.size} height={props.size} ref={canvasRef} />
 }
