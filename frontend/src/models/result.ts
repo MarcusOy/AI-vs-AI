@@ -10,4 +10,5 @@ export interface Result {
     title: string;
     subtitle: string;
     type: ResultType;
+    createdOn: Date;
 }

@@ -8,6 +8,7 @@
       "name": ".NET Core Attach",
       "type": "coreclr",
       "request": "attach",
+      "justMyCode": false,
       // "processId": "${command:pickProcess}"
       "processName": "AVA"
     }
