@@ -16,8 +16,8 @@ public class Game : BaseEntity
     public string ShortDescription { get; set; }
     [StringLength(2000)]
     public string LongDescription { get; set; }
-    [Required]
     public string BoilerplateCode { get; set; }
+    public string HelperCode { get; set; }
 
     // Strategy Relationship (Game is played by strategies)
     public List<Strategy> Strategies { get; set; }

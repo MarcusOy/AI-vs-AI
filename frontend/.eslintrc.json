@@ -16,7 +16,12 @@
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
-    "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
+    "plugins": [
+        "react",
+        "react-hooks",
+        "@typescript-eslint",
+        "prettier"
+    ],
     "rules": {
         "react/react-in-jsx-scope": "off",
         "@typescript-eslint/ban-ts-comment": "off",
@@ -24,9 +29,13 @@
         "react/prop-types": "off",
         "camelcase": "error",
         "spaced-comment": "error",
-        "quotes": ["error", "single"],
+        "quotes": [
+            "error",
+            "single"
+        ],
         "@typescript-eslint/no-explicit-any": "off",
-        "no-duplicate-imports": "error"
+        "no-duplicate-imports": "error",
+        "@typescript-eslint/no-non-null-asserted-optional-chain": "off"
     },
     "settings": {
         "import/resolver": {

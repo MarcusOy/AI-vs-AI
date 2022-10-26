@@ -14,11 +14,13 @@ public class Battle : BaseEntity
     public string Name { get; set; }
     [Required]
     public BattleStatus BattleStatus { get; set; }
+    public bool IsTestSubmission { get; set; }
     [Required]
     public int Iterations { get; set; }
     public int AttackerWins { get; set; }
     public int DefenderWins { get; set; }
-    public string StackTrace { get; set; }
+    public string AttackerStrategySnapshot { get; set; }
+    public string DefendingStrategySnapshot { get; set; }
 
     // Strategy Relationship (Battles are fought by *two* strategies)
     public Guid AttackingStrategyId { get; set; }

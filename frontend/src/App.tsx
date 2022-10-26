@@ -13,9 +13,8 @@ import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
 import Programming from './pages/Programming'
-import ReportBugModal from './components/modals/ReportBugModal'
-import SearchModal from './components/modals/SearchModal'
 import ModalProvider from './components/modals/ModalProvider'
+import ReplayPage from './pages/ReplayPage'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -70,6 +69,7 @@ function App() {
                             />
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
+                            <Route path='/Replay' element={<ReplayPage />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>

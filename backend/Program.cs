@@ -91,8 +91,9 @@ builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 // Setting up domain services
 builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IStrategiesService, StrategiesService>();
-builder.Services.AddScoped<IInitializationService, InitializationService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
+builder.Services.AddScoped<IInitializationService, InitializationService>();
 
 var app = builder.Build();
 #endregion
@@ -105,8 +106,9 @@ app.UseCors(x => x
     .AllowCredentials()
     .WithOrigins(
         "https://localhost:3000", // local development url
-        "https://ai-vs-ai.vercel.app/", // production url
-        "https://ai-vs-ai-git-dev-marcusoy.vercel.app/" // remote development url
+        "https://127.0.0.1:3000", // local development url
+        "https://ai-vs-ai.vercel.app", // production url
+        "https://ai-vs-ai-git-dev-marcusoy.vercel.app" // remote development url
     )
     .AllowAnyMethod()
     .AllowAnyHeader());

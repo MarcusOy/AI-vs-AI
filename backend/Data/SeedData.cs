@@ -9,7 +9,8 @@ public static class SeedData
     public static ModelBuilder HasSeedData(this ModelBuilder builder)
     {
         return builder.HasExampleUsers()
-            .HasGames();
+            .HasGames()
+            .HasStockStrategies();
     }
 
     private static ModelBuilder HasExampleUsers(this ModelBuilder builder)
@@ -118,6 +119,23 @@ Blah blah blah
                 DeletedOn = DateTime.UtcNow
             }
         );
+        return builder;
+    }
+
+    private static ModelBuilder HasStockStrategies(this ModelBuilder builder)
+    {
+        builder.Entity<Strategy>().HasData(
+            new Strategy
+            {
+                Id = new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"),
+                Name = "Stock Easy AI",
+                GameId = 1,
+                Status = StrategyStatus.Active,
+                SourceCode = null,
+                CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"), // system user
+            }
+        );
+
         return builder;
     }
 }
