@@ -6,9 +6,6 @@ import {
     Heading,
     ButtonGroup,
     Stack,
-    Avatar,
-    Text,
-    HStack,
     PopoverTrigger,
     PopoverContent,
     PopoverArrow,
@@ -20,18 +17,12 @@ import {
     Spinner,
     useToast,
     Textarea,
-    Select,
     FormControl,
     FormLabel,
-    Editable,
-    EditablePreview,
-    EditableTextarea,
     Input,
 } from '@chakra-ui/react'
-import { AVAStore } from '../../data/DataStore'
 import IdentityService from '../../data/IdentityService'
 import useAVAFetch from '../../helpers/useAVAFetch'
-import EditFullName from '../../components/profile/EditFullName'
 import { User } from '../../models/user'
 import EditFavoriteGameDropdown from '../../components/profile/EditFavoriteGameDropdown'
 import EditBioTextBox from '../../components/profile/EditBioTextBox'
@@ -83,7 +74,7 @@ const ProfilePage = (p: IProfilePage) => {
                     <>
                         <FormControl>
                             <FormLabel>Bio</FormLabel>
-                            <Textarea isDisabled value={p.user.bio} placeholder='No bio.' />
+                            <Textarea isDisabled value={p.user.bio ?? ''} placeholder='No bio.' />
                         </FormControl>
                         <FormControl>
                             <FormLabel>Favorite game</FormLabel>
