@@ -21,6 +21,7 @@ namespace AVA.API.Services
         Task<User> UpdateAsync(User user);
         Task<User> DeleteAsync(Guid userId);
         User CurrentUser { get; }
+        bool IsLoggedIn { get; }
     }
 
     public class IdentityService : IIdentityService
@@ -188,6 +189,22 @@ namespace AVA.API.Services
                 return _dbContext.Users
                     .Include(c => c.Strategies)
                     .FirstOrDefault(u => u.Id == userid);
+            }
+        }
+
+        public bool IsLoggedIn
+        {
+            get
+            {
+                try
+                {
+                    var testUser = this.CurrentUser;
+                }
+                catch (AuthenticationException ex)
+                {
+                    return false;
+                }
+                return true;
             }
         }
 

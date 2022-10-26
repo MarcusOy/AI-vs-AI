@@ -118,7 +118,7 @@ const SignUpTab = () => {
                         },
                         pattern: {
                             value: /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/,
-                            message: 'Password must contain a special symbol.',
+                            message: 'Password must contain a special symbol and a number.',
                         },
                     }}
                 />
