@@ -6,5 +6,5 @@
 export enum ResultType {
     User = 0,
     Strategy = 1,
-    Batttle = 2,
+    Battle = 2,
 }

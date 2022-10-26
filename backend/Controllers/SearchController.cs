@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using AVA.API.Data;
 using AVA.API.Models;
 using AVA.API.Services;
@@ -22,6 +23,9 @@ public class SearchController : Controller
     [HttpGet, Route("/Search"), Authorize]
     public async Task<List<Result>> Search([FromQuery] SearchQueryParameters p)
     {
+        if (p.SearchQuery is null || p.SearchQuery.Length <= 2)
+            throw new InvalidOperationException("Too few characters. Enter a longer query.");
+
         var uQuery = _dbContext.Users
             .Where(u => u.FirstName.ToUpper().Contains(p.SearchQuery.ToUpper())
                 || u.LastName.ToUpper().Contains(p.SearchQuery.ToUpper())
@@ -29,8 +33,8 @@ public class SearchController : Controller
             .Select(u => new Result
             {
                 Id = u.Id,
-                Title = u.FirstName + " " + u.LastName,
-                Subtitle = "@" + u.Username,
+                Title = Convert.ToString(u.FirstName + " " + u.LastName),
+                Subtitle = Convert.ToString("@" + u.Username),
                 Type = ResultType.User,
                 CreatedOn = u.CreatedOn
             });
@@ -41,8 +45,8 @@ public class SearchController : Controller
             .Select(s => new Result
             {
                 Id = s.Id,
-                Title = s.Name,
-                Subtitle = "@" + s.CreatedByUser.Username,
+                Title = Convert.ToString(s.Name),
+                Subtitle = Convert.ToString("@" + s.CreatedByUser.Username),
                 Type = ResultType.Strategy,
                 CreatedOn = s.CreatedOn
             });
@@ -52,26 +56,18 @@ public class SearchController : Controller
             .Select(b => new Result
             {
                 Id = b.Id,
-                Title = b.Name,
-                Subtitle = "Battle of " + b.Iterations + " iterations",
-                Type = ResultType.Batttle,
+                Title = Convert.ToString(b.Name),
+                Subtitle = Convert.ToString("Attacker wins: " + b.AttackerWins + " | Defender wins: " + b.DefenderWins),
+                Type = ResultType.Battle,
                 CreatedOn = b.CreatedOn
             });
 
         var q = uQuery.Union(sQuery)
             .Union(bQuery)
-            // .Select(r => new Result
-            // {
-            //     Id = r.Id,
-            //     Title = r.Title,
-            //     Subtitle = r.Subtitle,
-            //     Type = r.Type,
-            //     CreatedOn = r.CreatedOn
-            // })
-            // .OrderByDescending(r => r.CreatedOn)
-            // .Take(10)
-            // .Skip(0)
-            ;
+            .OrderByDescending(r => r.CreatedOn)
+            .Take(10)
+            .Skip(0)
+        ;
 
         return await q.ToListAsync();
     }
@@ -85,7 +81,9 @@ public class SearchController : Controller
     public class Result
     {
         public Guid Id { get; set; }
+        [MaxLength(100)]
         public String Title { get; set; }
+        [MaxLength(100)]
         public String Subtitle { get; set; }
         public ResultType Type { get; set; }
         public DateTime CreatedOn { get; set; }
@@ -95,6 +93,6 @@ public class SearchController : Controller
     {
         User,
         Strategy,
-        Batttle
+        Battle
     }
 }

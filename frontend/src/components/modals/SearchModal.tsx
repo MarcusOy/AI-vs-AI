@@ -24,13 +24,20 @@ import {
     Avatar,
     Text,
     Box,
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
 } from '@chakra-ui/react'
+import { randomColor } from '@chakra-ui/theme-tools'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import { IModalProps } from './ModalProvider'
 import { ArrowForwardIcon, SearchIcon } from '@chakra-ui/icons'
 import useDebounce from '../../hooks/useDebounce'
 import { Result } from '../../models/result'
 import { useNavigate } from 'react-router-dom'
+import { ResultType } from '../../models/result-type'
+import { TbRobot, TbSwords } from 'react-icons/tb'
 
 const SearchModal = (p: IModalProps) => {
     const navigate = useNavigate()
@@ -44,9 +51,13 @@ const SearchModal = (p: IModalProps) => {
     )
     const handleSearchChange = (e) => setSearchQuery(e.target.value)
 
-    const onNavigate = (route: string) => {
+    const onNavigate = (r: Result) => {
         onClose()
-        navigate(route)
+
+        if (r.type == ResultType.User) navigate(`/Profile/${r.id}/View`)
+        else if (r.type == ResultType.Strategy) navigate(`/Strategy/${r.id}`)
+        else if (r.type == ResultType.Battle) navigate(`/Battle/${r.id}`)
+        else navigate('/Invalid')
     }
 
     // Let outside ModalProvider open this modal
@@ -56,9 +67,9 @@ const SearchModal = (p: IModalProps) => {
 
     // Send search query on debounce
     useEffect(() => {
-        if (searchQuery.trim() !== '')
+        if (searchQuery !== '')
             execute({
-                params: { searchQuery },
+                params: { searchQuery: searchQuery.trim() },
             })
     }, [debounced])
 
@@ -81,7 +92,16 @@ const SearchModal = (p: IModalProps) => {
                     </InputGroup>
                 </ModalHeader>
                 <ModalBody pb={6}>
-                    {isLoading || error != undefined || results == undefined ? (
+                    {error != undefined && (
+                        <Alert status='error'>
+                            <AlertIcon />
+                            <AlertTitle>Error.</AlertTitle>
+                            <AlertDescription>{error?.response?.data}</AlertDescription>
+                        </Alert>
+                    )}
+                    {data == undefined || results.length <= 0 ? (
+                        <Text>Enter a search query above.</Text>
+                    ) : isLoading ? (
                         <Spinner />
                     ) : (
                         <Stack>
@@ -94,10 +114,22 @@ const SearchModal = (p: IModalProps) => {
                                         justifyContent='start'
                                         color='chakra-body-text'
                                         variant='ghost'
-                                        onClick={() => onNavigate(`/Profile/${r.id}/View`)}
+                                        onClick={() => onNavigate(r)}
                                     >
                                         <HStack flexGrow={1}>
-                                            <Avatar name={r.title} />
+                                            {r.type == ResultType.User ? (
+                                                <Avatar name={r.title} />
+                                            ) : r.type == ResultType.Battle ? (
+                                                <Avatar
+                                                    bg={randomColor({ string: r.title })}
+                                                    icon={<TbSwords size='25' />}
+                                                />
+                                            ) : (
+                                                <Avatar
+                                                    bg={randomColor({ string: r.title })}
+                                                    icon={<TbRobot size='30' />}
+                                                />
+                                            )}
                                             <Box flexGrow={1}>
                                                 <Text fontSize='xs' color='CaptionText'>
                                                     {r.subtitle}
