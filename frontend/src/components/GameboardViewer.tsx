@@ -244,8 +244,6 @@ const GameboardViewer = (props: IGameboardViewerProps) => {
 
     const canvasRef = useCanvas({ draw })
 
-    console.log({ prev: state.current.prev[35], curr: state.current.curr[35] })
-
     return <canvas width={props.size} height={props.size} ref={canvasRef} />
 }
 
