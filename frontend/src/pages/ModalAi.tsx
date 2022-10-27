@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import {
     Box,
     Button,
+    Center,
     chakra,
     Flex,
     HStack,
@@ -35,7 +36,7 @@ const ModalAi = () => {
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { whoAmI } = AVAStore.useState()
     const { data } = useAVAFetch('/Games/')
-    const [selected, setSelected] = useState({})
+    const [selected, setSelected] = useState('0')
     const [strats, setStrats] = useState<Strategy[]>([])
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy',
@@ -102,9 +103,21 @@ const ModalAi = () => {
                         const value = n.id
                         const radio = getRadioProps({ value })
                         return (
+                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2'>
                             <RadioCard key={value} {...radio}>
                                 {n.name}
-                            </RadioCard>
+                                </RadioCard>
+                                <Box
+                                    color='gray.500'
+                                    fontWeight='semibold'
+                                    letterSpacing='wide'
+                                    fontSize='xs'
+                                    textTransform='uppercase'
+                                    ml='2'
+                                >
+                                   0 wins &bull; 0 losses
+                                </Box>
+                            </Box>
                         )
                     }
                 })}
@@ -113,9 +126,21 @@ const ModalAi = () => {
                         const value = n.id
                         const radio = getRadioProps({ value })
                         return (
+                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2'>
                             <RadioCard key={value} {...radio}>
                                 {n.name}
-                            </RadioCard>
+                                </RadioCard>
+                                <Box
+                                    color='gray.500'
+                                    fontWeight='semibold'
+                                    letterSpacing='wide'
+                                    fontSize='xs'
+                                    textTransform='uppercase'
+                                    ml='2'
+                                >
+                                   0 wins &bull; 0 losses
+                                </Box>
+                            </Box>
                         )
                     }
       })}
@@ -147,7 +172,7 @@ const ModalAi = () => {
                         <Button colorScheme='blue' mr={3} onClick={onClose}>
                             Close
                         </Button>
-                        <Button variant='ghost' onClick={() => handleSubmit(1)}>Select</Button>
+                        <Button variant='ghost' onClick={() => handleSubmit()}>Select</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
@@ -179,8 +204,10 @@ function RadioCard(props) {
           }}
           px={5}
           py={3}
-        >
-          {props.children}
+            >
+                <Center>
+                    {props.children}
+                    </Center>
         </Box>
       </Box>
     )
