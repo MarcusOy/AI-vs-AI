@@ -84,6 +84,7 @@ public class SimulationApp {
     // BattleGame when the previous completes
     public static void main(String[] args)
             throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+
         // parse command line arguments
         if (parseCLI(args)) {
             // ends app if parseCLI() returns true
@@ -110,8 +111,19 @@ public class SimulationApp {
 
                 // processes message
                 Battle sentBattle = processMessage(message);
-                prepareAndRunBattle(sentBattle);
-                System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+                if (sentBattle != null) {
+                    prepareAndRunBattle(sentBattle);
+                    System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+                } else { // tries manual play if normal request failed
+                    SimulationRequestManual manRequest;
+                    // also initializes gameState upon success
+                    manRequest = processMessageManual(message);
+                    initializeManualGameState(manRequest);
+                    Color potentialWinner = playTurn(false, null, null);
+                    String[][] responseBoard = addPieceIds(manRequest);
+                    int gameWinner = potentialWinner == null ? -1 : potentialWinner.ordinal();
+                    SimulationResponseManual resp = new SimulationResponseManual(responseBoard, gameWinner);
+                }
             };
 
             // listens for messages
@@ -255,6 +267,100 @@ public class SimulationApp {
             System.out.println("Variables from OS environment set.");
         }
 
+    }
+
+    // processes the board sent from a manual play window,
+    // parsing the cells to create a usable gamestate
+    static void initializeManualGameState(SimulationRequestManual req) {
+        String board[][] = req.board;
+        gameState = new GameState();
+        gameState.currentPlayer = req.isWhiteAI ? 0 : 1;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                String curVal = board[i][j];
+
+                if (getPieceColor(curVal, gameState.board).equals(Color.WHITE)) {
+                    gameState.numWhitePieces++;
+
+                    if (getPieceMoveDistance(curVal, gameState.board) == 1)
+                        gameState.numWhitePawns++;
+                }
+                else if (getPieceColor(curVal, gameState.board).equals(Color.BLACK)) {
+                    gameState.numBlackPieces++;
+
+                    if (getPieceMoveDistance(curVal, gameState.board) == 1)
+                        gameState.numBlackPawns++;
+                }
+
+                if (curVal.equals(""))
+                    gameState.board[i][j] = curVal;
+                else
+                    gameState.board[i][j] = curVal.substring(2); // assumes that the piece id is the first 2 chars of cellVal
+            }
+        }
+    }
+
+    // add the pieceIds back to the gameState board for sending back to a manual play window
+    static String[][] addPieceIds(SimulationRequestManual req) {
+        String[][] requestBoard = req.board;
+        String[][] responseBoard = gameState.board;
+        Color AIColor = req.isWhiteAI ? Color.WHITE : Color.BLACK;
+        String preMovePieceString = null; // with ID
+        String postMovePieceString = null; // without ID
+        int postMovePieceCol = -1;
+        int postMovePieceRow = -1;
+
+        for (int i = 0; i < responseBoard.length; i++) {
+            for (int j = 0; j < responseBoard[i].length; j++) {
+                String requestVal = requestBoard[i][j];
+                String requestValSub = requestVal.length() == 0 ? requestVal : requestVal.substring(2); // assumes ID is first 2 chars
+                String responseVal = responseBoard[i][j];
+                boolean inReq = !requestVal.equals("");
+                boolean inResp = !responseVal.equals("");
+                boolean changed = inReq != inResp || !requestValSub.equals(responseVal);
+
+                // re-adds ids wherever possible
+                if (inReq && !changed) // if unchanged piece, copy id over
+                    responseBoard[i][j] = requestVal;
+                else if (inReq && !inResp && getPieceColor((new API()).colAndRowToCell(i, j), requestBoard).equals(AIColor)) { // if moved from
+                    preMovePieceString = requestVal;
+                }
+                else if (inResp && changed) { // if moved to
+                    postMovePieceString = responseVal;
+                    postMovePieceCol = i;
+                    postMovePieceRow = j;
+                }
+            }
+        }
+
+        System.out.println("preMoveString: " + preMovePieceString + "  postMoveString: " + postMovePieceString + "  [c,r]: [" + postMovePieceCol + ", " + postMovePieceRow + "]");
+
+        if (postMovePieceString != null)
+            responseBoard[postMovePieceCol][postMovePieceRow] = preMovePieceString;
+
+        return responseBoard;
+    }
+
+    // processes the message sent to the app to setup the board for a turn of a manual game
+    // Returns the board if no parsing errors
+    static SimulationRequestManual processMessageManual(String message) {
+        // try parsing manual play
+
+        // parses JSON
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        String[][] board;
+        try {
+            MassTransitMessage<SimulationRequestManual> sentMessage = mapper.readValue(message,
+                    new TypeReference<MassTransitMessage<SimulationRequestManual>>() {
+                    });
+            return sentMessage.message;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            System.out.println("JSON parsing of MassTransitMessage<SimulationRequestManual> failed: " + message);
+            return null;
+        }
     }
 
     // processes the message sent to the app to create a new battle
@@ -517,59 +623,9 @@ public class SimulationApp {
         }
 
         while (true) {
-
-            // fetch player move
-            if (CONSOLE_APP)
-                System.out.println(playerString(gameState.currentPlayer) + "'s turn");
-            String moveString = currentColor().equals(battleGame.getAttackerColor())
-                    ? getAttackerMoveString()
-                    : getDefenderMoveString();
-
-            // stores moveString in new turn, even if invalid
-            battleGame.addTurn(battle.getId(), currentColor(), moveString);
-
-            // validates move string
-            boolean isValid = isMoveValid(moveString, gameState.board);
-            if (!isValid) {
-                if (DEBUG) {
-                    System.out.printf("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
-                    System.out.println("Move String must be in the form \"<fromCell>, \"<toCell>\"");
-                }
-                winner = getPlayerColor(gameState.getOpponent());
-                break;
-            }
-
-            // process player move
-            processMove(moveString);
-
-            if (CONSOLE_APP || DEBUG)
-                printBoard();
-
-            // end game if all of a player's pawns are captured
-            if (gameState.numWhitePawns == 0) { // if white has lost all their pawns
-                // white can only win in this situation if they initiated a move that captured
-                // their opponents final pawn, as well as theirs simultaneously
-                if (gameState.numBlackPawns == 0 && gameState.currentPlayer == gameState.WHITE) {
-                    winner = Color.WHITE;
-                    debugPrintln("WHITE has captured all pawns in the game");
-                } else // otherwise, white losing all their pawns is a loss for white
-                {
-                    winner = Color.BLACK;
-                    debugPrintln("WHITE has no more pawns");
-                }
-
-                break;
-            } else if (gameState.numBlackPawns == 0) // if black is only side without pawns
-            {
-                winner = Color.WHITE;
-                debugPrintln("BLACK has no more pawns");
-                break;
-            }
-
-            // end game if piece(s) causing check remain
-            if (isPlayerInCheck(currentColor(), gameState.board)) {
-                winner = getPlayerColor(gameState.getOpponent());
-                debugPrintln("turn started while final rank was reached");
+            Color potentialWinner = playTurn(false, battle, battleGame);
+            if (potentialWinner != null) {
+                winner = potentialWinner;
                 break;
             }
 
@@ -582,6 +638,50 @@ public class SimulationApp {
         System.out.printf("%s Wins!!!\n", winner.name());
 
         return winner;
+    }
+
+    // plays a single turn of a game
+    // returns the color of the winner, if there was one
+    static Color playTurn(boolean isManualCom, Battle battle, BattleGame battleGame) {
+        // fetch player move
+        if (CONSOLE_APP)
+            System.out.println(playerString(gameState.currentPlayer) + "'s turn");
+
+        // for manualCom play, the player is the attacker
+        boolean isAttackerTurn = isManualCom ? false : currentColor().equals(battleGame.getAttackerColor());
+
+        String moveString = isAttackerTurn
+                ? getAttackerMoveString()
+                : getDefenderMoveString();
+
+        if (!isManualCom) {
+            // stores moveString in new turn, even if invalid
+            battleGame.addTurn(battle.getId(), currentColor(), moveString);
+        }
+
+        // validates move string
+        boolean isValid = isMoveValid(moveString, gameState.board);
+        if (!isValid) {
+            if (DEBUG) {
+                System.out.printf("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
+                System.out.println("Move String must be in the form \"<fromCell>, \"<toCell>\"");
+            }
+            return getPlayerColor(gameState.getOpponent());
+        }
+
+        // process player move
+        processMove(moveString);
+
+        if (CONSOLE_APP || DEBUG)
+            printBoard();
+
+        // determines if game has been won
+        Color potentialWinner = checkIfGameWon();
+        if (potentialWinner != null) {
+            return potentialWinner;
+        }
+
+        return null;
     }
 
     // You can replace the contents of this function with the Attacker AI,
@@ -714,8 +814,9 @@ public class SimulationApp {
     }
 
     static boolean isPlayerInCheck(Color color, String[][] board) {
-        int rowToCheck = (color == Color.WHITE) ? 9 : 0;
-        String opponentOnePiece = (color == Color.WHITE) ? "b1" : "w1";
+        boolean isWhite = color.equals(Color.WHITE);
+        int rowToCheck = isWhite ? 9 : 0;
+        String opponentOnePiece = isWhite ? "b1" : "w1";
 
         for (int i = 0; i < BOARD_LENGTH; i++) {
             if (board[i][rowToCheck].equals(opponentOnePiece))
@@ -725,17 +826,51 @@ public class SimulationApp {
         return false;
     }
 
+    // determines if the last player has just won the game
+    // returns the color of the winner, if there was one
+    public static Color checkIfGameWon() {
+        // end game if all of a player's pawns are captured
+        if (gameState.numWhitePawns == 0) { // if white has lost all their pawns
+            // white can only win in this situation if they initiated a move that captured
+            // their opponents final pawn, as well as theirs simultaneously
+            if (gameState.numBlackPawns == 0 && gameState.currentPlayer == gameState.WHITE) {
+                debugPrintln("WHITE has captured all pawns in the game");
+                return Color.WHITE;
+            } else // otherwise, white losing all their pawns is a loss for white
+            {
+                debugPrintln("WHITE has no more pawns");
+                return Color.BLACK;
+            }
+        } else if (gameState.numBlackPawns == 0) // if black is only side without pawns
+        {
+            debugPrintln("BLACK has no more pawns");
+            return Color.WHITE;
+        }
+
+        // end game if piece(s) causing check remain
+        if (isPlayerInCheck(currentColor(), gameState.board)) {
+            debugPrintln("turn started while final rank was reached");
+            return getPlayerColor(gameState.getOpponent());
+        }
+
+        return null;
+    }
+
     // changes whose turn it is in the gameState
     public static void alternatePlayer() {
         gameState.currentPlayer = gameState.getOpponent();
     }
 
     public static void printBoard() {
+        printBoardGeneric(gameState.board);
+    }
+
+    static void printBoardGeneric(String[][] board) {
         System.out.printf("\n\nMove %d: A\tB\tC\tD\tE\tF\tG\tH\tI\tJ\n", gameState.numMovesMade);
         for (int i = 0; i < BOARD_LENGTH; i++) {
             System.out.printf("%d\t{", i);
             for (int j = 0; j < BOARD_LENGTH; j++)
-                System.out.printf("\t%s,", gameState.board[j][i]);
+                System.out.printf("\t%s,", board[j][i]);
             System.out.print("\t},\n");
         }
         System.out.printf("W:%d\twPawns:%d\tB:%d\tbPawns:%d\n", gameState.numWhitePieces, gameState.numWhitePawns,
@@ -873,13 +1008,13 @@ public class SimulationApp {
 
     // updates the number of pieces still on the board in gameState
     static void processLosePiece(Color pieceColor, int pieceMoveDistance) {
-        if (pieceColor == Color.WHITE) {
+        if (pieceColor.equals(Color.WHITE)) {
             gameState.numWhitePieces--;
             if (pieceMoveDistance == 1)
                 gameState.numWhitePawns--;
 
             debugPrintln("\t\t\t\t\t\t\t\t\t\t\t\t\tLosing WHITE piece");
-        } else if (pieceColor == Color.BLACK) {
+        } else if (pieceColor.equals(Color.BLACK)) {
             gameState.numBlackPieces--;
             if (pieceMoveDistance == 1)
                 gameState.numBlackPawns--;
