@@ -35,6 +35,8 @@ const ModalAi = () => {
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { whoAmI } = AVAStore.useState()
     const { data } = useAVAFetch('/Games/')
+    const [selected, setSelected] = useState({})
+    const [strats, setStrats] = useState<Strategy[]>([])
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy',
         { method: 'PUT' },
@@ -42,10 +44,40 @@ const ModalAi = () => {
     )
 
     const options = data === undefined ? [{name: '1234 Chess', id: 1}] : data
-    const replacement = { name: 'Free Save' }
-    const openStrats = [replacement, replacement, replacement];
+    const openStrats = [{ name: 'Free Save', sourceCode: '', id: '-1' }, { name: 'Free Save', sourceCode: '', id: '-2' },{ name: 'Free Save', sourceCode: '', id: '-3' }];
     const strategies = whoAmI?.strategies || []
-    const handleSubmit = async (value) => {
+    const { getRootProps, getRadioProps } = useRadioGroup({
+        name: 'framework',
+        onChange: setSelected,
+      })
+      const group = getRootProps()
+    useEffect(() => {
+        let count = 0;
+        const game = {id: 1 }
+        let toAdd: Strategy[] = []
+        strategies.forEach((n) => {
+            if (n.gameId === game.id) {
+                count++;
+                toAdd =  [...toAdd, n]
+            }
+        })
+            openStrats.forEach((n, key) => {
+                if (count + key < 3) {
+                    toAdd =  [...toAdd, n]
+                }
+            })
+            setStrats((past) => [...past, ...toAdd])
+    }, [strategies])
+    const handleSubmit = async () => {
+        let value
+        strats.forEach((n) => 
+        {
+            if (n.id === selected) {
+                value = n
+            }
+        })
+        if (value === undefined)
+            return
         if (value.name === 'Free Save' && whoAmI !== undefined) {
             const build: Strategy = {
                 gameId: 1,
@@ -62,42 +94,37 @@ const ModalAi = () => {
     }
     const findDrafts = (game: Game) => {
         let count = 0;
-        return (<HStack m={4}>
-            {strategies?.map((value, key) => {
-                if (value.gameId == game.id) {
-                    count++;
-                    return (
-                        <Button
-                            key={key}
-                            type='submit'
-                            onClick={() => handleSubmit(value)}
-                        >
-                            {value.name}
-                        </Button>
-                    )
-                }
-        })}
-        {openStrats.map((value, key) => {
-            if (count + key < 3) {
-                return (
-                    <Button
-                        key={key}
-                        type='submit'
-                        onClick={() => handleSubmit(value)}
-                    >
-                        {'Free Save #' + (key+1)}
-                    </Button>
-                )
-            }
-        })
-
-        }
+        return (
+            <HStack m={4}>
+                {strategies.map((n, key) => {
+                    if (n.gameId === game.id) {
+                        count++;
+                        const value = n.id
+                        const radio = getRadioProps({ value })
+                        return (
+                            <RadioCard key={value} {...radio}>
+                                {n.name}
+                            </RadioCard>
+                        )
+                    }
+                })}
+                {openStrats.map((n, key) => {
+                    if (count + key < 3) {
+                        const value = n.id
+                        const radio = getRadioProps({ value })
+                        return (
+                            <RadioCard key={value} {...radio}>
+                                {n.name}
+                            </RadioCard>
+                        )
+                    }
+      })}
     </HStack>)
     }
     return (
         <>
             <Button onClick={onOpen}>Draft AI</Button>
-            <Modal isOpen={isOpen} onClose={onClose}>
+            <Modal isOpen={isOpen} onClose={onClose} size={'xl'}>
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Select a Draft Save</ModalHeader>
@@ -120,12 +147,42 @@ const ModalAi = () => {
                         <Button colorScheme='blue' mr={3} onClick={onClose}>
                             Close
                         </Button>
-                        <Button variant='ghost'>Select</Button>
+                        <Button variant='ghost' onClick={() => handleSubmit(1)}>Select</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
         </>
     )
 }
-
+function RadioCard(props) {
+    const { getInputProps, getCheckboxProps } = useRadio(props)
+  
+    const input = getInputProps()
+    const checkbox = getCheckboxProps()
+  
+    return (
+      <Box as='label'>
+        <input {...input} />
+        <Box
+          {...checkbox}
+          cursor='pointer'
+          borderWidth='1px'
+          borderRadius='md'
+          boxShadow='md'
+          _checked={{
+            bg: 'teal.600',
+            color: 'white',
+            borderColor: 'teal.600',
+          }}
+          _focus={{
+            boxShadow: 'outline',
+          }}
+          px={5}
+          py={3}
+        >
+          {props.children}
+        </Box>
+      </Box>
+    )
+  }
 export default ModalAi
