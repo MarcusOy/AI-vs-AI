@@ -17,7 +17,9 @@ const FeedPage = () => {
                 </Center> */}
             <Flex>
             <Box>
-                    <ModalAi />
+                    <ModalAi overwrite={false} />
+                    <Spacer m='4'/>
+                    <ModalAi overwrite={true} />
                 </Box>
                 <Spacer/>
                 <Box>

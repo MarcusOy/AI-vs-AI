@@ -30,8 +30,11 @@ import { StrategyStatus } from '../models/strategy-status'
 import IdentityService from '../data/IdentityService'
 import { devComplete, helperFunctions } from '../helpers/hardcodeAi'
 import { Game } from '../models/game'
-
-const ModalAi = () => {
+interface ModalAiProps {
+    overwrite: boolean,
+    strategy?: Strategy
+}
+const ModalAi = (props: ModalAiProps) => {
     const navigate = useNavigate()
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { whoAmI } = AVAStore.useState()
@@ -43,6 +46,11 @@ const ModalAi = () => {
         { method: 'PUT' },
         { manual: true },
     )
+    const duplicate = useAVAFetch(
+        '/Strategy/Update',
+        { method: 'PUT' },
+        { manual: true },
+    ).execute
 
     const options = data === undefined ? [{name: '1234 Chess', id: 1}] : data
     const openStrats = [{ name: 'Free Save', sourceCode: '', id: '-1' }, { name: 'Free Save', sourceCode: '', id: '-2' },{ name: 'Free Save', sourceCode: '', id: '-3' }];
@@ -77,15 +85,25 @@ const ModalAi = () => {
                 value = n
             }
         })
+        if (props.overwrite && props.strategy === undefined) {
+            return
+        }
         if (value === undefined)
             return
         if (value.name === 'Free Save' && whoAmI !== undefined) {
-            const build: Strategy = {
+            const build: Strategy = props.overwrite ? props.strategy : {
                 gameId: 1,
                 name: 'Untitled Draft',
                 sourceCode: helperFunctions + devComplete,
             }
             const response = await execute({ data: build })
+            console.log(response)
+            IdentityService.refreshIdentity()
+            navigate('/Programming/' + response.data.id)
+        } else if (props.overwrite) { 
+            value.sourceCode = props.strategy?.sourceCode
+            value.name = props.strategy?.name
+            const response = await duplicate({ data: props.strategy?.id })
             console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
@@ -114,6 +132,7 @@ const ModalAi = () => {
                                     fontSize='xs'
                                     textTransform='uppercase'
                                     ml='2'
+                                    mt='2'
                                 >
                                    0 wins &bull; 0 losses
                                 </Box>
@@ -137,6 +156,7 @@ const ModalAi = () => {
                                     fontSize='xs'
                                     textTransform='uppercase'
                                     ml='2'
+                                    mt='2'
                                 >
                                    0 wins &bull; 0 losses
                                 </Box>
@@ -148,7 +168,8 @@ const ModalAi = () => {
     }
     return (
         <>
-            <Button onClick={onOpen}>Draft AI</Button>
+            {!props.overwrite && <Button onClick={onOpen}>Draft AI</Button>}
+            {props.overwrite && <Button variant='link' onClick={onOpen}>Duplicate</Button>}
             <Modal isOpen={isOpen} onClose={onClose} size={'xl'}>
                 <ModalOverlay />
                 <ModalContent>
@@ -172,7 +193,7 @@ const ModalAi = () => {
                         <Button colorScheme='blue' mr={3} onClick={onClose}>
                             Close
                         </Button>
-                        <Button variant='ghost' onClick={() => handleSubmit()}>Select</Button>
+                        <Button variant='ghost' onClick={() => handleSubmit()}>{props.overwrite ? 'Overwrite' : 'Select'}</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
