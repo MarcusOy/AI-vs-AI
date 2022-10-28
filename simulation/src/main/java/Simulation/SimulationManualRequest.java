@@ -1,15 +1,15 @@
 package Simulation;
 
-public class SimulationRequestManual {
+public class SimulationManualRequest {
     public String[][] board;
     public boolean isWhiteAI;
     public String clientId;
 
-    public SimulationRequestManual() {
+    public SimulationManualRequest() {
 
     }
 
-    public SimulationRequestManual(String[][] board, boolean isWhiteAI, String clientId) {
+    public SimulationManualRequest(String[][] board, boolean isWhiteAI, String clientId) {
         this.board = board;
         this.isWhiteAI = isWhiteAI;
         this.clientId = clientId;

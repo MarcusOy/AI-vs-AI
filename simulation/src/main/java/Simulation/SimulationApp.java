@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -29,7 +28,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
-import io.github.cdimascio.dotenv.DotEnvException;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.cli.*;
 
@@ -48,7 +46,10 @@ import org.apache.commons.cli.*;
 //   - the default AI is random, but this can be adjusted locally for testing
 // - displaying detailed gamestate and debug info
 public class SimulationApp {
-    public final static String QUEUE_NAME = "SimulationRequests";
+    public final static String REQ_QUEUE_NAME = "SimulationRequests";
+    final static String RESP_QUEUE_NAME = "SimulationResponses";
+    final static String REQ_QUEUE_NAME_MANUAL = "SimulationManualRequests";
+    final static String RESP_QUEUE_NAME_MANUAL = "SimulationManualResponses";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
 
     public static String ENV_HOST = "AVA__RABBITMQ__HOST";
@@ -79,6 +80,7 @@ public class SimulationApp {
     static Scanner scan; // scanner used to interact with the console (can be used for manual play)
 
     static int numGames;
+    static String lastMoveString;
 
     // Runs a battle with an infinite number of BattleGames, starting a fresh
     // BattleGame when the previous completes
@@ -101,35 +103,38 @@ public class SimulationApp {
             Channel channel = connection.createChannel();
 
             // Creates queue if not already created an prepares to listen for messages
-            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            channel.queueDeclare(REQ_QUEUE_NAME, true, false, false, null);
             System.out.println(" [*] Waiting for messages.");
 
-            // Sends callback to sender
+            // Sends callback to sender (2-AI battle)
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
 
                 // processes message
                 Battle sentBattle = processMessage(message);
-                if (sentBattle != null) {
-                    prepareAndRunBattle(sentBattle);
-                    System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
-                } else { // tries manual play if normal request failed
-                    SimulationRequestManual manRequest;
-                    // also initializes gameState upon success
-                    manRequest = processMessageManual(message);
-                    initializeManualGameState(manRequest);
-                    Color potentialWinner = playTurn(false, null, null);
-                    String[][] responseBoard = addPieceIds(manRequest);
-                    int gameWinner = potentialWinner == null ? -1 : potentialWinner.ordinal();
-                    SimulationResponseManual resp = new SimulationResponseManual(responseBoard, gameWinner);
-                }
+                prepareAndRunBattle(sentBattle);
+                System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+            };
+
+            // Sends callback to sender (1 manual player vs stock AI)
+            DeliverCallback deliverCallbackManual = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+
+                // also initializes gameState upon success
+                SimulationManualRequest manRequest = processMessageManual(message);
+                initializeManualGameState(manRequest);
+                Color potentialWinner = playTurn(false, null, null);
+                String[][] responseBoard = addPieceIds(manRequest);
+                SimulationManualResponse resp = new SimulationManualResponse(responseBoard, lastMoveString, potentialWinner != null, Color.WHITE.equals(potentialWinner) == manRequest.isWhiteAI);
+                sendRabbitMQMessage(resp, RESP_QUEUE_NAME_MANUAL);
             };
 
             // listens for messages
             System.out.println("listening");
-            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
-            });
+            channel.basicConsume(REQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+            channel.basicConsume(REQ_QUEUE_NAME_MANUAL, true, deliverCallbackManual, consumerTag -> { });
             System.out.println("after consume call");
 
             /*
@@ -271,7 +276,7 @@ public class SimulationApp {
 
     // processes the board sent from a manual play window,
     // parsing the cells to create a usable gamestate
-    static void initializeManualGameState(SimulationRequestManual req) {
+    static void initializeManualGameState(SimulationManualRequest req) {
         String board[][] = req.board;
         gameState = new GameState();
         gameState.currentPlayer = req.isWhiteAI ? 0 : 1;
@@ -302,7 +307,7 @@ public class SimulationApp {
     }
 
     // add the pieceIds back to the gameState board for sending back to a manual play window
-    static String[][] addPieceIds(SimulationRequestManual req) {
+    static String[][] addPieceIds(SimulationManualRequest req) {
         String[][] requestBoard = req.board;
         String[][] responseBoard = gameState.board;
         Color AIColor = req.isWhiteAI ? Color.WHITE : Color.BLACK;
@@ -344,7 +349,7 @@ public class SimulationApp {
 
     // processes the message sent to the app to setup the board for a turn of a manual game
     // Returns the board if no parsing errors
-    static SimulationRequestManual processMessageManual(String message) {
+    static SimulationManualRequest processMessageManual(String message) {
         // try parsing manual play
 
         // parses JSON
@@ -352,8 +357,8 @@ public class SimulationApp {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String[][] board;
         try {
-            MassTransitMessage<SimulationRequestManual> sentMessage = mapper.readValue(message,
-                    new TypeReference<MassTransitMessage<SimulationRequestManual>>() {
+            MassTransitMessage<SimulationManualRequest> sentMessage = mapper.readValue(message,
+                    new TypeReference<MassTransitMessage<SimulationManualRequest>>() {
                     });
             return sentMessage.message;
         } catch (JsonProcessingException e) {
@@ -560,45 +565,7 @@ public class SimulationApp {
         // allowed
         if (!NO_COMMUNICATION) {
             // sends message back to backend
-            ConnectionFactory factory = new ConnectionFactory();
-            setupConnection(factory);
-
-            try {
-                Connection connection = factory.newConnection();
-                System.out.println("created connection");
-                Channel channel = connection.createChannel();
-
-                final String RESP_QUEUE_NAME = "SimulationResponses";
-                // Creates queue if not already created an prepares to listen for messages
-                channel.queueDeclare(RESP_QUEUE_NAME, true, false, false, null);
-
-                // writes JSON obj
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-                String messageJSON;
-                try {
-                    SimulationResponse res = new SimulationResponse(battle);
-                    MassTransitMessage<SimulationResponse> message = new MassTransitMessage(
-                            UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
-                            null, null, new String[] { "urn:message:AVA.API.Consumers:SimulationResponse" }, res);
-                    messageJSON = mapper.writeValueAsString(message);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                    System.out.println("JSON writing of message failed");
-                    return;
-                }
-
-                /*
-                 * String delimiter = SimulationApp.MESSAGE_DELIMITER;
-                 * String message = UUID.randomUUID() + delimiter + attackingStrategySource +
-                 * delimiter + UUID.randomUUID() + delimiter + defendingStrategySource +
-                 * delimiter + numGames;
-                 */
-                channel.basicPublish("", RESP_QUEUE_NAME, null, messageJSON.getBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("ERROR: message out FAILED");
-            }
+            sendRabbitMQMessage(new SimulationResponse(battle), RESP_QUEUE_NAME);
         }
 
         // scan.close();
@@ -642,6 +609,7 @@ public class SimulationApp {
 
     // plays a single turn of a game
     // returns the color of the winner, if there was one
+    // isManualCom is whether or not this moveString is being acquired from a manual test play window
     static Color playTurn(boolean isManualCom, Battle battle, BattleGame battleGame) {
         // fetch player move
         if (CONSOLE_APP)
@@ -651,8 +619,9 @@ public class SimulationApp {
         boolean isAttackerTurn = isManualCom ? false : currentColor().equals(battleGame.getAttackerColor());
 
         String moveString = isAttackerTurn
-                ? getAttackerMoveString()
-                : getDefenderMoveString();
+                ? getAttackerMoveString(isManualCom)
+                : getDefenderMoveString(isManualCom);
+        lastMoveString = moveString;
 
         if (!isManualCom) {
             // stores moveString in new turn, even if invalid
@@ -688,7 +657,8 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    static String getAttackerMoveString() {
+    // isManualCom is whether or not this moveString is being acquired from a manual test play window
+    static String getAttackerMoveString(boolean isManualCom) {
         debugPrintln("Fetching attacker's move");
         if (ATTACKER_MANUAL)
             return scan.nextLine();
@@ -697,7 +667,7 @@ public class SimulationApp {
         String moveString = "";
         try {
             // ATTACKER is a stock AI
-            if (attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
+            if (isManualCom || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
             } else // ATTACKER is sent from backend
                 moveString = processStrategySource(attackingEngine);// attackingStrategy.getMove(gameState);
@@ -714,7 +684,8 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    static String getDefenderMoveString() {
+    // isManualCom is whether or not this moveString is being acquired from a manual test play window
+    static String getDefenderMoveString(boolean isManualCom) {
         debugPrintln("Fetching defender's move");
         if (DEFENDER_MANUAL)
             return scan.nextLine();
@@ -723,7 +694,7 @@ public class SimulationApp {
         String moveString = "";
         try {
             // DEFENDER is a stock AI
-            if (defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
+            if (isManualCom || defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
             } else // DEFENDER is sent from backend
                 moveString = processStrategySource(defendingEngine);// defendingStrategy.getMove(gameState);
@@ -1020,6 +991,49 @@ public class SimulationApp {
                 gameState.numBlackPawns--;
 
             debugPrintln("\t\t\t\t\t\t\t\t\t\t\t\t\tLosing BLACK piece");
+        }
+    }
+
+    // sends the given message over a RabbitMQ Queue of the name, queueName
+    static <T> void sendRabbitMQMessage(T res, String queueName) {
+        ConnectionFactory factory = new ConnectionFactory();
+        setupConnection(factory);
+
+        try {
+            Connection connection = factory.newConnection();
+            System.out.println("created connection");
+            Channel channel = connection.createChannel();
+
+            // Creates queue if not already created an prepares to listen for messages
+            channel.queueDeclare(queueName, true, false, false, null);
+
+            // writes JSON obj
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            String messageJSON;
+            try {
+                // assumes queue name is the class name + 's'
+                String className = queueName.substring(0, queueName.length() - 1);
+                MassTransitMessage<T> message = new MassTransitMessage(
+                        UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
+                        null, null, new String[] { "urn:message:AVA.API.Consumers:" + className}, res);
+                messageJSON = mapper.writeValueAsString(message);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                System.out.println("JSON writing of message failed     response: " + res);
+                return;
+            }
+
+            /*
+             * String delimiter = SimulationApp.MESSAGE_DELIMITER;
+             * String message = UUID.randomUUID() + delimiter + attackingStrategySource +
+             * delimiter + UUID.randomUUID() + delimiter + defendingStrategySource +
+             * delimiter + numGames;
+             */
+            channel.basicPublish("", queueName, null, messageJSON.getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("ERROR: message out to queue: " + queueName + " FAILED");
         }
     }
 
