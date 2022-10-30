@@ -190,10 +190,10 @@ const ModalAi = (props: ModalAiProps) => {
                             </Tabs>
                     </ModalBody>
                     <ModalFooter>
-                        <Button colorScheme='blue' mr={3} onClick={onClose}>
+                        <Button variant='ghost' mr={3} onClick={onClose}>
                             Close
                         </Button>
-                        <Button variant='ghost' onClick={() => handleSubmit()}>{props.overwrite ? 'Overwrite' : 'Select'}</Button>
+                        <Button colorScheme='blue' onClick={() => handleSubmit()}>{props.overwrite ? 'Overwrite' : 'Select'}</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>

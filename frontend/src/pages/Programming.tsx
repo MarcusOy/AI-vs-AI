@@ -10,6 +10,7 @@ import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
 import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
+import Copy from '../helpers/Copy';
 
 function Programming() {
     const [code, setCode] = useState(helperFunctions + devComplete)
@@ -77,7 +78,9 @@ function Programming() {
         <Box pt='0'>
             <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
-                <Spacer/>
+                <Spacer />
+                <Copy sourceCode={strategy === undefined ? code : strategy.sourceCode} />
+                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setValue(sessionStorage.getItem('clipboard'))}}>Paste</Button>
                 <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)]); }}>Hide Helper</Button>
                 </Flex>
             <HStack>
