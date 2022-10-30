@@ -23,21 +23,22 @@ public class StatsController : Controller
         List<BattleGame> bg = b.BattleGames;
 
         int size = bg.Count;
-        String[,] outcome = new String[size, 2];
+        String[,] outcome = new String[size, 3];
         int idx = 0;
 
         foreach (BattleGame g in bg)
         {
+            outcome[idx, 0] = "Game Number: " + g.GameNumber;
             if (g.DidAttackerWin)
             {
-                outcome[idx, 0] = "Attacker Won";
+                outcome[idx, 1] = "Attacker Won";
             }
             else
             {
-                outcome[idx, 0] = "Defender Won";
+                outcome[idx, 1] = "Defender Won";
             }
 
-            outcome[idx, 1] = "Turns: " + g.Turns.Count;
+            outcome[idx, 2] = "Turns: " + g.Turns.Count;
 
             idx++;
         }
