@@ -14,6 +14,7 @@ import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
 import Programming from './pages/Programming'
 import ReportBugModal from './components/ReportBugModal'
+import InvalidStrategyPage from './pages/InvalidStrategyPage'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -67,6 +68,7 @@ function App() {
                             />
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
+                            <Route path='/Programming/' element={<InvalidStrategyPage />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>
