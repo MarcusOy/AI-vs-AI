@@ -25,6 +25,9 @@ const ProfileBattlesTab = () => {
 
     const navigate = useNavigate()
 
+    // the connection between battlepage and battle tab is done, waiting for Jiahao to merge
+    // his battlegame page with battle tab, which is the second navigate below
+
     const { data, error, isLoading } = useAVAFetch(
         `/Account/${id}`,
         {},
@@ -42,7 +45,7 @@ const ProfileBattlesTab = () => {
                         </MenuItem>
                         <MenuDivider />
                         <MenuItem onClick={() => navigate('/Profile')}>
-                            Check Stat of Individual Battle
+                            Check Stat of Individual Battle Game
                         </MenuItem>
                     </MenuList>
                 </Menu>
