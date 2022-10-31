@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
+import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton, Tag, TagCloseButton, TagLabel } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { devComplete, developerAi, easyAi, emptyStarter, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
@@ -10,18 +10,19 @@ import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
 import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
-import Copy from '../helpers/Copy';
-
 function Programming() {
+    const navigate = useNavigate()
     const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
+    const [emptyClipboard, setEmptyClipboard] = useState(false)
     const [submissions, setSubmissions] = useState([]);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
     console.log(whoAmI)
-    let strategy = useAVAFetch('/getAi/' + id).data
+    const load =  useAVAFetch('/getAi/' + id)
+    let strategy = load.data
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy/Update',
@@ -45,6 +46,11 @@ function Programming() {
             setCode(strategy === undefined ? code : strategy.sourceCode)
         }
     }, [strategy])
+    useEffect(() => {
+        if (!load.isLoading && strategy === undefined) {
+            navigate('/Programming/')
+        }
+    }, [load.isLoading])
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
@@ -79,8 +85,21 @@ function Programming() {
             <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
                 <Spacer />
-                <Copy sourceCode={strategy === undefined ? code : strategy.sourceCode} />
-                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setValue(sessionStorage.getItem('clipboard'))}}>Paste</Button>
+                <Button onClick={() => {sessionStorage.setItem('clipboard', editorRef.current.getValue())}}>
+                    Copy
+                </Button>
+                {!emptyClipboard && <Button mx='2' display={'flex'} justifyContent='flex-end' onClick={() => { sessionStorage.getItem('clipboard') !== null ? editorRef.current.setValue(sessionStorage.getItem('clipboard')) : setEmptyClipboard(true) }}>Paste</Button>}
+                {emptyClipboard &&
+    <Tag
+      size={'lg'}
+      borderRadius='full'
+      variant='solid'
+                        colorScheme='red'
+                        mx='2'
+    >
+      <TagLabel>Cannot Paste Empty Clipboard</TagLabel>
+      <TagCloseButton onClick={() => setEmptyClipboard(false)}/>
+    </Tag>}
                 <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)]); }}>Hide Helper</Button>
                 </Flex>
             <HStack>
