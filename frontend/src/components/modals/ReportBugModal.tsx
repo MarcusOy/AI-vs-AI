@@ -17,14 +17,11 @@ import {
     ModalOverlay,
     useDisclosure,
 } from '@chakra-ui/react'
-import { BugReport } from '../models/bug-report'
-import useAVAFetch from '../helpers/useAVAFetch'
+import { BugReport } from '../../models/bug-report'
+import useAVAFetch from '../../helpers/useAVAFetch'
+import { IModalProps } from './ModalProvider'
 
-interface IReportBugModal {
-    hackyOpenVar: string
-}
-
-const ReportBugModal = (p: IReportBugModal) => {
+const SearchModal = (p: IModalProps) => {
     const toast = useToast()
     const { isOpen, onOpen, onClose } = useDisclosure()
     const initialRef = React.useRef(null)
@@ -54,10 +51,10 @@ const ReportBugModal = (p: IReportBugModal) => {
         }
     }
 
-    // TODO: make this proper lol
+    // Let outside ModalProvider open this modal
     useEffect(() => {
-        if (p.hackyOpenVar != '') onOpen()
-    }, [p.hackyOpenVar])
+        if (p.openNum > 0) onOpen()
+    }, [p.openNum])
 
     const isValid = description.length > 0 && description.length < 500 && description.trim() != ''
 
@@ -108,4 +105,4 @@ const ReportBugModal = (p: IReportBugModal) => {
         </Modal>
     )
 }
-export default ReportBugModal
+export default SearchModal

@@ -13,6 +13,7 @@ export interface Game extends BaseEntity {
     shortDescription: string;
     longDescription: string;
     boilerplateCode: string;
+    helperCode: string;
     strategies: Strategy[];
     usersWhoFavorited: User[];
 }

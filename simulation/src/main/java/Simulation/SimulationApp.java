@@ -70,7 +70,8 @@ public class SimulationApp {
     static boolean JAVASCRIPT_STOCK;
     static boolean DEMO_STOCK;
 
-    static boolean defenderStockOverride = true;
+    static boolean attackerStockOverride = true;
+    static boolean defenderStockOverride = true;    
 
     static final int BOARD_LENGTH = 10;
 
@@ -355,8 +356,12 @@ public class SimulationApp {
             // extracts values
 
             try {
-                if (sentBattle.attackingStrategy != null)
-                    attackingEngine = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
+                if (sentBattle.attackingStrategy != null) {
+                    attackerStockOverride = sentBattle.attackingStrategy.sourceCode == null;
+
+                    if (sentBattle.attackingStrategy.sourceCode != null)
+                        attackingEngine = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
+                }
                 if (sentBattle.defendingStrategy != null) {
                     defenderStockOverride = sentBattle.defendingStrategy.sourceCode == null;
 
@@ -592,9 +597,9 @@ public class SimulationApp {
         String moveString = "";
         try {
             // ATTACKER is a stock AI
-            if (NO_COMMUNICATION && !JAVASCRIPT_STOCK)
+            if (attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
-            else // ATTACKER is sent from backend
+            } else // ATTACKER is sent from backend
                 moveString = processStrategySource(attackingEngine);// attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);

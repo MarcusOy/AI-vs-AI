@@ -1,27 +1,32 @@
-﻿// using AVA.API.Models;
-// using AVA.API.Services;
-// using Microsoft.AspNetCore.Mvc;
+﻿using System.Configuration;
+using AVA.API.Models;
+using AVA.API.Services;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace AVA.API.Controllers;
+namespace AVA.API.Controllers;
 
-// public class BattleController : Controller
-// {
+public class BattleController : Controller
+{
+    private readonly IBattlesService _battleService;
 
-//     [Route("/battlePerson")]
-//     public ActionResult startBattle(Strategy s1, Strategy s2)
-//     {
-//         // As of right now, the incoming message will consist of two strategies to battle each other
+    public BattleController(IBattlesService battleService)
+    {
+        _battleService = battleService;
+    }
+    // [HttpGet, Route("/Battles")]
+    // public List<Battle> GetBattles([FromQuery(Name = "StrategyId")] string strategyId)
+    // {
 
-//         // TODO - run the battle, and send the information back to the client
-
-//         return Ok("Battle info sent here");
-//     }
-
-//     [Route("/battleNpc")]
-//     public ActionResult startBattle(Strategy s1, Strategy s2) // Might get rid of this one
-//     {
-//         // As of right now, the incoming message will consist of two strategies, one the user's, one ours
-
-//         // TODO - run the battle, and send the information back to the client
-//     }
-// }
+    // }
+    [HttpGet, Route("/Battle/{id}")]
+    public Battle GetBattle(string id)
+    {
+        return _battleService.Get(new Guid(id));
+    }
+    [HttpGet, Route("/Battle/{id}/{num}")]
+    public BattleGame GetBattleGame(string id, string num)
+    {
+        var n = int.Parse(num);
+        return _battleService.GetBattleGame(new Guid(id), n);
+    }
+}

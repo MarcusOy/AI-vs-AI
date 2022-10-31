@@ -16,7 +16,7 @@ import { AVAStore } from '../data/DataStore'
 import IdentityService from '../data/IdentityService'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { useNavigate } from 'react-router-dom'
-import ReportBugModal from './ReportBugModal'
+import ModalService from '../data/ModalService'
 
 const CurrentAccountButton = () => {
     const navigate = useNavigate()
@@ -34,8 +34,6 @@ const CurrentAccountButton = () => {
             navigate('/')
         }
     }
-
-    const [hackyVar, setHackyVar] = useState('')
 
     const fullName = `${whoAmI?.firstName} ${whoAmI?.lastName}`
 
@@ -66,7 +64,7 @@ const CurrentAccountButton = () => {
                             <MenuItem>FAQ</MenuItem>
                             <MenuItem
                                 color='gold'
-                                onClick={() => setHackyVar(new Date().toTimeString())}
+                                onClick={() => ModalService.openBugReportModal()}
                             >
                                 Report Bug
                             </MenuItem>
@@ -83,7 +81,6 @@ const CurrentAccountButton = () => {
                     </MenuList>
                 </Menu>
             </Box>
-            <ReportBugModal hackyOpenVar={hackyVar} />
         </>
     )
 }

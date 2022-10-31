@@ -36,10 +36,13 @@ namespace AVA.API.Services
 
         public Game Get(int id)
         {
-            Game g = _dbContext.Games
-                .Include(g => g.Strategies
-                    .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id))
-               .FirstOrDefault(g => g.Id == id);
+            var gQuery = _dbContext.Games;
+
+            if (_identityService.IsLoggedIn)
+                gQuery.Include(g => g.Strategies
+                    .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id));
+
+            var g = gQuery.FirstOrDefault(g => g.Id == id);
 
             if (g is null)
                 throw new InvalidOperationException($"Game id [{id}] not valid.");
