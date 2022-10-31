@@ -9,6 +9,7 @@ using AVA.API.Controllers;
 using AVA.API.Middleware;
 using MassTransit;
 using AVA.API.Consumers;
+using AVA.API.Hubs;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -58,6 +59,9 @@ builder.Services.AddMassTransit(mt =>
         cfg.ConfigureEndpoints(context);
     });
 });
+
+// Add websockets functionality
+builder.Services.AddSignalR();
 
 // Added custom JWT Identity Authentication Service
 builder.Services.AddScoped<IIdentityService, IdentityService>();
@@ -118,6 +122,8 @@ app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+app.MapHub<SimulationStepHub>("/AI/Step");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())

@@ -49,20 +49,4 @@ namespace AVA.API.Consumers
     {
         public Battle ResultingBattle { get; set; }
     }
-
-    public class SimulationRequest
-    {
-        public String[][] SentBoard { get; set; }
-        public boolean IsWhiteAI { get; set; }
-        public String ClientId { get; set; }
-    }
-
-    public class SimulationManualResponse
-    {
-        public String[][] ResultingBoard { get; set; }
-        public String MoveString { get; set; }
-        
-        public boolean IsGameOver { get; set; } // determines if one of the players won, and which
-        public boolean? DidAttackerWin { get; set; } // didplayerwin?
-    }
 }
