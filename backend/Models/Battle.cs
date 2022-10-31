@@ -10,7 +10,7 @@ public class Battle : BaseEntity
 {
     [Required]
     public Guid Id { get; set; }
-    [Required]
+    [Required, MaxLength(100)]
     public string Name { get; set; }
     [Required]
     public BattleStatus BattleStatus { get; set; }

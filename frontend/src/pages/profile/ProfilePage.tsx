@@ -61,7 +61,7 @@ const ProfilePage = () => {
         navigate(`/Profile/${id}/${tab}`)
     }
 
-    if (isLoading)
+    if (isLoading || user == undefined)
         return (
             <Center mt='10'>
                 <Spinner />

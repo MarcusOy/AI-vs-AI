@@ -53,7 +53,7 @@ services:
   #     - rabbitmq
   #     - db
 
-  # Simulation (for docker buid testing only)
+  # Simulation
   sim:
     build:
       context: ./simulation
