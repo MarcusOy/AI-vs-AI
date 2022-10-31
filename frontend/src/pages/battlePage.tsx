@@ -1,14 +1,12 @@
 import React from 'react'
+import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom'
 import { Center, Box, Text, Flex, Spacer } from '@chakra-ui/react'
 
-const battlePage = () => {
-    return (
-        <Box>
-            <Flex>
-                <Text>here we need to connect this page to recent specific battle menu button</Text>
-            </Flex>
-        </Box>
-    )
+import useAVAFetch from '../helpers/useAVAFetch'
+import { AVAStore } from '../data/DataStore'
+
+const BattlePage = () => {
+    return <Text>HEYEHEYHE</Text>
 }
 
-export default battlePage
+export default BattlePage
