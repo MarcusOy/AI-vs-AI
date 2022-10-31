@@ -14,9 +14,40 @@ public class StatsController : Controller
         _battleService = battlesService;
     }
 
+    [HttpGet, Route("/GetStats/{BattleId}")]
+    public ActionResult GetBattleStats(String BattleId)
+    {
+        Guid IdBattle = new Guid(BattleId);
 
-    [HttpGet, Route("/getStats/{BattleId}/{StratId}")]
-    public ActionResult getStats(String BattleId, String StratId)
+        Battle b = _battleService.Get(IdBattle);
+        List<BattleGame> bg = b.BattleGames;
+
+        int size = bg.Count;
+        String[,] outcome = new String[size, 3];
+        int idx = 0;
+
+        foreach (BattleGame g in bg)
+        {
+            outcome[idx, 0] = "Game Number: " + g.GameNumber;
+            if (g.DidAttackerWin)
+            {
+                outcome[idx, 1] = "Attacker Won";
+            }
+            else
+            {
+                outcome[idx, 1] = "Defender Won";
+            }
+
+            outcome[idx, 2] = "Turns: " + g.Turns.Count;
+
+            idx++;
+        }
+
+        return Ok(outcome);
+    }
+
+    [HttpGet, Route("/GetStats/{BattleId}/{StratId}")]
+    public ActionResult GetStratStats(String BattleId, String StratId)
     {
         // The incoming message will be the battle id to display the stats from. This may 
         Guid idBattle = new Guid(BattleId);
