@@ -9,12 +9,15 @@ public class StatsController : Controller
 
     private readonly IBattlesService _battleService;
 
-    public StatsController(IBattlesService battlesService)
+    private readonly IStrategiesService _strategyService;
+
+    public StatsController(IBattlesService battlesService, IStrategiesService strategyService)
     {
         _battleService = battlesService;
+        _strategyService = strategyService;
     }
 
-    [HttpGet, Route("/GetStats/{BattleId}")]
+    [HttpGet, Route("/GetStats/BattleId/{BattleId}")]
     public ActionResult GetBattleStats(String BattleId)
     {
         Guid IdBattle = new Guid(BattleId);
@@ -46,8 +49,42 @@ public class StatsController : Controller
         return Ok(outcome);
     }
 
+    [HttpGet, Route("/GetStats/StratId/{StratId}")]
+    public ActionResult GetStratStats(String StratId)
+    {
+        Guid idStrat = new Guid(StratId);
+
+        Strategy strat = _strategyService.Get(idStrat);
+
+        int version = strat.Version;
+
+        List<Battle> attacker = strat.AttackerBattles;
+        List<Battle> defender = strat.DefenderBattles;
+
+        int NumWins = 0;
+        int NumLoss = 0;
+
+        foreach (Battle b in attacker)
+        {
+            NumWins += b.AttackerWins;
+            NumLoss += b.DefenderWins;
+        }
+
+        foreach (Battle b in defender)
+        {
+            NumWins += b.DefenderWins;
+            NumLoss += b.AttackerWins;
+        }
+
+        double WinLoss = NumWins / NumLoss;
+
+        var ret = new { version = version, WinLoss = WinLoss };
+
+        return Ok(ret);
+    }
+
     [HttpGet, Route("/GetStats/{BattleId}/{StratId}")]
-    public ActionResult GetStratStats(String BattleId, String StratId)
+    public ActionResult GetBattleStratStats(String BattleId, String StratId)
     {
         // The incoming message will be the battle id to display the stats from. This may 
         Guid idBattle = new Guid(BattleId);
