@@ -15,41 +15,69 @@ import {
     Button,
     Stack,
     MenuDivider,
+    Avatar,
 } from '@chakra-ui/react'
+import { ChevronDownIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
+import { User } from '../../models/user'
+import { randomColor } from '@chakra-ui/theme-tools'
+import { TbBook2, TbSwords } from 'react-icons/tb'
+import { Battle } from '../../models/battle'
 
-const ProfileBattlesTab = () => {
-    const { whoAmI } = AVAStore.useState()
+interface IProfileBattlesTabProps {
+    userId?: string
+    strategyId?: string
+}
 
-    const { id, tab } = useParams()
-    const isSelf = id == whoAmI?.id
-
+const ProfileBattlesTab = (p: IProfileBattlesTabProps) => {
     const navigate = useNavigate()
+    const { data, error, isLoading } = useAVAFetch('/Battles', {
+        params: {
+            userId: p.userId,
+            strategyId: p.strategyId,
+        },
+    })
 
-    // the connection between battlepage and battle tab is done, waiting for Jiahao to merge
-    // his battlegame page with battle tab, which is the second navigate below
+    const battles: Battle[] = data
 
-    const { data, error, isLoading } = useAVAFetch(
-        `/Account/${id}`,
-        {},
-        { manual: isSelf }, // don't retrieve account if self
-    )
+    if (battles == null || battles.length <= 0)
+        return (
+            <Center>
+                <Stack mt='48' alignItems='center'>
+                    <WarningIcon w={50} h={50} />
+                    <Text fontSize='5xl'>No battles</Text>
+                    <Text fontSize='lg'>This user does not have any battles.</Text>
+                    {/* <Text color='teal.500'>
+                    <RouterLink to='/'>Go back to the home page.</RouterLink>
+                </Text> */}
+                </Stack>
+            </Center>
+        )
 
     return (
         <Stack>
-            <Box maxW='32rem'>
-                <Menu>
-                    <MenuButton as={Button}>Open Most Recent Battles</MenuButton>
-                    <MenuList>
-                        <MenuItem onClick={() => navigate(`/Profile/${id}/BattlePage`)}>
-                            Check Stat of A Battle Game
-                        </MenuItem>
-                        <MenuDivider />
-                        <MenuItem onClick={() => navigate('/Profile')}>
-                            Check Stat of Individual Battle Game
-                        </MenuItem>
-                    </MenuList>
-                </Menu>
-            </Box>
+            {battles.map((b, i) => {
+                return (
+                    <Button
+                        key={i}
+                        colorScheme='gray'
+                        onClick={() => navigate(`/Battle/${b.id}`)}
+                        rightIcon={<ChevronRightIcon />}
+                        p={10}
+                    >
+                        <Avatar
+                            bg={randomColor({ string: b.name })}
+                            icon={<TbSwords size='25' />}
+                        />
+                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                            <Text>{b.name}</Text>
+                            <Text fontSize='xs'>
+                                Attacker wins: {b.attackerWins} | Defender wins: {b.defenderWins}
+                            </Text>
+                        </Stack>
+                        <Box flexGrow={1} />
+                    </Button>
+                )
+            })}
         </Stack>
     )
 }

@@ -115,10 +115,10 @@ const ProfilePage = () => {
                         <ProfileViewTab user={user} isSelf={isSelf} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileStrategiesTab />
+                        <ProfileStrategiesTab user={user} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileBattlesTab />
+                        <ProfileBattlesTab userId={user.id!} />
                     </TabPanel>
                     <TabPanel>
                         <ProfileSubmissionsTab />

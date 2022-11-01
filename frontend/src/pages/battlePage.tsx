@@ -15,7 +15,6 @@ import {
 } from '@chakra-ui/react'
 
 import useAVAFetch from '../helpers/useAVAFetch'
-import { AVAStore } from '../data/DataStore'
 
 const BattlePage = () => {
     const [id, setid] = useState('')

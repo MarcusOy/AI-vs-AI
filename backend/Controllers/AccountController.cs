@@ -83,11 +83,9 @@ public class AccountController : Controller
     }
 
     [HttpDelete, Route("/Account"), Authorize]
-    public async Task<ActionResult> Delete()
-    {
-        var ret = await _idService.DeleteAsync(_idService.CurrentUser.Id);
-        return Ok(ret);
-    }
+    public async Task<User> Delete()
+        => await _idService.DeleteAsync(_idService.CurrentUser.Id);
+
 
     public class SignupForm
     {

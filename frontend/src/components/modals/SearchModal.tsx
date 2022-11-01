@@ -1,18 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import {
-    FormControl,
-    FormLabel,
     Button,
-    FormErrorMessage,
-    FormHelperText,
-    Textarea,
-    useToast,
     Input,
     Modal,
     ModalBody,
-    ModalCloseButton,
     ModalContent,
-    ModalFooter,
     ModalHeader,
     ModalOverlay,
     useDisclosure,
@@ -37,7 +29,7 @@ import useDebounce from '../../hooks/useDebounce'
 import { Result } from '../../models/result'
 import { useNavigate } from 'react-router-dom'
 import { ResultType } from '../../models/result-type'
-import { TbRobot, TbSwords } from 'react-icons/tb'
+import { TbBook2, TbSwords } from 'react-icons/tb'
 
 const SearchModal = (p: IModalProps) => {
     const navigate = useNavigate()
@@ -130,7 +122,7 @@ const SearchModal = (p: IModalProps) => {
                                                 ) : (
                                                     <Avatar
                                                         bg={randomColor({ string: r.title })}
-                                                        icon={<TbRobot size='30' />}
+                                                        icon={<TbBook2 size='30' />}
                                                     />
                                                 )}
                                                 <Box flexGrow={1}>

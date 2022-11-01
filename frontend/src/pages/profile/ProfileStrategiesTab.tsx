@@ -15,27 +15,56 @@ import {
     Button,
     Stack,
     MenuDivider,
+    Avatar,
 } from '@chakra-ui/react'
+import { User } from '../../models/user'
+import { ChevronDownIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
+import { TbBook2, TbSwords } from 'react-icons/tb'
+import { randomColor } from '@chakra-ui/theme-tools'
 
-const ProfileStrategiesTab = () => {
-    const { whoAmI } = AVAStore.useState()
+interface IProfileStrategiesTabProps {
+    user: User
+}
 
-    const { id, tab } = useParams()
-    const isSelf = id == whoAmI?.id
-
+const ProfileStrategiesTab = (p: IProfileStrategiesTabProps) => {
     const navigate = useNavigate()
 
-    const { data, error, isLoading } = useAVAFetch(
-        `/Account/${id}`,
-        {},
-        { manual: isSelf }, // don't retrieve account if self
-    )
+    const strategies = p.user.strategies
+
+    if (strategies == null || strategies.length <= 0)
+        return (
+            <Center>
+                <Stack mt='48' alignItems='center'>
+                    <WarningIcon w={50} h={50} />
+                    <Text fontSize='5xl'>No strategies</Text>
+                    <Text fontSize='lg'>This user does not have any strategies.</Text>
+                    {/* <Text color='teal.500'>
+                        <RouterLink to='/'>Go back to the home page.</RouterLink>
+                    </Text> */}
+                </Stack>
+            </Center>
+        )
 
     return (
         <Stack>
-            <Box maxW='32rem'>
-                <Button onClick={() => navigate(`/Profile/${id}/StratPage`)}>View Stategy</Button>
-            </Box>
+            {strategies.map((s, i) => {
+                return (
+                    <Button
+                        key={i}
+                        colorScheme='gray'
+                        onClick={() => navigate(`/Strategy/${s.id}/Stats`)}
+                        rightIcon={<ChevronRightIcon />}
+                        p={10}
+                    >
+                        <Avatar bg={randomColor({ string: s.name })} icon={<TbBook2 size='25' />} />
+                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                            <Text>{s.name}</Text>
+                            <Text fontSize='xs'>{s.game?.name}</Text>
+                        </Stack>
+                        <Box flexGrow={1} />
+                    </Button>
+                )
+            })}
         </Stack>
     )
 }
