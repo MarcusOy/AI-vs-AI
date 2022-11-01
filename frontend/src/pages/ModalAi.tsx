@@ -125,17 +125,7 @@ const ModalAi = (props: ModalAiProps) => {
                             <RadioCard key={value} {...radio}>
                                 {n.name}
                                 </RadioCard>
-                                <Box
-                                    color='gray.500'
-                                    fontWeight='semibold'
-                                    letterSpacing='wide'
-                                    fontSize='xs'
-                                    textTransform='uppercase'
-                                    ml='2'
-                                    mt='2'
-                                >
-                                   0 wins &bull; 0 losses
-                                </Box>
+                                <StrategyStats strategy={n} />
                             </Box>
                         )
                     }
@@ -199,6 +189,27 @@ const ModalAi = (props: ModalAiProps) => {
             </Modal>
         </>
     )
+}
+function StrategyStats(props) {
+    const { isLoading, data } = useAVAFetch('/GetStats/StratId/' + props.strategy.id)
+    const [stats, setStats] = useState({})
+    useEffect(() => {
+        if (!isLoading && data) {
+            console.log(data)
+            setStats(data)
+        }
+    }, [isLoading])
+    return (<Box
+        color='gray.500'
+        fontWeight='semibold'
+        letterSpacing='wide'
+        fontSize='xs'
+        textTransform='uppercase'
+        ml='2'
+        mt='2'
+    >
+       k
+    </Box>)
 }
 function RadioCard(props) {
     const { getInputProps, getCheckboxProps } = useRadio(props)
