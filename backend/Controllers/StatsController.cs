@@ -1,5 +1,8 @@
-﻿using AVA.API.Models;
+﻿using System.Net;
+using AVA.API.Data;
+using AVA.API.Models;
 using AVA.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AVA.API.Controllers;
@@ -49,41 +52,55 @@ public class StatsController : Controller
         return Ok(outcome);
     }
 
-    [HttpGet, Route("/GetStats/StratId/{StratId}")]
+    [HttpGet, Route("/GetStats/StratId/{StratId}"), Authorize]
     public ActionResult GetStratStats(String StratId)
     {
+        Console.WriteLine("This is the strat id: " + StratId);
         Guid idStrat = new Guid(StratId);
 
-        Strategy strat = _strategyService.Get(idStrat);
-
-        int version = strat.Version;
-
-        List<Battle> attacker = strat.AttackerBattles;
-        List<Battle> defender = strat.DefenderBattles;
-
-        int NumWins = 0;
-        int NumLoss = 0;
-
-        foreach (Battle b in attacker)
+        try
         {
-            NumWins += b.AttackerWins;
-            NumLoss += b.DefenderWins;
-        }
+            Strategy strat = _strategyService.Get(idStrat);
 
-        foreach (Battle b in defender)
+            List<Battle> attacker = strat.AttackerBattles;
+            List<Battle> defender = strat.DefenderBattles;
+
+            int NumWins = 0;
+            int NumLoss = 0;
+
+            foreach (Battle b in attacker)
+            {
+                NumWins += b.AttackerWins;
+                NumLoss += b.DefenderWins;
+            }
+
+            foreach (Battle b in defender)
+            {
+                NumWins += b.DefenderWins;
+                NumLoss += b.AttackerWins;
+            }
+
+            double WinLoss = 0;
+
+            if (NumLoss == 0)
+            {
+                WinLoss = NumWins;
+            }
+            else
+            {
+                WinLoss = (double)NumWins / NumLoss;
+            }
+
+            return Ok(WinLoss);
+        }
+        catch (Exception e)
         {
-            NumWins += b.DefenderWins;
-            NumLoss += b.AttackerWins;
+            Console.WriteLine(e.Message);
+            return Ok(e.Message);
         }
-
-        double WinLoss = NumWins / NumLoss;
-
-        var ret = new { version = version, WinLoss = WinLoss };
-
-        return Ok(ret);
     }
 
-    [HttpGet, Route("/GetStats/{BattleId}/{StratId}")]
+    [HttpGet, Route("/GetStats/BattleAndStrat/{BattleId}/{StratId}")]
     public ActionResult GetBattleStratStats(String BattleId, String StratId)
     {
         // The incoming message will be the battle id to display the stats from. This may 
