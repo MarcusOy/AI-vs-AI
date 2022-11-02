@@ -4,7 +4,6 @@ import API.Java.API;
 import Simulation.GameState;
 
 import java.util.ArrayList;
-
 /**
  * Capture moves will now be returned in an 9-array of ArrayLists with the following priorities
  * F2 captures 1
@@ -113,11 +112,11 @@ public class MediumAI implements IStrategy {
                 }
             default:            //finished setting up formation phase
                 if (api.isPlayerInCheck(api.getMyColor(gameState), board) == api.TRUE) {
-                    ArrayList<String>[] movesArray = getAllLegalCaptureMovesDifferentiated(gameState);
+                    Object[] movesArray = getAllLegalCaptureMovesDifferentiated(gameState);
                     for (int i = 0; i < 9; i++) {
-                        if (movesArray[i].isEmpty())
+                        if (((ArrayList<String>)movesArray[i]).isEmpty())
                             continue;
-                        return pickBestMoveFromList(gameState, movesArray[i]);
+                        return pickBestMoveFromList(gameState, ((ArrayList<String>)movesArray[i]));
                     }
 
                     ArrayList<String> moves = getAllLegalTrade1For1Moves(gameState);
@@ -127,11 +126,11 @@ public class MediumAI implements IStrategy {
                         return "CHECKMATED";
                     }
                 } else {
-                    ArrayList<String>[] movesArray = getAllLegalCaptureMovesDifferentiated(gameState);
+                    Object[] movesArray = getAllLegalCaptureMovesDifferentiated(gameState);
                     for (int i = 0; i < 9; i++) {
-                        if (movesArray[i].isEmpty())
+                        if (((ArrayList<String>)movesArray[i]).isEmpty())
                             continue;
-                        return pickBestMoveFromList(gameState, movesArray[i]);
+                        return pickBestMoveFromList(gameState, ((ArrayList<String>)movesArray[i]));
                     }
                     ArrayList<String> moves = getAllLegalTradeF2ForB2Moves(gameState);
                     if (!moves.isEmpty()) {
@@ -194,11 +193,11 @@ public class MediumAI implements IStrategy {
         return moves;
     }
 
-    public ArrayList<String>[] getAllLegalCaptureMovesDifferentiated(GameState gameState) {
+    public Object[] getAllLegalCaptureMovesDifferentiated(GameState gameState) {
         String board[][] = api.getBoard(gameState);
         String[] pieceLocations = api.getMyPieceLocations(api.getMyColor(gameState), board);
 
-        ArrayList<String>[] movesArray = (ArrayList<String>[])(new Object[9]);
+        Object[] movesArray = new Object[9];
         for (int i = 0; i < 9; i++) {
             movesArray[i] = new ArrayList<String>();
         }
@@ -218,31 +217,31 @@ public class MediumAI implements IStrategy {
                     if (api.getPieceMoveDistance(move, board) == 1) {
                         if (api.getPieceMoveDistance(piece, board) == 2) {
                             if (api.cellToRow(piece) % 2 != api.getMyColor(gameState)) {        //back rank 2
-                                movesArray[2].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[2]).add(piece + ", " + move);
                             } else {            //front rank 2
-                                movesArray[0].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[0]).add(piece + ", " + move);
                             }
                         } else if (api.getPieceMoveDistance(piece, board) == 3) {
-                            movesArray[1].add(piece + ", " + move);
+                            ((ArrayList<String>)movesArray[1]).add(piece + ", " + move);
                         } else {           //4
-                            movesArray[3].add(piece + ", " + move);
+                            ((ArrayList<String>)movesArray[3]).add(piece + ", " + move);
                         }
                     } else if (api.getPieceMoveDistance(move, board) == 2) {
                         if (api.cellToRow(move) % 2 != api.getOpponentColor(api.getMyColor(gameState))) {        //back rank 2
                             if (api.getPieceMoveDistance(piece, board) == 3) {
-                                movesArray[4].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[4]).add(piece + ", " + move);
                             } else {        //4
-                                movesArray[5].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[5]).add(piece + ", " + move);
                             }
                         } else {            //front rank 2
                             if (api.getPieceMoveDistance(piece, board) == 3) {
-                                movesArray[6].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[6]).add(piece + ", " + move);
                             } else {        //4
-                                movesArray[7].add(piece + ", " + move);
+                                ((ArrayList<String>)movesArray[7]).add(piece + ", " + move);
                             }
                         }
                     } else {        //4 captures 3
-                        movesArray[8].add(piece + ", " + move);
+                        ((ArrayList<String>)movesArray[8]).add(piece + ", " + move);
                     }
                 }
             }
@@ -382,7 +381,15 @@ public class MediumAI implements IStrategy {
     }
 
     public String[][] tryThisMove(GameState gameState, String moveString) {
-        String[][] board = api.getBoard(gameState);
+        //for this method specifically, since we're trying to move pieces around, we need to make a deep copy
+        String[][] original =  api.getBoard(gameState);
+        String[][] board = new String[api.BOARD_LENGTH][api.BOARD_LENGTH];
+        for (int i = 0; i < api.BOARD_LENGTH; i++) {
+            for (int j = 0; j < api.BOARD_LENGTH; j++) {
+                board[i][j] = original[i][j];
+            }
+        }
+
         String[] moveCells = moveString.split(", ");
 
         String fromCell = moveCells[0];
@@ -579,7 +586,7 @@ public class MediumAI implements IStrategy {
                 break;
 
             if (api.getPieceMoveDistance(piece, board) == 3 &&
-                     api.cellToCol(piece) % 3 == 0) {
+                    api.cellToCol(piece) % 3 == 0) {
                 return piece;
             }
         }
