@@ -17,8 +17,10 @@ const FeedPage = () => {
                     </Link>
                 </Center> */}
             <Flex>
-                <Box>{/* <ModalAi /> */}</Box>
-                <Spacer />
+            <Box>
+                    <ModalAi overwrite={false} />
+                </Box>
+                <Spacer/>
                 <Box>
                     <Text>Feed page</Text>
                     <Link to='/Replay'> Replay Test </Link>

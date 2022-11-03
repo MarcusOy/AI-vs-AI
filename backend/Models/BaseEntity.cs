@@ -6,9 +6,9 @@ namespace AVA.API.Models;
 [ExportTsInterface]
 public class BaseEntity
 {
-    [JsonIgnore, TsOptional]
+    [TsOptional]
     public DateTime CreatedOn { get; set; }
-    [JsonIgnore, TsOptional]
+    [TsOptional]
     public DateTime UpdatedOn { get; set; }
     [JsonIgnore, TsOptional]
     public DateTime? DeletedOn { get; set; }

@@ -26,8 +26,9 @@ public class AiController : Controller
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
-    [HttpGet, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish()
+    // TODO Have frontend send stock to test with in uri
+    [HttpPost, Route("/Strategy/TestPublish/{stock}")]
+    public async Task<ActionResult> TestPublish([FromBody] Strategy s, String stock)
     {
         var strategy = _dbContext.Strategies
             .FirstOrDefault(s => s.Id == new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"));
@@ -51,5 +52,19 @@ public class AiController : Controller
         await endpoint.Send(request);
 
         return Ok("Simulation request sent.");
+    }
+
+    [HttpGet, Route("/Strategy/ChangePrivate/{id}")]
+    public async Task<Strategy> ChangePrivate(String Id)
+    {
+        Guid StratId = new Guid(Id);
+
+        Strategy strat = _strategiesService.Get(StratId);
+
+        strat.IsPrivate = !strat.IsPrivate;
+
+        await _strategiesService.UpdateAsync(strat);
+
+        return strat;
     }
 }

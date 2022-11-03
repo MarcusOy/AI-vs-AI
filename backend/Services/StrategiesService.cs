@@ -105,6 +105,22 @@ namespace AVA.API.Services
             return originalStrategy;
         }
 
+        public async Task<Strategy> SubmitAsync(Strategy strategy)
+        {
+            var originalStrategy = await _dbContext.Strategies
+                .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+                .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+
+            // trust these fields
+            originalStrategy.Status = Active;
+
+            _dbContext.Strategies.Update(originalStrategy);
+            _dbContext.Update(originalStrategy);
+            await _dbContext.SaveChangesAsync();
+
+            return originalStrategy;
+        }
+
         public async Task<Strategy> DeleteAsync(Guid id)
         {
             Strategy g = Get(id);
