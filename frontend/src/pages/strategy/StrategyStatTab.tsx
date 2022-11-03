@@ -24,6 +24,7 @@ interface IStrategyPage {
 const StrategyStatTab = (p: IStrategyPage) => {
     const strategyName = p.strategy.name
     const username = p.strategy.createdByUser?.username
+    const dateCreated = p.strategy.createdOn
 
     return (
         <Stack>
@@ -31,7 +32,7 @@ const StrategyStatTab = (p: IStrategyPage) => {
             <Box marginLeft={10}>
                 <UnorderedList>
                     <ListItem>Strategy created by: {username}</ListItem>
-                    <ListItem>Consectetur adipiscing elit</ListItem>
+                    <ListItem>Strategy created on: </ListItem>
                     <ListItem>Integer molestie lorem at massa</ListItem>
                     <ListItem>Facilisis in pretium nisl aliquet</ListItem>
                 </UnorderedList>

@@ -21,11 +21,11 @@ public class StatsController : Controller
     }
 
     [HttpGet, Route("/GetStats/{BattleId}")]
-    public async Task<ActionResult> GetBattleStats(String BattleId)
+    public ActionResult GetBattleStats(String BattleId)
     {
         Guid IdBattle = new Guid(BattleId);
 
-        Battle b = await _battleService.GetAsync(IdBattle);
+        Battle b = _battleService.Get(IdBattle);
         List<BattleGame> bg = b.BattleGames;
 
         int size = bg.Count;
@@ -111,7 +111,7 @@ public class StatsController : Controller
         Guid idBattle = new Guid(BattleId);
         Guid idStrat = new Guid(StratId);
 
-        Battle b = await _battleService.GetAsync(idBattle);
+        Battle b = _battleService.Get(idBattle);
         Boolean isAttacker = b.AttackingStrategy.Id == idStrat;
         int totalTurn = 0;
         int count = 0;
