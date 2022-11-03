@@ -35,7 +35,7 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
-        return await _strategyService.UpdateAsync(s); ;
+        return await _strategyService.SubmitAsync(s); ;
     }
 
     [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]

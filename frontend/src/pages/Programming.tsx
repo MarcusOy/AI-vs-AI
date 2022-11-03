@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton, Tag, TagCloseButton, TagLabel } from '@chakra-ui/react'
+import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton, Tag, TagCloseButton, TagLabel, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
@@ -12,6 +12,7 @@ import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
 function Programming() {
     const navigate = useNavigate()
+    const { isOpen, onOpen, onClose } = useDisclosure()
     const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
@@ -30,6 +31,11 @@ function Programming() {
         { method: 'PUT' },
         { manual: true },
     )
+    const submit = useAVAFetch(
+        '/Strategy/Submit',
+        { method: 'PUT' },
+        { manual: true },
+    ).execute
     const run = useAVAFetch(
         '/Strategy/TestPublish',
         { method: 'POST'},
@@ -67,6 +73,17 @@ function Programming() {
             setBuffer(buffer + 1)
         }
     }
+    const submitStrategy = async () => {
+        const build: Strategy = {
+            name: name,
+            sourceCode: code,
+            createdByUserId: strategy.createdByUserId,
+            id: strategy.id
+        }
+        strategy.status = 1;
+        await submit({ data: build })
+        IdentityService.refreshIdentity()
+    }
     const runStrategy = async () => {
         const build: Strategy = {
             name: name,
@@ -74,6 +91,7 @@ function Programming() {
             createdByUserId: strategy.createdByUserId,
             id: strategy.id
         }
+        strategy.status = 0;
         strategy = await execute({ data: build })
         console.log(await run({ data: build }))
         // @ts-ignore
@@ -84,7 +102,9 @@ function Programming() {
     return (
         <Box pt='0'>
             <Flex>
-                <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
+                <Heading>{strategy === undefined ? 'Loading Strategy...' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
+                <Spacer />
+                <Heading>{strategy === undefined ? '' : 'Status: ' + (strategy.status === 0 ? 'Draft' : 'Active')}</Heading>
                 <Spacer />
                 {!copied && <Button onClick={() => { sessionStorage.setItem('clipboard', editorRef.current.getValue()); setCopied(true) }}>
                     Copy
@@ -226,14 +246,31 @@ function Programming() {
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
-                    <Button margin='3' disabled={!select} onClick={() => runStrategy()} isLoading={isLoading}>
+                    <Button margin='3' disabled={!select} onClick={() => strategy.status === 0 ? runStrategy() : onOpen()} isLoading={isLoading}>
                         Run Strategy
                     </Button>
-                    <Button margin='3' disabled>
+                    <Button margin='3' disabled={!select || strategy.status === 1} onClick={() =>submitStrategy()}>
                         Submit Strategy
                     </Button>
                 </GridItem>
             </Grid>
+            <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>Confirmation</ModalHeader>
+                <ModalCloseButton />
+                            <ModalBody>
+                                Your draft is currently Active, continuing will place it back in Draft status.
+                </ModalBody>
+
+                <ModalFooter>
+                <Button colorScheme='blue' mr={3} onClick={onClose}>
+                    Close
+                </Button>
+                        <Button variant='ghost' onClick={() => { onClose(); runStrategy()}}>Continue</Button>
+                    </ModalFooter>
+                </ModalContent>
+                </Modal>
         </Box>
     )
 }

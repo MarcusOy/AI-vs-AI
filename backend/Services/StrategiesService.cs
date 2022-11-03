@@ -11,6 +11,7 @@ namespace AVA.API.Services
         string GetStockStategyCode(string strategyName);
         Task<Strategy> CreateAsync(Strategy strategy);
         Task<Strategy> UpdateAsync(Strategy strategy);
+        Task<Strategy> SubmitAsync(Strategy strategy);
         Task<Strategy> DeleteAsync(Guid id);
     }
 
@@ -97,6 +98,7 @@ namespace AVA.API.Services
             // trust these fields
             originalStrategy.Name = strategy.Name;
             originalStrategy.SourceCode = strategy.SourceCode;
+            originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
@@ -104,7 +106,6 @@ namespace AVA.API.Services
 
             return originalStrategy;
         }
-
         public async Task<Strategy> SubmitAsync(Strategy strategy)
         {
             var originalStrategy = await _dbContext.Strategies
@@ -112,7 +113,9 @@ namespace AVA.API.Services
                 .FirstOrDefaultAsync(s => s.Id == strategy.Id);
 
             // trust these fields
-            originalStrategy.Status = Active;
+            originalStrategy.Name = strategy.Name;
+            originalStrategy.SourceCode = strategy.SourceCode;
+            originalStrategy.Status = AVA.API.Models.StrategyStatus.Active;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
@@ -120,7 +123,6 @@ namespace AVA.API.Services
 
             return originalStrategy;
         }
-
         public async Task<Strategy> DeleteAsync(Guid id)
         {
             Strategy g = Get(id);
