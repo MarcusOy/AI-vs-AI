@@ -17,6 +17,8 @@ import IStrategy.IStrategy;
 import IStrategy.RandomAI;
 import IStrategy.EasyAI;
 import IStrategy.TrueRandomAI;
+import IStrategy.MediumAI;
+import IStrategy.HardAI;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -604,9 +606,9 @@ public class SimulationApp {
             if (mostlyCurrentBattle.defendingStrategy.version == -1)
                 stockDefender = new EasyAI();
             else if (mostlyCurrentBattle.defendingStrategy.version == -2)
-                stockDefender = new EasyAI();
+                stockDefender = new MediumAI();
             else if (mostlyCurrentBattle.defendingStrategy.version == -3)
-                stockDefender = new EasyAI();
+                stockDefender = new HardAI();
             else
                 stockDefender = new RandomAI();
         }
