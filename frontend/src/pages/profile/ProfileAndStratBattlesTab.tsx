@@ -28,7 +28,7 @@ interface IProfileBattlesTabProps {
     strategyId?: string
 }
 
-const ProfileBattlesTab = (p: IProfileBattlesTabProps) => {
+const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
     const navigate = useNavigate()
     const { data, error, isLoading } = useAVAFetch('/Battles', {
         params: {
@@ -45,7 +45,9 @@ const ProfileBattlesTab = (p: IProfileBattlesTabProps) => {
                 <Stack mt='48' alignItems='center'>
                     <WarningIcon w={50} h={50} />
                     <Text fontSize='5xl'>No battles</Text>
-                    <Text fontSize='lg'>This user does not have any battles.</Text>
+                    <Text fontSize='lg'>
+                        This {p.strategyId == null ? 'user' : 'strategy'} does not have any battles.
+                    </Text>
                     {/* <Text color='teal.500'>
                     <RouterLink to='/'>Go back to the home page.</RouterLink>
                 </Text> */}
@@ -82,4 +84,4 @@ const ProfileBattlesTab = (p: IProfileBattlesTabProps) => {
     )
 }
 
-export default ProfileBattlesTab
+export default ProfileAndStratBattlesTab

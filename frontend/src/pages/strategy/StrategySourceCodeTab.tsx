@@ -1,4 +1,5 @@
 import React from 'react'
+import { Strategy } from '../../models/strategy'
 import {
     Center,
     Box,
@@ -12,7 +13,12 @@ import {
     MenuDivider,
     Avatar,
 } from '@chakra-ui/react'
-const StrategySourceCodeTab = () => {
+
+interface IStrategySourceCodePage {
+    strategy: Strategy
+}
+
+const StrategySourceCodeTab = (p: IStrategySourceCodePage) => {
     return <Text>hi</Text>
 }
 

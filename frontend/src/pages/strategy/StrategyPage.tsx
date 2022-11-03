@@ -24,7 +24,6 @@ import {
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
-import StrategyBattleTab from './StrategyBattleTab'
 import StrategySourceCodeTab from './StrategySourceCodeTab'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import { WarningIcon } from '@chakra-ui/icons'
@@ -32,6 +31,7 @@ import EditFullName from '../../components/profile/EditFullName'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
 import { TbBook2 } from 'react-icons/tb'
+import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -87,9 +87,9 @@ const StrategyPage = () => {
                     <Stack spacing='0'>
                         {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
 
-                        <Text fontSize='lg' mt={0}>
-                            @{strategy.createdByUser?.username}
-                        </Text>
+                        <Heading fontSize='lg' mt={0}>
+                            {strategy.name} by {strategy.createdByUser?.username}
+                        </Heading>
                     </Stack>
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
@@ -104,10 +104,11 @@ const StrategyPage = () => {
                             <StrategyStatTab strategy={strategy} />
                         </TabPanel>
                         <TabPanel>
-                            <StrategySourceCodeTab />
+                            <StrategySourceCodeTab strategy={strategy} />
                         </TabPanel>
                         <TabPanel>
-                            <StrategyBattleTab />
+                            {/* <StrategyBattleTab strategy={strategy} /> */}
+                            <ProfileBattlesTab strategyId={strategy.id} />
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
