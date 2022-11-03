@@ -50,31 +50,66 @@ export const moveToTurn = (turns: Turn[], turn: number): IChessBoardData => {
     return { pieces: board.getPieces(), turnData: board.getTurnData() }
 }
 
+export const generatePieceListFromBoard = (
+    state: string[][],
+    prevPieceList: IPiece[],
+): IChessBoardData => {
+    const board = new ChessBoard(state)
+
+    // copy opacity and pos from prevPieceList
+    for (let i = 0; i < prevPieceList.length; i++) {
+        const prevPiece: IPiece = prevPieceList[i]
+        const curNewPiece: IPiece = board.getPieces()[i]
+
+        if (curNewPiece.isDead) {
+            curNewPiece.id = i
+            curNewPiece.isWhite = prevPiece.isWhite
+            curNewPiece.col = prevPiece.col
+            curNewPiece.row = prevPiece.row
+            curNewPiece.rank = prevPiece.rank
+            curNewPiece.row = prevPiece.row
+        }
+    }
+
+    return { pieces: board.getPieces(), turnData: board.getTurnData() }
+}
+
 class ChessBoard {
-    private board: string[][] = []
+    private board: string[][]
     private turnData: string[] = []
     private pieces: IPiece[] = []
-    constructor() {
+    constructor(board: string[][] = initialState) {
         // deep copy
-        this.board = JSON.parse(JSON.stringify(initialState))
+        this.board = JSON.parse(JSON.stringify(board))
         this.turnData = []
         this.pieces = []
 
-        let numPiecesInitialized = 0
+        // initialize pieceArray
+        for (let i = 0; i < 40; i++) {
+            this.pieces.push({
+                id: i,
+                isDead: true,
+                rank: -1,
+                isWhite: false,
+                col: -1,
+                row: -1,
+                opacity: 0,
+            })
+        }
+
         for (let c = 0; c < this.board.length; c++) {
             for (let r = 0; r < this.board[c].length; r++) {
                 if (this.board[c][r] != '') {
-                    this.pieces.push({
-                        id: numPiecesInitialized,
+                    const curId = getPieceId(c, r, this.board)
+                    this.pieces[curId] = {
+                        id: curId,
                         rank: getPieceRank(c, r, this.board),
                         col: c,
                         row: r,
                         isWhite: !!getPieceColor(c, r, this.board),
                         isDead: false,
                         opacity: 1,
-                    })
-
-                    numPiecesInitialized++
+                    }
                 }
             }
         }
@@ -154,6 +189,9 @@ class ChessBoard {
     }
     public getTurnData(): string[] {
         return this.turnData
+    }
+    public getBoard(): string[][] {
+        return this.board
     }
 
     public reset() {
