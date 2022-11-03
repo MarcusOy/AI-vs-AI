@@ -16,7 +16,12 @@ public class StrategyController : Controller
 
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
-        => await _strategyService.CreateAsync(s);
+    {
+        s.IsPrivate = true;
+        await _strategyService.CreateAsync(s);
+
+        return s;
+    }
 
     [HttpPut, Route("/Strategy/Update"), Authorize]
     public async Task<Strategy> Update([FromBody] Strategy s)
