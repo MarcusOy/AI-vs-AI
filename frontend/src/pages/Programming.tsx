@@ -7,11 +7,13 @@ import useAVAFetch from '../helpers/useAVAFetch'
 import { devComplete, developerAi, easyAi, emptyStarter, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService';
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
 import EditDraftName from '../components/EditDraftName';
 import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
 function Programming() {
     const navigate = useNavigate()
+    const [connection, setConnection] = useState<HubConnection | null>(null)
     const { isOpen, onOpen, onClose } = useDisclosure()
     const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
@@ -22,6 +24,29 @@ function Programming() {
     const [submissions, setSubmissions] = useState([]);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
+
+    useEffect(() => { 
+        const signalRConnection = new HubConnectionBuilder()
+            // @ts-ignore
+            .withUrl(process.env.REACT_APP_API_ENDPOINT + 'AI/Step')
+            .withAutomaticReconnect()
+            .build()
+        setConnection(signalRConnection)
+    }, [])
+    useEffect(() => {
+        if (connection) {
+            connection.start()
+                .then(() => {
+                    console.log('Connected.')
+                    connection!.on('Response', (response) => {
+                        const newBoard = response
+                        console.log('Response:')
+                        console.log(newBoard)
+                    })
+                })
+                .catch((e) => console.log('Connection failed: ', e))
+        }
+    }, [connection])
     console.log(whoAmI)
     const load =  useAVAFetch('/getAi/' + id)
     let strategy = load.data
@@ -93,7 +118,9 @@ function Programming() {
         }
         strategy.status = 0;
         strategy = await execute({ data: build })
-        console.log(await run({ data: build }))
+        if (select) {
+            console.log(await run({ url: '/Strategy/TestPublish/-1', data: build }))
+        }
         // @ts-ignore
         setSubmissions((past) => [...past, 'Stats for Previous Submission display here'])
         setSelect(!select)
