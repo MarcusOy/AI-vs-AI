@@ -69,6 +69,18 @@ function App() {
                                 path='/Profile/Submissions'
                                 element={<Navigate to={`/Profile/${whoAmI.id}/Submissions`} />}
                             />
+                            <Route
+                                path='/Profile/Strategies'
+                                element={<Navigate to={`/Strategy/${whoAmI.id}/SourceCode`} />}
+                            />
+                            <Route
+                                path='/Profile/Battles'
+                                element={<Navigate to={`/Strategy/${whoAmI.id}/Battles`} />}
+                            />
+                            <Route
+                                path='/Profile/Submissions'
+                                element={<Navigate to={`/Strategy/${whoAmI.id}/Stats`} />}
+                            />
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
                             <Route path='/Strategy/:id/:tab' element={<StrategyPage />} />
                             <Route path='/Battle/:id' element={<BattlePage />} />

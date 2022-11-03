@@ -12,55 +12,41 @@ import {
     Button,
     HStack,
     ButtonGroup,
+    Tab,
+    TabList,
+    Tabs,
+    Stack,
+    Avatar,
+    Heading,
+    TabPanel,
+    TabPanels,
 } from '@chakra-ui/react'
 
 import useAVAFetch from '../helpers/useAVAFetch'
+import EditFullName from '../components/profile/EditFullName'
 
 const BattlePage = () => {
     const [id, setid] = useState('')
     const { data, isLoading, execute } = useAVAFetch(
-        `/GetStats/${id}`,
+        `/Battle/${id}`,
         { method: 'POST' },
         { manual: true }, // makes sure this request fires on user action
     )
     const navigate = useNavigate()
 
-    return (
-        <Center>
-            <Box>
-                <FormControl isRequired>
-                    <Center>
-                        <FormLabel>Enter Battle Id</FormLabel>
-                    </Center>
+    const handleTabsChange = (index) => {
+        const tab =
+            index == 1
+                ? 'BattleStrat'
+                : index == 2
+                ? 'Battles'
+                : index == 3
+                ? 'Submissions'
+                : 'View'
+        navigate(`/Profile/${id}/${tab}`)
+    }
 
-                    <Input
-                        mt='10px'
-                        htmlSize={30}
-                        width='auto'
-                        size='md'
-                        placeholder='Enter your battle id here'
-                    />
-                </FormControl>
-
-                <Center>
-                    <ButtonGroup>
-                        <Button size='md' mt='20px' type='submit' isLoading={isLoading}>
-                            Search Battle
-                        </Button>
-
-                        <Button
-                            colorScheme='red'
-                            size='md'
-                            mt='20px'
-                            onClick={() => navigate(`/Profile/${id}`)}
-                        >
-                            Back To Profile
-                        </Button>
-                    </ButtonGroup>
-                </Center>
-            </Box>
-        </Center>
-    )
+    return <Text>1</Text>
 }
 
 export default BattlePage

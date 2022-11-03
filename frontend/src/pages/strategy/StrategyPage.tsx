@@ -24,6 +24,7 @@ import {
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
+import StrategyBattleTab from './StrategyBattleTab'
 import StrategySourceCodeTab from './StrategySourceCodeTab'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import { WarningIcon } from '@chakra-ui/icons'
@@ -44,20 +45,10 @@ const StrategyPage = () => {
     const strategy: Strategy = data
     const isSelf = strategy.createdByUserId == whoAmI?.id
 
-    const index =
-        tab == 'View'
-            ? 0
-            : tab == 'Strategies'
-            ? 1
-            : tab == 'Battles'
-            ? 2
-            : tab == 'Submissions'
-            ? 3
-            : -1
+    const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
     const handleTabsChange = (index) => {
-        const tab =
-            index == 1 ? 'Strategies' : index == 2 ? 'Battles' : index == 3 ? 'Submissions' : 'View'
+        const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
         navigate(`/Strategy/${id}/${tab}`)
     }
 
@@ -108,7 +99,7 @@ const StrategyPage = () => {
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>
                         <Tab>Stats</Tab>
-                        <Tab>Source Code</Tab>
+                        <Tab>SourceCode</Tab>
                         <Tab>Battles</Tab>
                     </TabList>
 
@@ -120,13 +111,13 @@ const StrategyPage = () => {
                             <StrategySourceCodeTab />
                         </TabPanel>
                         <TabPanel>
-                            {/* <StrategyBattleTab /> */}
+                            <StrategyBattleTab />
                             <Text>Battles</Text>
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
             </Box>
-            <Center>
+            {/* <Center>
                 <ButtonGroup>
                     <Button size='md' mt='20px' type='submit' isLoading={isLoading}>
                         Search Strategy
@@ -140,7 +131,7 @@ const StrategyPage = () => {
                         Back To Profile
                     </Button>
                 </ButtonGroup>
-            </Center>
+            </Center> */}
         </Box>
     )
 }
