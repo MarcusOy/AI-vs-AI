@@ -97,6 +97,7 @@ namespace AVA.API.Services
             // trust these fields
             originalStrategy.Name = strategy.Name;
             originalStrategy.SourceCode = strategy.SourceCode;
+            originalStrategy.IsPrivate = strategy.IsPrivate;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);

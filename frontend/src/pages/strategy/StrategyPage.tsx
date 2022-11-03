@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Center,
@@ -25,24 +25,29 @@ import {
     Menu,
     MenuItem,
     MenuList,
+    useToast,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
 import StrategySourceCodeTab from './StrategySourceCodeTab'
 import useAVAFetch from '../../helpers/useAVAFetch'
-import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, WarningIcon, LockIcon, UnlockIcon, Icon } from '@chakra-ui/icons'
 import EditFullName from '../../components/profile/EditFullName'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
 import { TbBook2 } from 'react-icons/tb'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
+import { SubmitErrorHandler, SubmitHandler } from 'react-hook-form'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
     const { id, tab } = useParams()
-    const { data, isLoading, error } = useAVAFetch(`/Strategy/${id}`)
+    const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
+    const toast = useToast()
+
+    
     // const isSelf = strategy.createdByUserId == whoAmI?.id
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
@@ -51,7 +56,29 @@ const StrategyPage = () => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
         navigate(`/Strategy/${id}/${tab}`)
     }
+    const visibilityRequest = useAVAFetch(
+        '/Strategy/Update',
+        { method: 'PUT' },
+        { manual: true }, // makes sure this request fires on user action
+    )
 
+    const onSubmit = async () => {
+        const newStrategy: Strategy = {
+            ...(strategy),
+            isPrivate: !strategy.isPrivate,
+        }
+        const response = await visibilityRequest.execute({ data: newStrategy })
+        if (response.status == 200) {
+            execute();
+            toast({
+                title: 'Code visibility Statue changed Successful.',
+                description: 'You just changed visibility.',
+                status: 'success',
+                duration: 5000,
+                isClosable: true,
+            })
+        }
+    }
     if (isLoading || strategy == undefined)
         return (
             <Center mt='10'>
@@ -92,7 +119,7 @@ const StrategyPage = () => {
                         {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
 
                         <Heading fontSize='lg' mt={0}>
-                            {strategy.name} by {strategy.createdByUser?.username}
+                        { strategy.isPrivate ? <Icon as={UnlockIcon} />: <Icon as={LockIcon} />} {strategy.name} by {strategy.createdByUser?.username}
                         </Heading>
                     </Stack>
                     <Box flexGrow={1} />
@@ -104,8 +131,7 @@ const StrategyPage = () => {
                             <MenuItem>Download</MenuItem>
                             <MenuItem>Create a Copy</MenuItem>
                             <MenuItem>Mark as Draft</MenuItem>
-                            <MenuItem>Delete</MenuItem>
-                            <MenuItem>Attend a Workshop</MenuItem>
+                            <MenuItem onClick={onSubmit}>{ strategy.isPrivate ? 'Set Private': 'Set Public'}</MenuItem>
                         </MenuList>
                     </Menu>
                 </HStack>
