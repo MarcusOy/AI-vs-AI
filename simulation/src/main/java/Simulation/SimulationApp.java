@@ -82,6 +82,10 @@ public class SimulationApp {
     static int numGames;
     static String lastMoveString;
 
+    // used to access defender strategy source and version for selecting a stock defender override, if necessary
+    // doesn't track with the battle throughout all modifications
+    static Battle mostlyCurrentBattle;
+
     // Runs a battle with an infinite number of BattleGames, starting a fresh
     // BattleGame when the previous completes
     public static void main(String[] args)
@@ -113,6 +117,7 @@ public class SimulationApp {
 
                 // processes message
                 Battle sentBattle = processMessage(message);
+                mostlyCurrentBattle = sentBattle;
                 prepareAndRunBattle(sentBattle);
                 System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
             };
@@ -593,7 +598,20 @@ public class SimulationApp {
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
         stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
-        stockDefender = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
+        if (DEMO_STOCK)
+            stockDefender = new TrueRandomAI();
+        else if (mostlyCurrentBattle != null && defenderStockOverride) {
+            if (mostlyCurrentBattle.defendingStrategy.version == -1)
+                stockDefender = new EasyAI();
+            else if (mostlyCurrentBattle.defendingStrategy.version == -2)
+                stockDefender = new EasyAI();
+            else if (mostlyCurrentBattle.defendingStrategy.version == -3)
+                stockDefender = new EasyAI();
+            else
+                stockDefender = new RandomAI();
+        }
+        else
+            stockDefender = new RandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
