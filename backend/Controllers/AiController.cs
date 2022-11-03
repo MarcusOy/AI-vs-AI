@@ -60,4 +60,8 @@ public class AiController : Controller
 
         return Ok("Simulation request sent.");
     }
+
+    [HttpDelete, Route("/Strategy/Delete/{id}")]
+    public async Task<Strategy> Delete(String id)
+        => await _strategiesService.DeleteAsync(new Guid(id));
 }
