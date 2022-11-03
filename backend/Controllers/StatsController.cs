@@ -90,8 +90,12 @@ public class StatsController : Controller
             {
                 WinLoss = (double)NumWins / NumLoss;
             }
-
-            return Ok(WinLoss);
+            var results = new
+            {
+                win = NumWins,
+                loss = NumLoss
+            };
+            return Ok(results);
         }
         catch (Exception e)
         {
