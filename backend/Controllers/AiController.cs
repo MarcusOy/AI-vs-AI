@@ -23,8 +23,65 @@ public class AiController : Controller
       => _strategiesService.Get(new Guid(id));
 
     // TODO Have frontend send stock to test with in uri
-    [HttpPost, Route("/Strategy/TestPublish/{stock}")]
-    public async Task<ActionResult> TestPublish([FromBody] Strategy s, String stock)
+    [HttpPost, Route("/Strategy/TestStrategy/{stock}")]
+    public async Task<ActionResult> TestStrategy([FromBody] Strategy s, String stock)
+    {
+        var attackGuid = s.Id;
+        int selectedStock = 0;
+
+        try
+        {
+            selectedStock = int.Parse(stock);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"StockCodeInteger of {stock} is invalid.  {ex.Message}");
+        }
+
+        if (selectedStock < -3 || selectedStock > -1)
+        {
+            throw new InvalidOperationException("Must pass an integer from -3 to -1 to /Strategy/TestStrategy/{stock}.");
+        }
+
+        string stockName = _strategiesService.getStockName(selectedStock);
+        var defendGuid = _strategiesService.getStockGuid(selectedStock);
+
+        var request = new SimulationRequest
+        {
+            PendingBattle = new Battle
+            {
+                Id = Guid.NewGuid(),
+                Name = s.Name + " vs " + stockName,
+                BattleStatus = BattleStatus.Pending,
+                Iterations = 1,
+                AttackingStrategyId = attackGuid,
+                AttackingStrategy = new Strategy
+                {
+                    Id = attackGuid,
+                    Name = s.Name,
+                    Status = StrategyStatus.Active,
+                    SourceCode = s.SourceCode
+                },
+                DefendingStrategyId = defendGuid,
+                DefendingStrategy = new Strategy
+                {
+                    Id = defendGuid,
+                    Name = stockName,
+                    Status = StrategyStatus.Active,
+                    Version = selectedStock,
+                    SourceCode = null
+                }
+            }
+        };
+
+        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
+        await endpoint.Send(request);
+
+        return Ok("Simulation request sent.");
+    }
+
+    [HttpPost, Route("/Strategy/TestPublish")]
+    public async Task<ActionResult> TestPublish([FromBody] Strategy s)
     {
         var attackGuid = s.Id;
         var defendGuid = Guid.NewGuid();

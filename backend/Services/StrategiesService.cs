@@ -13,6 +13,9 @@ namespace AVA.API.Services
         Task<Strategy> UpdateAsync(Strategy strategy);
         Task<Strategy> SubmitAsync(Strategy strategy);
         Task<Strategy> DeleteAsync(Guid id);
+
+        String getStockName(int StockCodeInt);
+        Guid getStockGuid(int StockCodeInt);
     }
 
     public class StrategiesService : IStrategiesService
@@ -61,29 +64,8 @@ namespace AVA.API.Services
                 throw new InvalidOperationException($"Stock Strategy [{stocktoChoose}] invalid.  Must be between [-1] and [-3]. ");
             }
 
-            // TODO hardcode GUIDS of stockAI
-            Guid EASY_AI_GUID = Guid.NewGuid();
-            Guid MED_AI_GUID = Guid.NewGuid();
-            Guid HARD_AI_GUID = Guid.NewGuid();
-
-            Guid strategyGUID = Guid.NewGuid();
-            string strategyName = "";
-
-            if (stocktoChoose == -1)
-            {
-                strategyGUID = EASY_AI_GUID;
-                strategyName = "EasyAI";
-            }
-            else if (stocktoChoose == -2)
-            {
-                strategyGUID = MED_AI_GUID;
-                strategyName = "MedAI";
-            }
-            else if (stocktoChoose == -3)
-            {
-                strategyGUID = HARD_AI_GUID;
-                strategyName = "HardAI";
-            }
+            Guid strategyGUID = getStockGuid(stocktoChoose);
+            string strategyName = getStockName(stocktoChoose);
 
             Strategy s = _dbContext.Strategies
                .FirstOrDefault(s => s.Id == strategyGUID);
@@ -164,6 +146,37 @@ namespace AVA.API.Services
             await _dbContext.SaveChangesAsync();
 
             return g;
+        }
+
+        // converts an integer StockCodeInt to the corresponding name of the stock AI
+        public string getStockName(int stockCodeInt)
+        {
+            if (stockCodeInt == -1)
+                return "Easy AI";
+            else if (stockCodeInt == -2)
+                return "Medium AI";
+            else if (stockCodeInt == -3)
+                return "Hard AI";
+            else
+                return "INVALID STOCK";
+        }
+
+        // converts an integer StockCodeInt to the corresponding Guid of the stock AI in the database
+        public Guid getStockGuid(int stockCodeInt)
+        {
+            // TODO hardcode GUIDS of stockAI
+            Guid EASY_AI_GUID = Guid.Empty;
+            Guid MED_AI_GUID = Guid.Empty;
+            Guid HARD_AI_GUID = Guid.Empty;
+
+            if (stockCodeInt == -1)
+                return EASY_AI_GUID;
+            else if (stockCodeInt == -2)
+                return MED_AI_GUID;
+            else if (stockCodeInt == -3)
+                return HARD_AI_GUID;
+            else
+                return Guid.Empty;
         }
     }
 }
