@@ -61,18 +61,4 @@ public class AiController : Controller
 
         return Ok("Simulation request sent.");
     }
-
-    [HttpGet, Route("/Strategy/ChangePrivate/{id}")]
-    public async Task<Strategy> ChangePrivate(String Id)
-    {
-        Guid StratId = new Guid(Id);
-
-        Strategy strat = _strategiesService.Get(StratId);
-
-        strat.IsPrivate = !strat.IsPrivate;
-
-        await _strategiesService.UpdateAsync(strat);
-
-        return strat;
-    }
 }
