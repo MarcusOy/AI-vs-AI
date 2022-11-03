@@ -564,8 +564,25 @@ public class SimulationApp {
             BattleGame currentBattleGame = battle.addBattleGame();
             gameState = new GameState();
 
+            // writes JSON obj
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            String jsonBoard = null;
+            try {
+                jsonBoard = mapper.writeValueAsString(gameState.board);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                System.out.println("JSON writing of JSON board failed");
+            }
+
             Color gameWinner = playGame(battle, currentBattleGame);
-            currentBattleGame.setWinner(gameWinner);
+            boolean attackerIsWhite = battle.getAttackerColor().equals(Color.WHITE);
+            int aPi = attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+            int dPi = !attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+            int aPa = attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+            int dPa = !attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+
+            currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
             battle.processGameWinner(currentBattleGame, gameWinner);
 
             if (CONSOLE_APP)
