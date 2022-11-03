@@ -101,12 +101,12 @@ const ModalAi = (props: ModalAiProps) => {
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else if (props.overwrite) { 
-            value.sourceCode = props.strategy?.sourceCode
+            /* value.sourceCode = props.strategy?.sourceCode
             value.name = props.strategy?.name
-            const response = await duplicate({ data: props.strategy?.id })
+            const response = await duplicate({ data: value })
             console.log(response)
-            IdentityService.refreshIdentity()
-            navigate('/Programming/' + response.data.id)
+            IdentityService.refreshIdentity()*/
+            navigate('/Programming/') // + response.data.id)
         } else {
             navigate('/Programming/' + value.id)
         }
