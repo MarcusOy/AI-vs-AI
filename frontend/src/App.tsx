@@ -13,6 +13,7 @@ import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
 import BattlePage from './pages/BattlePage'
+import BattleGamePage from './pages/BattleGamePage'
 import StrategyPage from './pages/strategy/StrategyPage'
 import Programming from './pages/Programming'
 import ModalProvider from './components/modals/ModalProvider'
@@ -74,6 +75,7 @@ function App() {
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
                             <Route path='/Strategy/:id/:tab' element={<StrategyPage />} />
                             <Route path='/Battle/:id' element={<BattlePage />} />
+                            <Route path='/BattleGame/:id' element={<BattleGamePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
                             <Route path='/Replay' element={<ReplayPage />} />
                             <Route path='/Programming/' element={<InvalidStrategyPage />} />

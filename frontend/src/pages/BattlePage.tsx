@@ -34,6 +34,7 @@ import {
 import useAVAFetch from '../helpers/useAVAFetch'
 import EditFullName from '../components/profile/EditFullName'
 import { Battle } from '../models/battle'
+import BattleGameList from './BattleGameList'
 import { WarningIcon } from '@chakra-ui/icons'
 import { randomColor } from '@chakra-ui/theme-tools'
 import { TbSword } from 'react-icons/tb'
@@ -118,7 +119,7 @@ const BattlePage = () => {
                 </UnorderedList>
             </Box>
             <Box>
-                <ProfileAndStratBattlesTab />
+                <BattleGameList battleId={battle.id} />
             </Box>
         </Stack>
     )
