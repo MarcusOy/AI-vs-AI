@@ -53,21 +53,21 @@ namespace AVA.API.Services
 
         // assumes that we are reserving certain names as prototype names
         // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
-        public Strategy GetStockStrategy(int stockToChoose)
+        public Strategy GetStockStrategy(int stocktoChoose)
         {
             // make sure stockToChoose is within bounds
             if (stocktoChoose < -3 || stocktoChoose > -1)
             {
-                throw new InvalidOperationException($"Stock Strategy [{stockToChoose}] invalid.  Must be between [-1] and [-3]. ");
+                throw new InvalidOperationException($"Stock Strategy [{stocktoChoose}] invalid.  Must be between [-1] and [-3]. ");
             }
 
             // TODO hardcode GUIDS of stockAI
-            const GUID EASY_AI_GUID = GUID.NewGuid();
-            const GUID MED_AI_GUID = GUID.NewGuid();
-            const GUID HARD_AI_GUID = GUID.NewGuid();
+            Guid EASY_AI_GUID = Guid.NewGuid();
+            Guid MED_AI_GUID = Guid.NewGuid();
+            Guid HARD_AI_GUID = Guid.NewGuid();
 
-            GUID strategyGUID;
-            string strategyName;
+            Guid strategyGUID = Guid.NewGuid();
+            string strategyName = "";
 
             if (stocktoChoose == -1)
             {
@@ -86,7 +86,7 @@ namespace AVA.API.Services
             }
 
             Strategy s = _dbContext.Strategies
-               .FirstOrDefault(s => s.id == strategyGUID);
+               .FirstOrDefault(s => s.Id == strategyGUID);
 
             if (s is null)
             {

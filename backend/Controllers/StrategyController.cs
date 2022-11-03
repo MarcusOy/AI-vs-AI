@@ -17,7 +17,6 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
     {
-        s.IsPrivate = true;
         await _strategyService.CreateAsync(s);
 
         return s;
@@ -50,7 +49,8 @@ public class StrategyController : Controller
 
     // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
     [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
-    public async Task<Strategy> GetStockStrategy(String stockToChoose) {
-        return await _strategyService.GetStockStrategy(int.Parse(stockToChoose));
+    public async Task<Strategy> GetStockStrategy(String stockToChoose)
+    {
+        return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }
 }
