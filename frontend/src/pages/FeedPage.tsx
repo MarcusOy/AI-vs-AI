@@ -18,8 +18,6 @@ const FeedPage = () => {
             <Flex>
             <Box>
                     <ModalAi overwrite={false} />
-                    <Spacer m='4'/>
-                    <ModalAi overwrite={true} />
                 </Box>
                 <Spacer/>
                 <Box>
