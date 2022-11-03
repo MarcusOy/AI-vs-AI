@@ -60,7 +60,7 @@ namespace AVA.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuthTokens");
+                    b.ToTable("AuthTokens", (string)null);
                 });
 
             modelBuilder.Entity("AVA.API.Models.Battle", b =>
@@ -115,7 +115,7 @@ namespace AVA.Migrations
 
                     b.HasIndex("DefendingStrategyId");
 
-                    b.ToTable("Battles");
+                    b.ToTable("Battles", (string)null);
                 });
 
             modelBuilder.Entity("AVA.API.Models.BattleGame", b =>
@@ -143,7 +143,7 @@ namespace AVA.Migrations
 
                     b.HasKey("BattleId", "GameNumber");
 
-                    b.ToTable("BattleGames");
+                    b.ToTable("BattleGames", (string)null);
                 });
 
             modelBuilder.Entity("AVA.API.Models.BugReport", b =>
@@ -176,7 +176,7 @@ namespace AVA.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("BugReports");
+                    b.ToTable("BugReports", (string)null);
                 });
 
             modelBuilder.Entity("AVA.API.Models.Game", b =>
@@ -216,7 +216,7 @@ namespace AVA.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
 
                     b.HasData(
                         new
@@ -270,9 +270,6 @@ namespace AVA.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsPrivate")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -296,7 +293,7 @@ namespace AVA.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.ToTable("Strategies");
+                    b.ToTable("Strategies", (string)null);
 
                     b.HasData(
                         new
@@ -341,7 +338,7 @@ namespace AVA.Migrations
 
                     b.HasKey("BattleId", "BattleGameNumber", "TurnNumber");
 
-                    b.ToTable("Turns");
+                    b.ToTable("Turns", (string)null);
                 });
 
             modelBuilder.Entity("AVA.API.Models.User", b =>
@@ -401,7 +398,7 @@ namespace AVA.Migrations
 
                     b.HasIndex("FavoriteGameId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new
