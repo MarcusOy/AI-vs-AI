@@ -101,14 +101,13 @@ const StrategyPage = () => {
 
                     <TabPanels>
                         <TabPanel>
-                            <StrategyStatTab />
+                            <StrategyStatTab strategy={strategy} />
                         </TabPanel>
                         <TabPanel>
                             <StrategySourceCodeTab />
                         </TabPanel>
                         <TabPanel>
                             <StrategyBattleTab />
-                            <Text>Battles</Text>
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
