@@ -30,7 +30,7 @@ public class HardAI implements IStrategy {
     private int[] pieceValueOfBlackB2s = {0, -95, -200};    //B2 pair is very important
     private int[] pieceValueOfBlack3s = {0, -85, -170, -255};
     private int allFourBlack2sBonus = -10;
-    
+
     private int[] attackValueOnBlack1s = {500000, 100, 70, 52, 52, 51, 51, 50, 50};
     private int[] attackValueOnBlackLF2s = {45, 40};
     private int[] attackValueOnBlackRF2s = {45, 40};
@@ -302,7 +302,7 @@ public class HardAI implements IStrategy {
         } else if (fromMoveDistance == toMoveDistance) { // both pieces die upon a tie
             board[toCol][toRow] = "";
         } else { // if (fromMoveDistance < toMoveDistance) // defender wins
-            return null;    //return null to show that this is a suicide move which is very bad and shouldn't be considered
+
         }
         // removes piece from old location
         board[fromCol][fromRow] = "";
@@ -339,28 +339,31 @@ public class HardAI implements IStrategy {
         } else if (fromMoveDistance == toMoveDistance) { // both pieces die upon a tie
             board[toCol][toRow] = "";
         } else { // if (fromMoveDistance < toMoveDistance) // defender wins
-            return null;    //return null to show that this is a suicide move which is very bad and shouldn't be considered
+
         }
         // removes piece from old location
         board[fromCol][fromRow] = "";
         return board;
     }
-    
+
     public int evaluatePosition(String[][] board, int playerToMove) {
         int evaluation = 5 - 10 * playerToMove;   //start off by giving 5 to whoever's turn it is to move
-        
+
         //first evaluate piece values and position values at the same time
         int numWhite1s = 0, numWhiteLF2s = 0, numWhiteRF2s = 0, numWhiteB2s = 0, numWhite3s = 0;
         String[] pieceLocations = api.getMyPieceLocations(api.WHITE, board);
         for (String piece : pieceLocations) {
+            if (piece.equals(""))
+                break;
+
             int moveDistance = api.getPieceMoveDistance(piece, board);
             if (moveDistance == 1) {
                 evaluation += positionalValueOfWhite1s[api.cellToRow(piece)][api.cellToCol(piece)];
-                
+
                 numWhite1s++;
             } else if (moveDistance == 2) {
                 evaluation += positionalValueOfWhite2s[api.cellToRow(piece)][api.cellToCol(piece)];
-                
+
                 if (api.cellToRow(piece) % 2 != api.WHITE) {       //back rank 2
                     numWhiteB2s++;
                 } else if (api.cellToCol(piece) % 2 == api.WHITE) {  //left front rank 2
@@ -370,7 +373,7 @@ public class HardAI implements IStrategy {
                 }
             } else if (moveDistance == 3) {
                 evaluation += positionalValueOfWhite3s[api.cellToRow(piece)][api.cellToCol(piece)];
-                
+
                 numWhite3s++;
             } else {  //it's a 4
                 evaluation += positionalValueOfWhite4s[api.cellToRow(piece)][api.cellToCol(piece)];
@@ -388,6 +391,9 @@ public class HardAI implements IStrategy {
         int numBlack1s = 0, numBlackLF2s = 0, numBlackRF2s = 0, numBlackB2s = 0, numBlack3s = 0;
         pieceLocations = api.getMyPieceLocations(api.BLACK, board);
         for (String piece : pieceLocations) {
+            if (piece.equals(""))
+                break;
+
             int moveDistance = api.getPieceMoveDistance(piece, board);
             if (moveDistance == 1) {
                 evaluation += positionalValueOfBlack1s[api.cellToRow(piece)][api.cellToCol(piece)];
