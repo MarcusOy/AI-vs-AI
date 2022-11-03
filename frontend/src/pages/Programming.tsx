@@ -17,6 +17,7 @@ function Programming() {
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
     const [emptyClipboard, setEmptyClipboard] = useState(false)
+    const [copied, setCopied] = useState(false)
     const [submissions, setSubmissions] = useState([]);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
@@ -85,9 +86,20 @@ function Programming() {
             <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
                 <Spacer />
-                <Button onClick={() => {sessionStorage.setItem('clipboard', editorRef.current.getValue())}}>
+                {!copied && <Button onClick={() => { sessionStorage.setItem('clipboard', editorRef.current.getValue()); setCopied(true) }}>
                     Copy
-                </Button>
+                </Button>}
+                {copied &&
+    <Tag
+      size={'lg'}
+      borderRadius='full'
+      variant='solid'
+                        colorScheme='green'
+                        mx='2'
+    >
+      <TagLabel>Copied!</TagLabel>
+      <TagCloseButton onClick={() => setCopied(false)}/>
+    </Tag>}
                 {!emptyClipboard && <Button mx='2' display={'flex'} justifyContent='flex-end' onClick={() => { sessionStorage.getItem('clipboard') !== null ? editorRef.current.setValue(sessionStorage.getItem('clipboard')) : setEmptyClipboard(true) }}>Paste</Button>}
                 {emptyClipboard &&
     <Tag
@@ -128,12 +140,12 @@ function Programming() {
                             <TabPanel>
                                 {strategy !== undefined && <HStack justifyContent={'center'} gap='2'>
                                     <h1>View Complete Developer Code</h1>
-                                    <CodeModal codeName='Developer Ai' code={devComplete} />
+                                    <CodeModal strategy={{name: 'Developer Ai', gameId: 1, sourceCode: devComplete}} />
                                 </HStack>
                                 }
                                 {strategy !== undefined && <HStack  m='2' justifyContent={'center'} gap='2'>
                                     <h1>View Incomplete Starter Code</h1>
-                                    <CodeModal codeName='Initial Ai with Comments' code={emptyStarter} />
+                                    <CodeModal strategy={{name: 'Initial Ai with Comments', gameId: 1, sourceCode: emptyStarter}} />
                                 </HStack>
                                 }
                                 <Center>
@@ -198,20 +210,19 @@ function Programming() {
                             Easy Stock
                         </Button>
                         <CodeModal
-                            codeName='Easy Stock Code'
-                            code={easyAi}
+                            strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}}
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
                     <ButtonGroup isAttached variant='outline' margin='4' isDisabled>
                         <Button color={'orange'}>Medium Stock</Button>
-                        <CodeModal code='' color={'orange'} />
+                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'orange'} />
                     </ButtonGroup>
                     <ButtonGroup variant='outline' margin='3' isDisabled isAttached>
                         <Button color={'red'} disabled>
                             Hard Stock
                         </Button>
-                        <CodeModal code='' color={'red'} />
+                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'red'} />
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>

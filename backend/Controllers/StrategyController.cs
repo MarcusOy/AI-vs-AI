@@ -22,4 +22,17 @@ public class StrategyController : Controller
     public async Task<Strategy> Update([FromBody] Strategy s)
         => await _strategyService.UpdateAsync(s);
 
+    [HttpPut, Route("/Strategy/Duplicate/{id}"), Authorize]
+    public async Task<Strategy> Duplicate([FromBody] Strategy s, String id)
+    {
+        await _strategyService.DeleteAsync(new Guid(id));
+        s.Name = "Duplicate of " + s.Name;
+        Console.WriteLine(id);
+        Console.WriteLine(s);
+        return await _strategyService.CreateAsync(s);
+    }
+
+    [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
+    public async Task<Strategy> Delete(String id)
+        => await _strategyService.DeleteAsync(new Guid(id));
 }

@@ -48,11 +48,10 @@ const ModalAi = (props: ModalAiProps) => {
         { manual: true },
     )
     const duplicate = useAVAFetch(
-        '/Strategy/Update',
+        '/Strategy/Duplicate/',
         { method: 'PUT' },
         { manual: true },
     ).execute
-
     const options = data === undefined ? [{name: '1234 Chess', id: 1}] : data
     const openStrats = [{ name: 'Free Save', sourceCode: '', id: '-1' }, { name: 'Free Save', sourceCode: '', id: '-2' },{ name: 'Free Save', sourceCode: '', id: '-3' }];
     const strategies = whoAmI?.strategies || []
@@ -102,12 +101,10 @@ const ModalAi = (props: ModalAiProps) => {
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else if (props.overwrite) { 
-            /* value.sourceCode = props.strategy?.sourceCode
-            value.name = props.strategy?.name
-            const response = await duplicate({ data: value })
+            const response = await duplicate({ url: '/Strategy/Duplicate/'+value.id, data: props.strategy })
             console.log(response)
-            IdentityService.refreshIdentity()*/
-            navigate('/Programming/') // + response.data.id)
+            IdentityService.refreshIdentity()
+            navigate('/Programming/' + response.data.id)
         } else {
             navigate('/Programming/' + value.id)
         }
