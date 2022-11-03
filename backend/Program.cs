@@ -48,6 +48,7 @@ builder.Services.AddControllers()
 builder.Services.AddMassTransit(mt =>
 {
     mt.AddConsumer<SimulationResponsesConsumer>();
+    mt.AddConsumer<SimulationStepResponsesConsumer>();
 
     mt.UsingRabbitMq((context, cfg) =>
     {
@@ -123,7 +124,7 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseEndpoints(endpoints => endpoints.MapControllers());
 
-app.MapHub<SimulationStepHub>("/AI/Step");
+app.MapHub<SimulationStepHub>("AI/Step");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())

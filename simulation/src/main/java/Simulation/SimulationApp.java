@@ -48,8 +48,8 @@ import org.apache.commons.cli.*;
 public class SimulationApp {
     public final static String REQ_QUEUE_NAME = "SimulationRequests";
     final static String RESP_QUEUE_NAME = "SimulationResponses";
-    final static String REQ_QUEUE_NAME_MANUAL = "SimulationManualRequests";
-    final static String RESP_QUEUE_NAME_MANUAL = "SimulationManualResponses";
+    final static String REQ_QUEUE_NAME_MANUAL = "SimulationStepRequests";
+    final static String RESP_QUEUE_NAME_MANUAL = "SimulationStepResponses";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
 
     public static String ENV_HOST = "AVA__RABBITMQ__HOST";
@@ -72,7 +72,7 @@ public class SimulationApp {
     static boolean DEMO_STOCK;
 
     static boolean attackerStockOverride = true;
-    static boolean defenderStockOverride = true;    
+    static boolean defenderStockOverride = true;
 
     static final int BOARD_LENGTH = 10;
 
@@ -123,18 +123,23 @@ public class SimulationApp {
                 System.out.println(" [x] Received '" + message + "'");
 
                 // also initializes gameState upon success
-                SimulationManualRequest manRequest = processMessageManual(message);
+                SimulationStepRequest manRequest = processMessageManual(message);
                 initializeManualGameState(manRequest);
-                Color potentialWinner = playTurn(false, null, null);
+                setupStrategies();
+                Color potentialWinner = playTurn(true, null, null);
                 String[][] responseBoard = addPieceIds(manRequest);
-                SimulationManualResponse resp = new SimulationManualResponse(responseBoard, lastMoveString, potentialWinner != null, Color.WHITE.equals(potentialWinner) == manRequest.isWhiteAI);
+                SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
+                        potentialWinner != null, Color.WHITE.equals(potentialWinner) != manRequest.isWhiteAI,
+                        manRequest.clientId);
                 sendRabbitMQMessage(resp, RESP_QUEUE_NAME_MANUAL);
             };
 
             // listens for messages
             System.out.println("listening");
-            channel.basicConsume(REQ_QUEUE_NAME, true, deliverCallback, consumerTag -> { });
-            channel.basicConsume(REQ_QUEUE_NAME_MANUAL, true, deliverCallbackManual, consumerTag -> { });
+            channel.basicConsume(REQ_QUEUE_NAME, true, deliverCallback, consumerTag -> {
+            });
+            channel.basicConsume(REQ_QUEUE_NAME_MANUAL, true, deliverCallbackManual, consumerTag -> {
+            });
             System.out.println("after consume call");
 
             /*
@@ -276,39 +281,49 @@ public class SimulationApp {
 
     // processes the board sent from a manual play window,
     // parsing the cells to create a usable gamestate
-    static void initializeManualGameState(SimulationManualRequest req) {
-        String board[][] = req.board;
+    static void initializeManualGameState(SimulationStepRequest req) {
+        String board[][] = req.sentBoard;
         gameState = new GameState();
+
+        // override initialized fields
+        gameState.numBlackPawns = 0;
+        gameState.numBlackPieces = 0;
+        gameState.numWhitePawns = 0;
+        gameState.numWhitePieces = 0;
+
         gameState.currentPlayer = req.isWhiteAI ? 0 : 1;
+        API api = new API();
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 String curVal = board[i][j];
-
-                if (getPieceColor(curVal, gameState.board).equals(Color.WHITE)) {
-                    gameState.numWhitePieces++;
-
-                    if (getPieceMoveDistance(curVal, gameState.board) == 1)
-                        gameState.numWhitePawns++;
-                }
-                else if (getPieceColor(curVal, gameState.board).equals(Color.BLACK)) {
-                    gameState.numBlackPieces++;
-
-                    if (getPieceMoveDistance(curVal, gameState.board) == 1)
-                        gameState.numBlackPawns++;
-                }
-
                 if (curVal.equals(""))
                     gameState.board[i][j] = curVal;
                 else
-                    gameState.board[i][j] = curVal.substring(2); // assumes that the piece id is the first 2 chars of cellVal
+                    gameState.board[i][j] = curVal.substring(2); // assumes that the piece id is the first 2 chars of
+                                                                 // cellVal
+
+                String cellString = api.colAndRowToCell(i, j);
+
+                if (getPieceColor(cellString, gameState.board).equals(Color.WHITE)) {
+                    gameState.numWhitePieces++;
+
+                    if (getPieceMoveDistance(cellString, gameState.board) == 1)
+                        gameState.numWhitePawns++;
+                } else if (getPieceColor(cellString, gameState.board).equals(Color.BLACK)) {
+                    gameState.numBlackPieces++;
+
+                    if (getPieceMoveDistance(cellString, gameState.board) == 1)
+                        gameState.numBlackPawns++;
+                }
             }
         }
     }
 
-    // add the pieceIds back to the gameState board for sending back to a manual play window
-    static String[][] addPieceIds(SimulationManualRequest req) {
-        String[][] requestBoard = req.board;
+    // add the pieceIds back to the gameState board for sending back to a manual
+    // play window
+    static String[][] addPieceIds(SimulationStepRequest req) {
+        String[][] requestBoard = req.sentBoard;
         String[][] responseBoard = gameState.board;
         Color AIColor = req.isWhiteAI ? Color.WHITE : Color.BLACK;
         String preMovePieceString = null; // with ID
@@ -319,7 +334,8 @@ public class SimulationApp {
         for (int i = 0; i < responseBoard.length; i++) {
             for (int j = 0; j < responseBoard[i].length; j++) {
                 String requestVal = requestBoard[i][j];
-                String requestValSub = requestVal.length() == 0 ? requestVal : requestVal.substring(2); // assumes ID is first 2 chars
+                String requestValSub = requestVal.length() == 0 ? requestVal : requestVal.substring(2); // assumes ID is
+                                                                                                        // first 2 chars
                 String responseVal = responseBoard[i][j];
                 boolean inReq = !requestVal.equals("");
                 boolean inResp = !responseVal.equals("");
@@ -328,10 +344,11 @@ public class SimulationApp {
                 // re-adds ids wherever possible
                 if (inReq && !changed) // if unchanged piece, copy id over
                     responseBoard[i][j] = requestVal;
-                else if (inReq && !inResp && getPieceColor((new API()).colAndRowToCell(i, j), requestBoard).equals(AIColor)) { // if moved from
+                else if (inReq && !inResp
+                        && getPieceColor((new API()).colAndRowToCell(i, j), requestBoard).equals(AIColor)) { // if moved
+                                                                                                             // from
                     preMovePieceString = requestVal;
-                }
-                else if (inResp && changed) { // if moved to
+                } else if (inResp && changed) { // if moved to
                     postMovePieceString = responseVal;
                     postMovePieceCol = i;
                     postMovePieceRow = j;
@@ -339,7 +356,8 @@ public class SimulationApp {
             }
         }
 
-        System.out.println("preMoveString: " + preMovePieceString + "  postMoveString: " + postMovePieceString + "  [c,r]: [" + postMovePieceCol + ", " + postMovePieceRow + "]");
+        System.out.println("preMoveString: " + preMovePieceString + "  postMoveString: " + postMovePieceString
+                + "  [c,r]: [" + postMovePieceCol + ", " + postMovePieceRow + "]");
 
         if (postMovePieceString != null)
             responseBoard[postMovePieceCol][postMovePieceRow] = preMovePieceString;
@@ -347,9 +365,10 @@ public class SimulationApp {
         return responseBoard;
     }
 
-    // processes the message sent to the app to setup the board for a turn of a manual game
+    // processes the message sent to the app to setup the board for a turn of a
+    // manual game
     // Returns the board if no parsing errors
-    static SimulationManualRequest processMessageManual(String message) {
+    static SimulationStepRequest processMessageManual(String message) {
         // try parsing manual play
 
         // parses JSON
@@ -357,8 +376,8 @@ public class SimulationApp {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String[][] board;
         try {
-            MassTransitMessage<SimulationManualRequest> sentMessage = mapper.readValue(message,
-                    new TypeReference<MassTransitMessage<SimulationManualRequest>>() {
+            MassTransitMessage<SimulationStepRequest> sentMessage = mapper.readValue(message,
+                    new TypeReference<MassTransitMessage<SimulationStepRequest>>() {
                     });
             return sentMessage.message;
         } catch (JsonProcessingException e) {
@@ -574,7 +593,7 @@ public class SimulationApp {
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
         stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
-        stockDefender = DEMO_STOCK ? new TrueRandomAI() : new EasyAI();
+        stockDefender = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -609,7 +628,8 @@ public class SimulationApp {
 
     // plays a single turn of a game
     // returns the color of the winner, if there was one
-    // isManualCom is whether or not this moveString is being acquired from a manual test play window
+    // isManualCom is whether or not this moveString is being acquired from a manual
+    // test play window
     static Color playTurn(boolean isManualCom, Battle battle, BattleGame battleGame) {
         // fetch player move
         if (CONSOLE_APP)
@@ -657,7 +677,8 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    // isManualCom is whether or not this moveString is being acquired from a manual test play window
+    // isManualCom is whether or not this moveString is being acquired from a manual
+    // test play window
     static String getAttackerMoveString(boolean isManualCom) {
         debugPrintln("Fetching attacker's move");
         if (ATTACKER_MANUAL)
@@ -684,7 +705,8 @@ public class SimulationApp {
     // thus ignoring the Scanner for System.in
     //
     // Return string must be in the form "<fromCell>, <toCell>".
-    // isManualCom is whether or not this moveString is being acquired from a manual test play window
+    // isManualCom is whether or not this moveString is being acquired from a manual
+    // test play window
     static String getDefenderMoveString(boolean isManualCom) {
         debugPrintln("Fetching defender's move");
         if (DEFENDER_MANUAL)
@@ -902,7 +924,7 @@ public class SimulationApp {
         boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell))
                 && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
                 || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell))
-                && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
+                        && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
 
         if (movingPieceNotFarEnough) {
             debugPrintln("Trying to move piece not far enough");
@@ -1001,9 +1023,10 @@ public class SimulationApp {
 
         try {
             Connection connection = factory.newConnection();
-            System.out.println("created connection");
+            System.out.println("Created RabbitMQ connection");
             Channel channel = connection.createChannel();
 
+            System.out.println("Ensuring queue " + queueName + " exists...");
             // Creates queue if not already created an prepares to listen for messages
             channel.queueDeclare(queueName, true, false, false, null);
 
@@ -1013,10 +1036,11 @@ public class SimulationApp {
             String messageJSON;
             try {
                 // assumes queue name is the class name + 's'
+                System.out.println("Queue exists. Trying to serialize response object to JSON...");
                 String className = queueName.substring(0, queueName.length() - 1);
                 MassTransitMessage<T> message = new MassTransitMessage(
                         UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
-                        null, null, new String[] { "urn:message:AVA.API.Consumers:" + className}, res);
+                        null, null, new String[] { "urn:message:AVA.API.Consumers:" + className }, res);
                 messageJSON = mapper.writeValueAsString(message);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
@@ -1030,7 +1054,10 @@ public class SimulationApp {
              * delimiter + UUID.randomUUID() + delimiter + defendingStrategySource +
              * delimiter + numGames;
              */
+            System.out.println("JSON serialized. Trying to send message to queue...");
             channel.basicPublish("", queueName, null, messageJSON.getBytes());
+            System.out.println("Message sent successfully.");
+
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("ERROR: message out to queue: " + queueName + " FAILED");

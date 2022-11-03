@@ -11,39 +11,31 @@ namespace AVA.API.Hubs
 {
     public class SimulationStepHub : Hub
     {
+        private readonly ILogger<SimulationStepHub> _logger;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
-        public SimulationStepHub(ISendEndpointProvider sendEndpointProvider)
+        public SimulationStepHub(ISendEndpointProvider sendEndpointProvider,
+                                 ILogger<SimulationStepHub> logger)
         {
             _sendEndpointProvider = sendEndpointProvider;
+            _logger = logger;
         }
 
-        public async Task RequestStep(SimulationStepRequest request)
+        public async Task StepRequest(SimulationStepRequest request)
         {
-            var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
+
+            _logger.LogInformation($"Simulation step received. Sending to simulation service... {request.ClientId}");
+            await Task.Delay(1000);
+            var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationStepRequests"));
             await endpoint.Send(request);
         }
 
-        public async Task ResponseStep(SimulationStepResponse response)
-            => await Clients.Client(response.ClientId).SendAsync("responseStep", response);
+        public class SimulationStepRequest
+        {
+            public String[][] SentBoard { get; set; }
+            public bool IsWhiteAI { get; set; }
+            public String ClientId { get; set; }
+        }
 
-
-    }
-
-    public class SimulationStepRequest
-    {
-        public String[][] SentBoard { get; set; }
-        public bool IsWhiteAI { get; set; }
-        public String ClientId { get; set; }
-    }
-
-    public class SimulationStepResponse
-    {
-        public String[][] ResultingBoard { get; set; }
-        public String MoveString { get; set; }
-
-        public bool IsGameOver { get; set; } // determines if one of the players won, and which
-        public bool? DidAttackerWin { get; set; } // didplayerwin?
-        public String ClientId { get; set; }
     }
 }
