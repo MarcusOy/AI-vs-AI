@@ -12,10 +12,12 @@ export interface Battle extends BaseEntity {
     id: string;
     name: string;
     battleStatus: BattleStatus;
+    isTestSubmission: boolean;
     iterations: number;
     attackerWins: number;
     defenderWins: number;
-    stackTrace: string;
+    attackerStrategySnapshot: string;
+    defendingStrategySnapshot: string;
     attackingStrategyId: string;
     attackingStrategy: Strategy;
     defendingStrategyId: string;
