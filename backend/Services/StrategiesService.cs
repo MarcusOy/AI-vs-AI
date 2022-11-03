@@ -140,7 +140,7 @@ namespace AVA.API.Services
                 .FirstOrDefaultAsync(s => s.Id == strategy.Id);
 
             // trust these fields
-            originalStrategy.Status = Active;
+            originalStrategy.Status = StrategyStatus.Active;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
