@@ -31,6 +31,7 @@ import { StrategyStatus } from '../models/strategy-status'
 import IdentityService from '../data/IdentityService'
 import { devComplete, helperFunctions } from '../helpers/hardcodeAi'
 import { Game } from '../models/game'
+import Moment from 'react-moment';
 interface ModalAiProps {
     overwrite: boolean,
     strategy?: Strategy
@@ -119,9 +120,9 @@ const ModalAi = (props: ModalAiProps) => {
                         const value = n.id
                         const radio = getRadioProps({ value })
                         return (
-                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2'>
-                            <RadioCard key={value} {...radio}>
-                                {n.name}
+                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2' width='33%' height='40vh'>
+                                <RadioCard key={value} {...radio}>
+                                    {n.name}
                                 </RadioCard>
                                 <StrategyStats strategy={n} />
                             </Box>
@@ -133,7 +134,7 @@ const ModalAi = (props: ModalAiProps) => {
                         const value = n.id
                         const radio = getRadioProps({ value })
                         return (
-                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2'>
+                            <Box key={key} borderWidth='1px' borderRadius='lg' p='2' width='33%' height='40vh'>
                             <RadioCard key={value} {...radio}>
                                 {n.name}
                                 </RadioCard>
@@ -158,7 +159,7 @@ const ModalAi = (props: ModalAiProps) => {
         <>
             {!props.overwrite && <Button onClick={onOpen}>Draft AI</Button>}
             {props.overwrite && <Button variant='link' onClick={onOpen}>Duplicate</Button>}
-            <Modal isOpen={isOpen} onClose={onClose} size={'xl'}>
+            <Modal isOpen={isOpen} onClose={onClose} size={'full'}>
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Select a Draft Save</ModalHeader>
@@ -218,9 +219,20 @@ function StrategyStats(props) {
         ml='2'
         mt='2'
         >
-            <Center>
-                Created: {props.strategy.createdOn}
-                </Center>
+            Created:
+            <Moment format=" HH:MM MM/DD/YYYY">
+                {props.strategy.createdOn}
+                </Moment>
+        </Box>
+        <Box
+        color='gray.500'
+        fontWeight='semibold'
+        letterSpacing='wide'
+        fontSize='xs'
+        ml='2'
+        mt='2'
+        >
+            Status: {props.strategy.status == 0 ? 'Draft' : 'Active'}
     </Box></VStack>)
 }
 function RadioCard(props) {
