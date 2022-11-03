@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react'
 import { ArrowLeftIcon, ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { MdPause, MdPlayArrow } from 'react-icons/md'
+import { useParams } from 'react-router-dom'
 
 export const BOARD_SIZES = {
     DEFAULT: 600, // for replay view
@@ -26,31 +27,23 @@ export const BOARD_SIZES = {
 }
 
 const ReplayPage = () => {
+    const { bid, gnum } = useParams()
     const [currentTurn, setCurrentTurn] = useState(0)
     const [showTooltip, setShowTooltip] = useState(false)
     const [isPlaying, setIsPlaying] = useState(false)
     const [speed, setSpeed] = useState(1)
 
-    const {
-        data: bData,
-        isLoading: bIsLoading,
-        error: bError,
-    } = useAVAFetch('/Battle/d7b0f0d8-5a4c-4d19-ba93-0cc3b360281a')
-    const {
-        data: gData,
-        isLoading: gIsLoading,
-        error: gError,
-    } = useAVAFetch('/Battle/d7b0f0d8-5a4c-4d19-ba93-0cc3b360281a/1')
+    const { data, isLoading, error } = useAVAFetch(`/Battle/${bid}/${gnum}`)
 
     // update turn slider helper text on turn data load
     useEffect(() => {
-        if (gData) setCurrentTurn((gData as BattleGame).turns.length)
-    }, [gData])
+        if (data) setCurrentTurn((data as BattleGame).turns.length)
+    }, [data])
 
     // step though turns if is playing
     useEffect(() => {
-        if (gData == undefined) return
-        const turns = (gData as BattleGame).turns
+        if (data == undefined) return
+        const turns = (data as BattleGame).turns
 
         // stop playback at end
         if (currentTurn == turns.length) {
@@ -79,8 +72,8 @@ const ReplayPage = () => {
         if (currentTurn > 0) setCurrentTurn(currentTurn - 1)
     }
     const onPlay = () => {
-        if (gData == undefined) return
-        const turns = (gData as BattleGame).turns
+        if (data == undefined) return
+        const turns = (data as BattleGame).turns
 
         // set to turn 0 if at end already
         if (currentTurn == turns.length) setCurrentTurn(0)
@@ -92,9 +85,9 @@ const ReplayPage = () => {
     }
     const goToLastTurn = () => setCurrentTurn(turns.length)
 
-    if (bIsLoading || gIsLoading) return <Spinner />
+    if (isLoading) return <Spinner />
 
-    const turns = (gData as BattleGame).turns
+    const turns = (data as BattleGame).turns
     const size = BOARD_SIZES.DEFAULT
 
     return (

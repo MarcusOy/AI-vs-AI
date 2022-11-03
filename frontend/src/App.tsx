@@ -75,7 +75,7 @@ function App() {
                             <Route path='/Strategy/:id/:tab' element={<StrategyPage />} />
                             <Route path='/Battle/:id' element={<BattlePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
-                            <Route path='/Replay' element={<ReplayPage />} />
+                            <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
