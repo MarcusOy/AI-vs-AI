@@ -9,6 +9,7 @@ using AVA.API.Controllers;
 using AVA.API.Middleware;
 using MassTransit;
 using AVA.API.Consumers;
+using AVA.API.Hubs;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -47,6 +48,7 @@ builder.Services.AddControllers()
 builder.Services.AddMassTransit(mt =>
 {
     mt.AddConsumer<SimulationResponsesConsumer>();
+    mt.AddConsumer<SimulationStepResponsesConsumer>();
 
     mt.UsingRabbitMq((context, cfg) =>
     {
@@ -58,6 +60,9 @@ builder.Services.AddMassTransit(mt =>
         cfg.ConfigureEndpoints(context);
     });
 });
+
+// Add websockets functionality
+builder.Services.AddSignalR();
 
 // Added custom JWT Identity Authentication Service
 builder.Services.AddScoped<IIdentityService, IdentityService>();
@@ -91,6 +96,8 @@ builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 // Setting up domain services
 builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IStrategiesService, StrategiesService>();
+builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
 builder.Services.AddScoped<IBattlesService, BattlesService>();
@@ -106,8 +113,9 @@ app.UseCors(x => x
     .AllowCredentials()
     .WithOrigins(
         "https://localhost:3000", // local development url
-        "https://ai-vs-ai.vercel.app/", // production url
-        "https://ai-vs-ai-git-dev-marcusoy.vercel.app/" // remote development url
+        "https://127.0.0.1:3000", // local development url
+        "https://ai-vs-ai.vercel.app", // production url
+        "https://ai-vs-ai-git-dev-marcusoy.vercel.app" // remote development url
     )
     .AllowAnyMethod()
     .AllowAnyHeader());
@@ -117,6 +125,8 @@ app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+app.MapHub<SimulationStepHub>("AI/Step");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())

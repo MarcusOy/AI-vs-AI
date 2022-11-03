@@ -33,7 +33,7 @@ services:
       - RABBITMQ_DEFAULT_USER=ava
       - RABBITMQ_DEFAULT_PASS=!ava_app!
 
-  # # Backend (for docker buid testing only)
+  # Backend (for docker buid testing only)
   # backend:
   #   build:
   #     context: ./backend
@@ -53,16 +53,16 @@ services:
   #     - rabbitmq
   #     - db
 
-  # Simulation (for docker buid testing only)
-  # sim:
-  #   build:
-  #     context: ./simulation
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   environment:
-  #     - AVA__RABBITMQ__HOST=rabbitmq
-  #     - AVA__RABBITMQ__USER=ava
-  #     - AVA__RABBITMQ__PASS=!ava_app!
-  #     - AVA__RABBITMQ__PORT=5672
-  #   depends_on:
-  #     - rabbitmq
+  # Simulation
+  sim:
+    build:
+      context: ./simulation
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - AVA__RABBITMQ__HOST=rabbitmq
+      - AVA__RABBITMQ__USER=ava
+      - AVA__RABBITMQ__PASS=!ava_app!
+      - AVA__RABBITMQ__PORT=5672
+    depends_on:
+      - rabbitmq

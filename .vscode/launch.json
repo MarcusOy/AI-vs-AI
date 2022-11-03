@@ -5,9 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "firefox",
+      "request": "attach",
+      "name": "Firefox Attach"
+    },
+    {
       "name": ".NET Core Attach",
       "type": "coreclr",
       "request": "attach",
+      "justMyCode": false,
       // "processId": "${command:pickProcess}"
       "processName": "AVA"
     }
