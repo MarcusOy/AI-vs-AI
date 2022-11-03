@@ -20,33 +20,50 @@ import {
     Heading,
     TabPanel,
     TabPanels,
+    Spinner,
 } from '@chakra-ui/react'
 
 import useAVAFetch from '../helpers/useAVAFetch'
 import EditFullName from '../components/profile/EditFullName'
+import { Battle } from '../models/battle'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 
 const BattlePage = () => {
-    const [id, setid] = useState('')
-    const { data, isLoading, execute } = useAVAFetch(
-        `/Battle/${id}`,
-        { method: 'POST' },
-        { manual: true }, // makes sure this request fires on user action
-    )
+    const { id } = useParams()
+    const { data, isLoading, error } = useAVAFetch(`/Battle/${id}`)
     const navigate = useNavigate()
 
-    const handleTabsChange = (index) => {
-        const tab =
-            index == 1
-                ? 'BattleStrat'
-                : index == 2
-                ? 'Battles'
-                : index == 3
-                ? 'Submissions'
-                : 'View'
-        navigate(`/Profile/${id}/${tab}`)
-    }
+    const battle = data as Battle
 
-    return <Text>1</Text>
+    if (isLoading || battle == undefined)
+        return (
+            <Center mt='10'>
+                <Spinner />
+            </Center>
+        )
+
+    return (
+        <Stack>
+            {battle.battleGames.map((g, i) => {
+                return (
+                    <Button
+                        key={i}
+                        colorScheme='gray'
+                        onClick={() => navigate(`/Replay/${g.battleId}/${g.gameNumber}`)}
+                        rightIcon={<ChevronRightIcon />}
+                        p={10}
+                    >
+                        {/* <GameBoardViewer/> */}
+                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                            <Text>Game {g.gameNumber}</Text>
+                            <Text fontSize='xs'>Win/Loss Placeholder</Text>
+                        </Stack>
+                        <Box flexGrow={1} />
+                    </Button>
+                )
+            })}
+        </Stack>
+    )
 }
 
 export default BattlePage
