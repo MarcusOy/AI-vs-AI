@@ -5,7 +5,6 @@ import { Turn } from '../models/turn'
 import ChessBoard, {
     generateBoardFromTurns,
     generatePieceListFromBoard,
-    getNewlyDeadPieces,
     initialState,
     IPiece,
     moveToTurn,
@@ -18,7 +17,6 @@ import {
     Point2D,
     scaleMousePos,
     colAndRowToCell,
-    prettyPrintBoard,
 } from '../helpers/ChessboardHelpers'
 
 export const GAME_COLORS = {

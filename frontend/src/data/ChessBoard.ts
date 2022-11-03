@@ -60,11 +60,6 @@ export const generatePieceListFromBoard = (
     for (let i = 0; i < prevPieceList.length; i++) {
         const prevPiece: IPiece = prevPieceList[i]
         const curNewPiece: IPiece = board.getPieces()[i]
-        if (curNewPiece.id == prevPiece.id) {
-            curNewPiece.opacity = prevPiece.opacity
-            curNewPiece.posX = prevPiece.posX
-            curNewPiece.posY = prevPiece.posY
-        }
 
         if (curNewPiece.isDead) {
             curNewPiece.id = i
@@ -79,24 +74,6 @@ export const generatePieceListFromBoard = (
     return { pieces: board.getPieces(), turnData: board.getTurnData() }
 }
 
-export const getNewlyDeadPieces = (prevPieceList: IPiece[], newPieceList: IPiece[]): IPiece[] => {
-    const deadPieces: IPiece[] = []
-
-    for (let i = 0; i < prevPieceList.length; i++) {
-        let isInNewList: boolean = false
-
-        for (let j = 0; j < newPieceList.length; j++) {
-            if (prevPieceList[i].id == newPieceList[j].id) isInNewList = true
-        }
-
-        if (!isInNewList) {
-            prevPieceList[i].isDead = true
-            deadPieces.push(prevPieceList[i])
-        }
-    }
-
-    return deadPieces
-}
 class ChessBoard {
     private board: string[][]
     private turnData: string[] = []
@@ -107,26 +84,17 @@ class ChessBoard {
         this.turnData = []
         this.pieces = []
 
-        // for (let c = 0; c < this.board.length; c++) {
-        //     for (let r = 0; r < this.board[c].length; r++) {
-        //         if (this.board[c][r] != '') {
-        //             this.pieces.push({
-        //                 id: getPieceId(c, r, this.board),
-        //                 rank: getPieceRank(c, r, this.board),
-        //                 col: c,
-        //                 row: r,
-        //                 isWhite: !!getPieceColor(c, r, this.board),
-        //                 isDead: false,
-        //                 opacity: 1,
-        //             })
-        //         }
-        //     }
-        // }
-
         // initialize pieceArray
-        this.pieces = Array(40).fill({})
-        for (let i = 0; i < this.pieces.length; i++) {
-            this.pieces[i].isDead = true
+        for (let i = 0; i < 40; i++) {
+            this.pieces.push({
+                id: i,
+                isDead: true,
+                rank: -1,
+                isWhite: false,
+                col: -1,
+                row: -1,
+                opacity: 0,
+            })
         }
 
         for (let c = 0; c < this.board.length; c++) {
