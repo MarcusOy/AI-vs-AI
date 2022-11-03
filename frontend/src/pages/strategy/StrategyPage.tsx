@@ -37,13 +37,9 @@ const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
     const { id, tab } = useParams()
-    const { data, isLoading, error, execute } = useAVAFetch(
-        `/GetStats/${id}`,
-        { method: 'POST' },
-        { manual: true }, // makes sure this request fires on user action
-    )
+    const { data, isLoading, error } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
-    const isSelf = strategy.createdByUserId == whoAmI?.id
+    // const isSelf = strategy.createdByUserId == whoAmI?.id
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
@@ -89,7 +85,7 @@ const StrategyPage = () => {
                         icon={<TbBook2 size='25' />}
                     />
                     <Stack spacing='0'>
-                        {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>}
+                        {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
 
                         <Text fontSize='lg' mt={0}>
                             @{strategy.createdByUser?.username}

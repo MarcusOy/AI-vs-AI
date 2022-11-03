@@ -13,6 +13,9 @@ public class StrategyController : Controller
     {
         _strategyService = strategiesService;
     }
+    [HttpGet, Route("/Strategy/{id}"), Authorize]
+    public Strategy Get(string id)
+        => _strategyService.Get(new Guid(id));
 
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
