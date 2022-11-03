@@ -21,12 +21,16 @@ import {
     AlertTitle,
     Heading,
     Spinner,
+    MenuButton,
+    Menu,
+    MenuItem,
+    MenuList,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
 import StrategySourceCodeTab from './StrategySourceCodeTab'
 import useAVAFetch from '../../helpers/useAVAFetch'
-import { WarningIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons'
 import EditFullName from '../../components/profile/EditFullName'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
@@ -91,6 +95,19 @@ const StrategyPage = () => {
                             {strategy.name} by {strategy.createdByUser?.username}
                         </Heading>
                     </Stack>
+                    <Box flexGrow={1} />
+                    <Menu>
+                        <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                            Actions
+                        </MenuButton>
+                        <MenuList>
+                            <MenuItem>Download</MenuItem>
+                            <MenuItem>Create a Copy</MenuItem>
+                            <MenuItem>Mark as Draft</MenuItem>
+                            <MenuItem>Delete</MenuItem>
+                            <MenuItem>Attend a Workshop</MenuItem>
+                        </MenuList>
+                    </Menu>
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>
