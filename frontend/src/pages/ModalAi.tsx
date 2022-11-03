@@ -21,6 +21,7 @@ import {
     useDisclosure,
     useRadio,
     useRadioGroup,
+    VStack,
 } from '@chakra-ui/react'
 import { AVAStore } from '../data/DataStore'
 import useAVAFetch from '../helpers/useAVAFetch'
@@ -192,14 +193,17 @@ const ModalAi = (props: ModalAiProps) => {
 }
 function StrategyStats(props) {
     const { isLoading, data } = useAVAFetch('/GetStats/StratId/' + props.strategy.id)
-    const [stats, setStats] = useState({})
+    interface result {
+        win: number,
+        loss: number
+    }
+    const [stats, setStats] = useState<result>({wins: 0, losses: -1})
     useEffect(() => {
-        if (!isLoading && data) {
-            console.log(data)
+        if (!isLoading) {
             setStats(data)
         }
     }, [isLoading])
-    return (<Box
+    return (<VStack><Box
         color='gray.500'
         fontWeight='semibold'
         letterSpacing='wide'
@@ -208,8 +212,19 @@ function StrategyStats(props) {
         ml='2'
         mt='2'
     >
-       k
-    </Box>)
+    {stats.win} wins &bull; {stats.loss} losses
+    </Box><Box
+        color='gray.500'
+        fontWeight='semibold'
+        letterSpacing='wide'
+        fontSize='xs'
+        ml='2'
+        mt='2'
+        >
+            <Center>
+                Created: {props.strategy.createdOn}
+                </Center>
+    </Box></VStack>)
 }
 function RadioCard(props) {
     const { getInputProps, getCheckboxProps } = useRadio(props)

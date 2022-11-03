@@ -22,8 +22,9 @@ public class AiController : Controller
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
-    [HttpPost, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish([FromBody] Strategy s)
+    // TODO Have frontend send stock to test with in uri
+    [HttpPost, Route("/Strategy/TestPublish/{stock}")]
+    public async Task<ActionResult> TestPublish([FromBody] Strategy s, String stock)
     {
         var attackGuid = s.Id;
         var defendGuid = Guid.NewGuid();
