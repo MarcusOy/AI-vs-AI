@@ -17,7 +17,9 @@ const FeedPage = () => {
                     </Link>
     </Center> */}
             <Flex>
-                <Box>{<ModalAi />}</Box>
+                <Box>
+                    <ModalAi overwrite={false} />
+                </Box>
                 <Spacer />
                 <Box>
                     <Text>Feed page</Text>

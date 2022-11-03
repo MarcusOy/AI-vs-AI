@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react';
-import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton } from '@chakra-ui/react'
+import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton, Tag, TagCloseButton, TagLabel } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { devComplete, developerAi, easyAi, emptyStarter, helperFunctions } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
@@ -10,17 +10,20 @@ import IdentityService from '../data/IdentityService';
 import EditDraftName from '../components/EditDraftName';
 import { Strategy } from '../models/strategy';
 import { AVAStore } from '../data/DataStore'
-
 function Programming() {
+    const navigate = useNavigate()
     const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
+    const [emptyClipboard, setEmptyClipboard] = useState(false)
+    const [copied, setCopied] = useState(false)
     const [submissions, setSubmissions] = useState([]);
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
     console.log(whoAmI)
-    let strategy = useAVAFetch('/getAi/' + id).data
+    const load =  useAVAFetch('/getAi/' + id)
+    let strategy = load.data
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
         '/Strategy/Update',
@@ -44,6 +47,11 @@ function Programming() {
             setCode(strategy === undefined ? code : strategy.sourceCode)
         }
     }, [strategy])
+    useEffect(() => {
+        if (!load.isLoading && strategy === undefined) {
+            navigate('/Programming/')
+        }
+    }, [load.isLoading])
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
@@ -77,7 +85,33 @@ function Programming() {
         <Box pt='0'>
             <Flex>
                 <Heading>{strategy === undefined ? 'Invalid Strategy ID' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
-                <Spacer/>
+                <Spacer />
+                {!copied && <Button onClick={() => { sessionStorage.setItem('clipboard', editorRef.current.getValue()); setCopied(true) }}>
+                    Copy
+                </Button>}
+                {copied &&
+    <Tag
+      size={'lg'}
+      borderRadius='full'
+      variant='solid'
+                        colorScheme='green'
+                        mx='2'
+    >
+      <TagLabel>Copied!</TagLabel>
+      <TagCloseButton onClick={() => setCopied(false)}/>
+    </Tag>}
+                {!emptyClipboard && <Button mx='2' display={'flex'} justifyContent='flex-end' onClick={() => { sessionStorage.getItem('clipboard') !== null ? editorRef.current.setValue(sessionStorage.getItem('clipboard')) : setEmptyClipboard(true) }}>Paste</Button>}
+                {emptyClipboard &&
+    <Tag
+      size={'lg'}
+      borderRadius='full'
+      variant='solid'
+                        colorScheme='red'
+                        mx='2'
+    >
+      <TagLabel>Cannot Paste Empty Clipboard</TagLabel>
+      <TagCloseButton onClick={() => setEmptyClipboard(false)}/>
+    </Tag>}
                 <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)]); }}>Hide Helper</Button>
                 </Flex>
             <HStack>
@@ -106,12 +140,12 @@ function Programming() {
                             <TabPanel>
                                 {strategy !== undefined && <HStack justifyContent={'center'} gap='2'>
                                     <h1>View Complete Developer Code</h1>
-                                    <CodeModal codeName='Developer Ai' code={devComplete} />
+                                    <CodeModal strategy={{name: 'Developer Ai', gameId: 1, sourceCode: devComplete}} />
                                 </HStack>
                                 }
                                 {strategy !== undefined && <HStack  m='2' justifyContent={'center'} gap='2'>
                                     <h1>View Incomplete Starter Code</h1>
-                                    <CodeModal codeName='Initial Ai with Comments' code={emptyStarter} />
+                                    <CodeModal strategy={{name: 'Initial Ai with Comments', gameId: 1, sourceCode: emptyStarter}} />
                                 </HStack>
                                 }
                                 <Center>
@@ -176,20 +210,19 @@ function Programming() {
                             Easy Stock
                         </Button>
                         <CodeModal
-                            codeName='Easy Stock Code'
-                            code={easyAi}
+                            strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}}
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
                     <ButtonGroup isAttached variant='outline' margin='4' isDisabled>
                         <Button color={'orange'}>Medium Stock</Button>
-                        <CodeModal code='' color={'orange'} />
+                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'orange'} />
                     </ButtonGroup>
                     <ButtonGroup variant='outline' margin='3' isDisabled isAttached>
                         <Button color={'red'} disabled>
                             Hard Stock
                         </Button>
-                        <CodeModal code='' color={'red'} />
+                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'red'} />
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>

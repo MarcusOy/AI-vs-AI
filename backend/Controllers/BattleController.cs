@@ -18,8 +18,8 @@ public class BattleController : Controller
         => await _battleService.GetAsync(p);
 
     [HttpGet, Route("/Battle/{id}")]
-    public async Task<Battle> GetBattle(string id)
-        => await _battleService.GetAsync(new Guid(id));
+    public async Task<Battle> Get(string id)
+        => _battleService.Get(new Guid(id));
 
     [HttpGet, Route("/Battle/{id}/{num}")]
     public async Task<BattleGame> GetBattleGame(string id, string num)

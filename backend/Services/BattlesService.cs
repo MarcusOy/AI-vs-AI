@@ -7,7 +7,7 @@ namespace AVA.API.Services
 {
     public interface IBattlesService
     {
-        Task<Battle> GetAsync(Guid id);
+        Battle Get(Guid id);
         Task<List<Battle>> GetAsync(GetBattlesParameters p);
         Task<BattleGame> GetBattleGameAsync(Guid battleId, int gameId);
         Task<Battle> CreateAsync(Battle battle);
@@ -28,13 +28,13 @@ namespace AVA.API.Services
             _logger = logger;
         }
 
-        public async Task<Battle> GetAsync(Guid id)
+        public Battle Get(Guid id)
         {
-            Battle b = await _dbContext.Battles
+            Battle b = _dbContext.Battles
                 .Include(b => b.AttackingStrategy)
                 .Include(b => b.DefendingStrategy)
                 .Include(b => b.BattleGames)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefault(s => s.Id == id);
 
             if (b is null)
                 throw new InvalidOperationException($"Battle id [{id}] not valid.");
