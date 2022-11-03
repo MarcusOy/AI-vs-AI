@@ -41,4 +41,11 @@ public class StrategyController : Controller
     [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
     public async Task<Strategy> Delete(String id)
         => await _strategyService.DeleteAsync(new Guid(id));
+
+
+    // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
+    [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
+    public async Task<Strategy> GetStockStrategy(String stockToChoose) {
+        return await _strategyService.GetStockStrategy(int.Parse(stockToChoose));
+    }
 }

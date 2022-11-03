@@ -8,10 +8,10 @@ namespace AVA.API.Services
     {
         List<Strategy> GetAll();
         Strategy Get(Guid id);
-        string GetStockStategyCode(string strategyName);
+        Strategy GetStockStrategy(int stockToChoose);
         Task<Strategy> CreateAsync(Strategy strategy);
         Task<Strategy> UpdateAsync(Strategy strategy);
-        Task<Strategy> DeleteAsync(Guid id);
+        Task<Strategy> DeleteAsync(Guid id);        
     }
 
     public class StrategiesService : IStrategiesService
@@ -51,15 +51,43 @@ namespace AVA.API.Services
         }
 
         // assumes that we are reserving certain names as prototype names
-        public string GetStockStategyCode(string strategyName)
+        // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
+        public Strategy GetStockStrategy(int stockToChoose)
         {
+            // make sure stockToChoose is within bounds
+            if (stocktoChoose < -3 || stocktoChoose > -1) {
+                throw new InvalidOperationException($"Stock Strategy [{stockToChoose}] invalid.  Must be between [-1] and [-3]. ");
+            }
+
+            // TODO hardcode GUIDS of stockAI
+            const GUID EASY_AI_GUID = GUID.NewGuid();
+            const GUID MED_AI_GUID = GUID.NewGuid();
+            const GUID HARD_AI_GUID = GUID.NewGuid();
+
+            GUID strategyGUID;
+            string strategyName;
+
+            if (stocktoChoose == -1) {
+                strategyGUID = EASY_AI_GUID;
+                strategyName = "EasyAI";
+            }
+            else if (stocktoChoose == -2) {
+                strategyGUID = MED_AI_GUID;
+                strategyName = "MedAI";
+            }
+            else if (stocktoChoose == -3) {
+                strategyGUID = HARD_AI_GUID;
+                strategyName = "HardAI";
+            }
+
             Strategy s = _dbContext.Strategies
-               .FirstOrDefault(s => s.Name == strategyName);
+               .FirstOrDefault(s => s.id == strategyGUID);
 
-            if (s is null)
-                throw new InvalidOperationException($"Stock Strategy name [{strategyName}] not valid.");
+            if (s is null) {
+                throw new InvalidOperationException($"Stock Strategy [{strategyName}] not found in database.");                
+            }
 
-            return s.SourceCode;
+            return s;
         }
 
         public async Task<Strategy> CreateAsync(Strategy strategy)
