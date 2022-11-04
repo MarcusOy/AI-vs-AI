@@ -57,6 +57,15 @@ import { Battle } from '../models/battle'
 import { StrategyStatus } from '../models/strategy-status'
 function Programming() {
     const navigate = useNavigate()
+    const [tabIndex, setTabIndex] = useState(0)
+
+    const handleShowSubmission = () => {
+      setTabIndex(3)
+    }
+  
+    const handleTabsChange = (index) => {
+      setTabIndex(index)
+    }
     const [connection, setConnection] = useState<HubConnection | null>(null)
     const { isOpen, onOpen, onClose } = useDisclosure()
     const [code, setCode] = useState(helperFunctions + devComplete)
@@ -65,7 +74,7 @@ function Programming() {
     const [name, setName] = useState('')
     const [emptyClipboard, setEmptyClipboard] = useState(false)
     const [copied, setCopied] = useState(false)
-    const [submissions, setSubmissions] = useState([])
+    const [submissions, setSubmissions] = useState<Battle[]>([])
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
 
@@ -86,12 +95,14 @@ function Programming() {
                     connection!.on('TestSubmissionResult', (response) => {
                         const battle = response.resultingBattle as Battle
                         console.log('TestSubmissionResult Response:', battle)
+                        // @ts-ignore
+                        setSubmissions((past) => [...past, battle])
+                        handleShowSubmission()
                     })
                 })
                 .catch((e) => console.log('Connection failed: ', e))
         }
     }, [connection])
-    console.log(whoAmI)
     const load = useAVAFetch('/getAi/' + id)
     let strategy = load.data
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
@@ -157,11 +168,10 @@ function Programming() {
             clientId: connection?.connectionId,
         }
         strategy = await execute({ data: data.strategyToTest })
+        strategy.status = 1
         if (select) {
             console.log(await run({ data }))
         }
-        // @ts-ignore
-        setSubmissions((past) => [...past, 'Stats for Previous Submission display here'])
         setSelect(!select)
     }
 
@@ -230,7 +240,7 @@ function Programming() {
             </Flex>
             <HStack>
                 <Box width='45%' borderRadius='1g' borderWidth='1px'>
-                    <Tabs variant='enclosed'>
+                    <Tabs variant='enclosed' onChange={handleTabsChange}>
                         <TabList>
                             <Tab>Game Canvas</Tab>
                             <Tab>Game Description</Tab>
@@ -299,13 +309,24 @@ function Programming() {
                                             <AccordionItem key={key}>
                                                 <h2>
                                                     <AccordionButton>
-                                                        <Box flex='1' textAlign='left'>
+                                                        <Box flex='1' textAlign='left' color={value.attackerWins === 1 ? 'green' : 'red'}>
                                                             Submission #{key + 1}
                                                         </Box>
                                                         <AccordionIcon />
                                                     </AccordionButton>
                                                 </h2>
-                                                <AccordionPanel pb={4}>{value}</AccordionPanel>
+                                                <AccordionPanel pb={4}>
+                                                    <VStack>
+                                                        <Box>
+                                                            {value.name}
+                                                        </Box>
+                                                        <Box>
+                                                            {value.attackerWins === 1 ? 'You Win!' : 'Iterate and Improve, You Lost...'}
+                                                        </Box>
+                                                        <Box>
+                                                            Turns: {value.battleGames[0].turns.length}
+                                                        </Box>
+                                                    </VStack></AccordionPanel>
                                             </AccordionItem>
                                         )
                                     })}
