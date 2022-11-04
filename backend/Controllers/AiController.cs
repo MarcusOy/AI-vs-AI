@@ -82,7 +82,7 @@ public class AiController : Controller
         return Ok("Simulation request sent.");
     }
 
-    [HttpPost, Route("/Strategy/TestPublish")]
+    [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {
         var strategy = _dbContext.Strategies
