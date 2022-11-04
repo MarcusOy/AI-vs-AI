@@ -24,6 +24,8 @@ public class Battle {
     public String defendingStrategyId;
     public Strategy defendingStrategy;
 
+    public boolean isTestSubmission;
+
     public ArrayList<BattleGame> battleGames;
 
     private int gamesCompleted;
@@ -32,8 +34,10 @@ public class Battle {
     // Decided randomly in constructor
     private boolean willAttackerStartWhite;
 
+    private String clientId;
+
     public Battle() {
-//        id = UUID.randomUUID().toString();
+        // id = UUID.randomUUID().toString();
         init();
     }
 
@@ -89,11 +93,25 @@ public class Battle {
         return id;
     }
 
-    public int getIterations() { return iterations; }
+    public int getIterations() {
+        return iterations;
+    }
 
-    public int getAttackerWins() { return attackerWins; }
+    public int getAttackerWins() {
+        return attackerWins;
+    }
 
-    public int getDefenderWins() { return defenderWins; }
+    public int getDefenderWins() {
+        return defenderWins;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getClientId() {
+        return this.clientId;
+    }
 
     public Color getAttackerColor() {
         // used to make attacker start the color that willAttackerStartWhite dictates
@@ -113,7 +131,7 @@ public class Battle {
                 ", attackerWins=" + attackerWins +
                 ", defenderWins=" + defenderWins +
                 ", gamesCompleted=" + defenderWins +
-                ", battleGames=" + printBattleGames() /*battleGames*/ +
+                ", battleGames=" + printBattleGames() /* battleGames */ +
                 '}';
     }
 }

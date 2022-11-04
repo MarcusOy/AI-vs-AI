@@ -84,7 +84,8 @@ public class SimulationApp {
     static int numGames;
     static String lastMoveString;
 
-    // used to access defender strategy source and version for selecting a stock defender override, if necessary
+    // used to access defender strategy source and version for selecting a stock
+    // defender override, if necessary
     // doesn't track with the battle throughout all modifications
     static Battle mostlyCurrentBattle;
 
@@ -407,6 +408,7 @@ public class SimulationApp {
                     new TypeReference<MassTransitMessage<SimulationRequest>>() {
                     });
             sentBattle = sentMessage.message.pendingBattle;
+            sentBattle.setClientId(sentMessage.message.clientId);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             System.out.println("JSON parsing of MassTransitMessage<SimulationRequest> failed: " + message);
@@ -591,7 +593,7 @@ public class SimulationApp {
         // allowed
         if (!NO_COMMUNICATION) {
             // sends message back to backend
-            sendRabbitMQMessage(new SimulationResponse(battle), RESP_QUEUE_NAME);
+            sendRabbitMQMessage(new SimulationResponse(battle, battle.getClientId()), RESP_QUEUE_NAME);
         }
 
         // scan.close();
@@ -603,16 +605,17 @@ public class SimulationApp {
         if (DEMO_STOCK)
             stockDefender = new TrueRandomAI();
         else if (mostlyCurrentBattle != null && defenderStockOverride) {
-            if (mostlyCurrentBattle.defendingStrategy.version == -1)
+            if (mostlyCurrentBattle.defendingStrategy.id == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
                 stockDefender = new EasyAI();
-            else if (mostlyCurrentBattle.defendingStrategy.version == -2)
+            else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+                    .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
                 stockDefender = new MediumAI();
-            else if (mostlyCurrentBattle.defendingStrategy.version == -3)
+            else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+                    .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
                 stockDefender = new HardAI();
             else
                 stockDefender = new RandomAI();
-        }
-        else
+        } else
             stockDefender = new RandomAI();
     }
 

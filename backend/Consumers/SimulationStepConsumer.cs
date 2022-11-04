@@ -13,9 +13,9 @@ namespace AVA.API.Consumers
     public class SimulationStepResponsesConsumer : IConsumer<SimulationStepResponse>
     {
         private readonly ILogger<SimulationStepResponsesConsumer> _logger;
-        private readonly IHubContext<SimulationStepHub> _hubContext;
+        private readonly IHubContext<SimulationHub> _hubContext;
         public SimulationStepResponsesConsumer(ILogger<SimulationStepResponsesConsumer> logger,
-                                      IHubContext<SimulationStepHub> hubContext)
+                                      IHubContext<SimulationHub> hubContext)
         {
             _logger = logger;
             _hubContext = hubContext;
