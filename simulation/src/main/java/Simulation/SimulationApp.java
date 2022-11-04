@@ -569,7 +569,7 @@ public class SimulationApp {
             mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             String jsonBoard = null;
             try {
-                jsonBoard = mapper.writeValueAsString(gameState.board);
+                jsonBoard = mapper.writeValueAsString(addPieceIdsUnreliableIds(gameState.board));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of JSON board failed");
@@ -1079,6 +1079,26 @@ public class SimulationApp {
             e.printStackTrace();
             System.out.println("ERROR: message out to queue: " + queueName + " FAILED");
         }
+    }
+
+    // adds piece ids with unreliable ids (this means that the ids are there for the frontend)
+    // it does not add piece ids that match with what the id should actually be if the game was played fully
+    static String[][] addPieceIdsUnreliableIds(String[][] prevBoard) {
+        String[][] newBoard = new String[prevBoard.length][prevBoard[0].length];
+
+        int lastIdAdded = 0;
+
+        for (int c = 0; c < newBoard.length; c++) {
+            for (int r = 0; r < newBoard[c].length; r++) {
+                String idString = lastIdAdded + "";
+                if (idString.length() < 2)
+                    idString = "0" + idString;
+
+                newBoard[c][r] = idString + prevBoard[c][r];
+            }
+        }
+
+        return newBoard;
     }
 
     // performs a println if the application is in DEBUG mode
