@@ -627,11 +627,21 @@ public class SimulationApp {
 
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
-        stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
-        if (DEMO_STOCK)
+        if (DEMO_STOCK) {
+            stockAttacker = new TrueRandomAI();
             stockDefender = new TrueRandomAI();
-        else if (mostlyCurrentBattle != null && defenderStockOverride)
-            stockDefender = getStockAI((mostlyCurrentBattle.defendingStrategy.id));
+            return;
+        }
+
+        //sets up attacker
+        if (mostlyCurrentBattle != null && attackerStockOverride)
+            stockAttacker = getStockAI((UUID.fromString(mostlyCurrentBattle.attackingStrategyId)));
+        else
+            stockAttacker = new RandomAI();
+
+        // sets up defender
+        if (mostlyCurrentBattle != null && defenderStockOverride)
+            stockDefender = getStockAI(UUID.fromString(mostlyCurrentBattle.defendingStrategyId));
         else if (manualPlayStockId != null)
             stockDefender = getStockAI(manualPlayStockId);
         else
