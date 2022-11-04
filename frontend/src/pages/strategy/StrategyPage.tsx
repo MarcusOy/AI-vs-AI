@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link as LinkRouter } from 'react-router-dom'
 import {
     Center,
     Box,
@@ -143,7 +143,9 @@ const StrategyPage = () => {
                         </HStack>
                         <Text>
                             <span style={{ marginRight: 10 }}>
-                                @{strategy.createdByUser?.username}
+                                <LinkRouter to={`/Profile/${strategy.createdByUserId}/View`}>
+                                    @{strategy.createdByUser?.username}
+                                </LinkRouter>
                             </span>
                             {strategy.status == StrategyStatus.Draft && (
                                 <Badge variant='outline' colorScheme='cyan'>
