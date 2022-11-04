@@ -1090,11 +1090,16 @@ public class SimulationApp {
 
         for (int c = 0; c < newBoard.length; c++) {
             for (int r = 0; r < newBoard[c].length; r++) {
+                if (prevBoard[c][r] == "")
+                    continue;
+
                 String idString = lastIdAdded + "";
                 if (idString.length() < 2)
                     idString = "0" + idString;
 
                 newBoard[c][r] = idString + prevBoard[c][r];
+
+                lastIdAdded++;
             }
         }
 
