@@ -47,7 +47,6 @@ const StrategyPage = () => {
     const strategy: Strategy = data
     const toast = useToast()
 
-    
     // const isSelf = strategy.createdByUserId == whoAmI?.id
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
@@ -64,12 +63,12 @@ const StrategyPage = () => {
 
     const onSubmit = async () => {
         const newStrategy: Strategy = {
-            ...(strategy),
+            ...strategy,
             isPrivate: !strategy.isPrivate,
         }
         const response = await visibilityRequest.execute({ data: newStrategy })
         if (response.status == 200) {
-            execute();
+            execute()
             toast({
                 title: 'Code visibility Statue changed Successful.',
                 description: 'You just changed visibility.',
@@ -111,16 +110,23 @@ const StrategyPage = () => {
             <Box mx='100'>
                 <HStack>
                     <Avatar
-                        size='xl'
+                        size='2xl'
                         bg={randomColor({ string: strategy.name })}
                         icon={<TbBook2 size='25' />}
                     />
                     <Stack spacing='0'>
                         {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
-
-                        <Heading fontSize='lg' mt={0}>
-                        { strategy.isPrivate ? <Icon as={UnlockIcon} />: <Icon as={LockIcon} />} {strategy.name} by {strategy.createdByUser?.username}
-                        </Heading>
+                        <HStack>
+                            <Heading fontSize='4xl' mt={0}>
+                                {strategy.name}
+                            </Heading>
+                            {strategy.isPrivate ? (
+                                <Icon size='lg' as={UnlockIcon} />
+                            ) : (
+                                <Icon size='lg' as={LockIcon} />
+                            )}
+                        </HStack>
+                        <Text>@{strategy.createdByUser?.username}</Text>
                     </Stack>
                     <Box flexGrow={1} />
                     <Menu>
@@ -131,7 +137,9 @@ const StrategyPage = () => {
                             <MenuItem>Download</MenuItem>
                             <MenuItem>Create a Copy</MenuItem>
                             <MenuItem>Mark as Draft</MenuItem>
-                            <MenuItem onClick={onSubmit}>{ strategy.isPrivate ? 'Set Private': 'Set Public'}</MenuItem>
+                            <MenuItem onClick={onSubmit}>
+                                {strategy.isPrivate ? 'Set Private' : 'Set Public'}
+                            </MenuItem>
                         </MenuList>
                     </Menu>
                 </HStack>
