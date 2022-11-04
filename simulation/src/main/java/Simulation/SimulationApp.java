@@ -633,7 +633,7 @@ public class SimulationApp {
             return;
         }
 
-        //sets up attacker
+        // sets up attacker
         if (mostlyCurrentBattle != null && attackerStockOverride)
             stockAttacker = getStockAI((UUID.fromString(mostlyCurrentBattle.attackingStrategyId)));
         else
@@ -646,17 +646,16 @@ public class SimulationApp {
             stockDefender = getStockAI(manualPlayStockId);
         else
             stockDefender = new RandomAI();
+
     }
 
     // gets a Java StockAI from a UUID
     static IStrategy getStockAI(UUID sentId) {
-        if (sentId == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
+        if (sentId.equals(UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c")))
             return new EasyAI();
-        else if (sentId == UUID
-                .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
+        else if (sentId.equals(UUID.fromString("ff567412-30a5-444c-9ff8-437eda8a73a7")))
             return new MediumAI();
-        else if (sentId == UUID
-                .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
+        else if (sentId.equals(UUID.fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189")))
             return new HardAI();
 
         return new TrueRandomAI();
