@@ -11,7 +11,7 @@ interface StrategySourceCodeTab {
 }
 
 const StrategySourceCodeTab = (p: StrategySourceCodeTab) => {
-    if (p.strategy.sourceCode == null)
+    if (p.strategy.sourceCode == null || p.strategy.isPrivate)
         return (
             <Center>
                 <Stack mt='48' alignItems='center'>
