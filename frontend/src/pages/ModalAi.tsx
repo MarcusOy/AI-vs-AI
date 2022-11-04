@@ -62,7 +62,9 @@ const ModalAi = (props: ModalAiProps) => {
       })
     const group = getRootProps()
     useEffect(() => {
-        IdentityService.refreshIdentity()
+        if (!props.overwrite) {
+            IdentityService.refreshIdentity()
+        }
     }, [])
     useEffect(() => {
         let count = 0;

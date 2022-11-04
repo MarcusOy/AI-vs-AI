@@ -92,7 +92,7 @@ function Programming() {
                         const battle = response.resultingBattle as Battle
                         console.log('TestSubmissionResult Response:', battle)
                         // @ts-ignore
-                        setSubmissions((past) => [...past, battle])
+                        setSubmissions((past) => [battle, ...past])
                         handleShowSubmission()
                     })
                 })
@@ -136,6 +136,7 @@ function Programming() {
             case 1: setSelect(true); setMedium(false); setHard(false); break;
             case 2: setSelect(false); setMedium(true); setHard(false); break;
             case 3: setSelect(false); setMedium(false); setHard(true); break;
+            default: setSelect(false); setMedium(false); setHard(false);
         }
             
     }
@@ -160,6 +161,14 @@ function Programming() {
         IdentityService.refreshIdentity()
     }
     const runStrategy = async () => {
+        let chosen;
+        if (select) {
+            chosen = -1;
+        } else if (medium) {
+            chosen = -2;
+        } else {
+            chosen = -3;
+        }
         const data = {
             strategyToTest: {
                 name: name,
@@ -168,15 +177,15 @@ function Programming() {
                 id: strategy.id,
                 strategy: StrategyStatus.Draft,
             },
-            stock: -1,
+            stock: chosen,
             clientId: connection?.connectionId,
         }
         strategy = await execute({ data: data.strategyToTest })
-        strategy.status = 1
-        if (select) {
+        strategy.status = 0
+        if (select || hard || medium) {
             console.log(await run({ data }))
         }
-        setSelect(!select)
+        toggleStock(0)
     }
 
     return (
@@ -314,7 +323,7 @@ function Programming() {
                                                 <h2>
                                                     <AccordionButton>
                                                         <Box flex='1' textAlign='left' color={value.attackerWins === 1 ? 'green' : 'red'}>
-                                                            Submission #{key + 1}
+                                                            Submission #{submissions.length - key}
                                                         </Box>
                                                         <AccordionIcon />
                                                     </AccordionButton>
@@ -364,7 +373,7 @@ function Programming() {
                             variant='outline'
                             color={select ? 'white' : 'green'}
                             background={select ? 'green' : ''}
-                            onClick={() => setSelect(!select)}
+                            onClick={() => toggleStock(1)}
                         >
                             Easy Stock
                         </Button>
@@ -373,21 +382,21 @@ function Programming() {
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
-                    <ButtonGroup isAttached variant='outline' margin='4'>
-                        <Button color={'orange'}>Medium Stock</Button>
-                        <CodeModal strategy={mediumAi} color={select ? 'white' : 'orange'} />
+                    <ButtonGroup isAttached variant='outline' margin='4' color={medium ? 'white' : 'orange'} background={medium ? 'orange' : ''}>
+                        <Button color={medium ? 'white' : 'orange'} onClick={() => toggleStock(2)}>Medium Stock</Button>
+                        <CodeModal strategy={mediumAi} color={medium ? 'white' : 'orange'} />
                     </ButtonGroup>
-                    <ButtonGroup variant='outline' margin='3' isAttached>
-                        <Button color={'red'}>
+                    <ButtonGroup variant='outline' margin='3' isAttached color={hard ? 'white' : 'red'} background={hard ? 'red' : ''}>
+                        <Button color={hard ? 'white' : 'red'} onClick={() => toggleStock(3)}>
                             Hard Stock
                         </Button>
-                        <CodeModal strategy={ hardAi } color={select ? 'white' : 'red'}/>
+                        <CodeModal strategy={ hardAi } color={hard ? 'white' : 'red'}/>
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
                     <Button
                         margin='3'
-                        disabled={!select}
+                        disabled={(!select && !hard && !medium) || isLoading}
                         onClick={() => (strategy.status === 0 ? runStrategy() : onOpen())}
                         isLoading={isLoading}
                     >
@@ -395,10 +404,10 @@ function Programming() {
                     </Button>
                     <Button
                         margin='3'
-                        disabled={!select || strategy.status === 1}
+                        disabled={(!select && !hard && !medium) || strategy.status === 1}
                         onClick={() => submitStrategy()}
                     >
-                        Submit Strategy
+                        Activate Strategy
                     </Button>
                 </GridItem>
             </Grid>
