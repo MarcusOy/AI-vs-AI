@@ -404,7 +404,7 @@ function Programming() {
                     </Button>
                     <Button
                         margin='3'
-                        disabled={(!select && !hard && !medium) || strategy.status === 1}
+                        disabled={strategy === undefined || strategy.status === 1}
                         onClick={() => submitStrategy()}
                     >
                         Activate Strategy

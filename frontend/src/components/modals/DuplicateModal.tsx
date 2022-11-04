@@ -23,22 +23,24 @@ import {
     useRadioGroup,
     VStack,
 } from '@chakra-ui/react'
-import { AVAStore } from '../data/DataStore'
-import useAVAFetch from '../helpers/useAVAFetch'
+import { AVAStore } from '../../data/DataStore'
+import useAVAFetch from '../../helpers/useAVAFetch'
 import { useNavigate } from 'react-router-dom'
-import { Strategy } from '../models/strategy'
-import { StrategyStatus } from '../models/strategy-status'
-import IdentityService from '../data/IdentityService'
-import { devComplete, helperFunctions } from '../helpers/hardcodeAi'
-import { Game } from '../models/game'
+import { Strategy } from '../../models/strategy'
+import { StrategyStatus } from '../../models/strategy-status'
+import IdentityService from '../../data/IdentityService'
+import { devComplete, helperFunctions } from '../../helpers/hardcodeAi'
+import { Game } from '../../models/game'
 import Moment from 'react-moment'
-interface ModalAiProps {
-    overwrite: boolean
+interface DuplicateModalProps {
+    isOpen: boolean
     strategy?: Strategy
+    onOpen: () => void
+    onClose: () => void
 }
-const ModalAi = (props: ModalAiProps) => {
+const DuplicateModal = (props: DuplicateModalProps) => {
     const navigate = useNavigate()
-    const { isOpen, onOpen, onClose } = useDisclosure()
+    const { isOpen, onOpen, onClose } = props
     const { whoAmI } = AVAStore.useState()
     const { data } = useAVAFetch('/Games/')
     const [selected, setSelected] = useState('0')
@@ -65,11 +67,6 @@ const ModalAi = (props: ModalAiProps) => {
         onChange: setSelected,
     })
     const group = getRootProps()
-    // useEffect(() => {
-    //     if (!props.overwrite) {
-    //         IdentityService.refreshIdentity()
-    //     }
-    // }, [])
     useEffect(() => {
         let count = 0
         const game = { id: 1 }
@@ -94,26 +91,20 @@ const ModalAi = (props: ModalAiProps) => {
                 value = n
             }
         })
-        if (props.overwrite && props.strategy === undefined) {
+        console.log('Strategy:' + props.strategy)
+        console.log('Chosen: ' + value)
+        if (props.strategy === undefined) {
             return
         }
         if (value === undefined) return
         if (value.name === 'Free Save' && whoAmI !== undefined) {
-            const build: Strategy = props.overwrite
-                ? props.strategy
-                : {
-                      gameId: 1,
-                      name: 'Untitled Draft',
-                      sourceCode: helperFunctions + devComplete,
-                }
-            if (props.overwrite) {
-                build.name = 'Duplicate of ' + build.name
-            }
+            const build: Strategy = props.strategy
+            build.name = 'Duplicate of ' + build.name
             const response = await execute({ data: build })
             console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
-        } else if (props.overwrite) {
+        } else {
             const response = await duplicate({
                 url: '/Strategy/Duplicate/' + value.id,
                 data: props.strategy,
@@ -121,8 +112,6 @@ const ModalAi = (props: ModalAiProps) => {
             console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
-        } else {
-            navigate('/Programming/' + value.id)
         }
     }
     const findDrafts = (game: Game) => {
@@ -189,12 +178,6 @@ const ModalAi = (props: ModalAiProps) => {
     }
     return (
         <>
-            {!props.overwrite && <Button onClick={onOpen}>Draft AI</Button>}
-            {props.overwrite && (
-                <Button variant='link' onClick={onOpen}>
-                    Duplicate
-                </Button>
-            )}
             <Modal isOpen={isOpen} onClose={onClose} size={'full'}>
                 <ModalOverlay />
                 <ModalContent>
@@ -223,7 +206,7 @@ const ModalAi = (props: ModalAiProps) => {
                             Close
                         </Button>
                         <Button colorScheme='blue' onClick={() => handleSubmit()}>
-                            {props.overwrite ? 'Overwrite' : 'Select'}
+                            Overwrite
                         </Button>
                     </ModalFooter>
                 </ModalContent>
@@ -311,4 +294,4 @@ function RadioCard(props) {
         </Box>
     )
 }
-export default ModalAi
+export default DuplicateModal

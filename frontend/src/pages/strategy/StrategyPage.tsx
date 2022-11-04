@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Center,
@@ -27,6 +27,7 @@ import {
     useToast,
     Tooltip,
     Badge,
+    useDisclosure,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
@@ -39,10 +40,12 @@ import { TbBook2 } from 'react-icons/tb'
 import { GoGlobe, GoLock } from 'react-icons/go'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
+import DuplicateModal from '../../components/modals/DuplicateModal'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
+    const { isOpen, onOpen, onClose } = useDisclosure()
     const { id, tab } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
@@ -165,7 +168,17 @@ const StrategyPage = () => {
                         <MenuList>
                             <MenuItem>Attack</MenuItem>
                             <MenuItem>Manually Attack</MenuItem>
-                            <MenuItem>Duplicate</MenuItem>
+                            <MenuItem onClick={onOpen}>Duplicate</MenuItem>
+                            <MenuItem onClick={() => {
+                                sessionStorage.setItem('clipboard', strategy.sourceCode);
+                                toast({
+                                    title: 'Code copied successfully.',
+                                    description: 'You just copied this strategy\'s source code to clipboard',
+                                    status: 'success',
+                                    duration: 5000,
+                                    isClosable: true,
+                                })
+                            }}>Copy</MenuItem>
                             {/* <MenuItem>Mark as Draft</MenuItem> */}
                             {isSelf && (
                                 <MenuItem onClick={onSubmit}>
@@ -174,6 +187,7 @@ const StrategyPage = () => {
                             )}
                         </MenuList>
                     </Menu>
+                    <DuplicateModal isOpen={isOpen} strategy={strategy} onOpen={onOpen.bind(this)} onClose={onClose.bind(this)} />
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>
