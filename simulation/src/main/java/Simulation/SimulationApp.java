@@ -111,6 +111,7 @@ public class SimulationApp {
 
             // Creates queue if not already created an prepares to listen for messages
             channel.queueDeclare(REQ_QUEUE_NAME, true, false, false, null);
+            channel.queueDeclare(REQ_QUEUE_NAME_MANUAL, true, false, false, null);
             System.out.println(" [*] Waiting for messages.");
 
             // Sends callback to sender (2-AI battle)
