@@ -128,7 +128,9 @@ namespace AVA.API.Services
             var user = await _dbContext.Users
                 .Where(u => u.Active)
                 .Include(u => u.FavoriteGame)
-                .Include(u => u.Strategies)
+                .Include(u => u.Strategies
+                        .OrderByDescending(s => s.UpdatedOn))
+                    .ThenInclude(s => s.Game)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null)
@@ -187,7 +189,9 @@ namespace AVA.API.Services
                     throw new AuthenticationException("Malformed user. Please log in again");
 
                 return _dbContext.Users
-                    .Include(c => c.Strategies)
+                    .Include(u => u.Strategies
+                        .OrderByDescending(s => s.UpdatedOn))
+                    .ThenInclude(s => s.Game)
                     .FirstOrDefault(u => u.Id == userid);
             }
         }

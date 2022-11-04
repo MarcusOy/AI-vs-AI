@@ -19,6 +19,7 @@ const Header = (props: IHeader) => {
             background='chakra-body-bg'
             py='1rem'
             position='sticky'
+            zIndex={999}
             top={0}
             left={0}
             right={0}

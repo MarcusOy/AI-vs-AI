@@ -20,7 +20,7 @@ public class StatsController : Controller
         _strategyService = strategyService;
     }
 
-    [HttpGet, Route("/GetStats/BattleId/{BattleId}")]
+    [HttpGet, Route("/GetStats/{BattleId}")]
     public ActionResult GetBattleStats(String BattleId)
     {
         Guid IdBattle = new Guid(BattleId);

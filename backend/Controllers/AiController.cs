@@ -9,9 +9,9 @@ namespace AVA.API.Controllers;
 
 public class AiController : Controller
 {
-    private readonly AVADbContext _dbContext;
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
+    private readonly AVADbContext _dbContext;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
@@ -83,7 +83,7 @@ public class AiController : Controller
     }
 
     [HttpPost, Route("/Strategy/TestPublish")]
-    public async Task<ActionResult> TestPublish([FromBody] Strategy s)
+    public async Task<ActionResult> TestPublish()
     {
         var strategy = _dbContext.Strategies
             .FirstOrDefault(s => s.Id == new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"));
@@ -109,6 +109,24 @@ public class AiController : Controller
         return Ok("Simulation request sent.");
     }
 
+    [HttpDelete, Route("/Strategy/Delete/{id}")]
+    public async Task<Strategy> Delete(String id)
+        => await _strategiesService.DeleteAsync(new Guid(id));
+
+    [HttpGet, Route("/Strategy/ChangePrivate/{id}")]
+
+    public async Task<Strategy> ChangePrivate(String Id)
+    {
+        Guid StratId = new Guid(Id);
+
+        Strategy strat = _strategiesService.Get(StratId);
+
+        // strat.IsPrivate = !strat.IsPrivate;
+
+        await _strategiesService.UpdateAsync(strat);
+
+        return strat;
+    }
     public class TestStrategyRequest
     {
         public Strategy StrategyToTest { get; set; }

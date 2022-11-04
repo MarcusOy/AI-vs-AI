@@ -3,6 +3,7 @@ using System;
 using AVA.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AVA.Migrations
 {
     [DbContext(typeof(AVADbContext))]
-    partial class AVADbContextModelSnapshot : ModelSnapshot
+    [Migration("20221103041843_AdditionalStrategyField")]
+    partial class AdditionalStrategyField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,29 +129,14 @@ namespace AVA.Migrations
                     b.Property<int>("GameNumber")
                         .HasColumnType("int");
 
-                    b.Property<int>("AttackerPawnsLeft")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttackerPiecesLeft")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("DefenderPawnsLeft")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DefenderPiecesLeft")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("DidAttackerWin")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("FinalBoard")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("StackTrace")
                         .HasColumnType("longtext");
@@ -238,9 +225,9 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 1,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\n                ",
+                            LongDescription = "\r\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\r\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\r\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\r\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\r\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\r\n                ",
                             Name = "1234 Chess",
                             ShortDescription = "Advance a 1-piece past your opponent's last rank.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -248,9 +235,9 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 2,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nCheckers is a board game played between two people on an 8x8 checked board.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
+                            LongDescription = "\r\nCheckers is a board game played between two people on an 8x8 checked board.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Checkers",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -258,10 +245,10 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 3,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedOn = new DateTime(2022, 11, 4, 1, 54, 3, 289, DateTimeKind.Utc).AddTicks(9260),
-                            LongDescription = "\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
+                            DeletedOn = new DateTime(2022, 11, 3, 4, 18, 43, 413, DateTimeKind.Utc).AddTicks(7398),
+                            LongDescription = "\r\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Chess",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -323,28 +310,6 @@ namespace AVA.Migrations
                             GameId = 1,
                             IsPrivate = false,
                             Name = "Stock Easy AI",
-                            Status = 1,
-                            UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Version = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("ff567412-30a5-444c-9ff8-437eda8a73a7"),
-                            CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            GameId = 1,
-                            Name = "Stock Medium AI",
-                            Status = 1,
-                            UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Version = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"),
-                            CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            GameId = 1,
-                            Name = "Stock Hard AI",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -451,8 +416,8 @@ namespace AVA.Migrations
                             Email = "marcus.orciuch@gmail.com",
                             FirstName = "System",
                             LastName = "User",
-                            Password = "t6AgeRhND2Za6hb1d0wHZMM/5Xs9m4Pc8tcCdgMNNjo=",
-                            Salt = "ZJg76QyA1SzWVnAdBXkuaQ==",
+                            Password = "DVQeBcrGsMCMSpFNpa0GcvulvE5kBMgWa3v1P1BqqAs=",
+                            Salt = "2j2HyBrQM7SJGWjoFEsm8A==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "system"
                         },
@@ -464,8 +429,8 @@ namespace AVA.Migrations
                             Email = "morciuch@purdue.edu",
                             FirstName = "Marcus",
                             LastName = "Orciuch",
-                            Password = "XnMOvV2EM1vzfa8dnRRfyoV1OHgcPwC+YB7rhdxFEHg=",
-                            Salt = "CmdkZduCBhU+jZHXVRNiKw==",
+                            Password = "r3rfTjTMLgg8Aq/URZpTXcPUQlxBAJPEoARvqg2OGVM=",
+                            Salt = "BlCNIGrrTkQCi5rxTdgCgQ==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "marcus"
                         },
@@ -477,8 +442,8 @@ namespace AVA.Migrations
                             Email = "korciuch@purdue.edu",
                             FirstName = "Kyle",
                             LastName = "Orciuch",
-                            Password = "wsgwvU0CJ7694v2TvBMbC7FRZ1l6GaUH/9dwDq0s41M=",
-                            Salt = "P9biM/UD/gXUU/IYuw9HIA==",
+                            Password = "oybsRsVu/zdXrqvuueshRvURTTXbDg+d/ENNZfD9rA4=",
+                            Salt = "4Z4AbL5gzk4vAmXKLHx5Cw==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "kyle"
                         });

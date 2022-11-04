@@ -13,10 +13,14 @@ public class StrategyController : Controller
     {
         _strategyService = strategiesService;
     }
+    [HttpGet, Route("/Strategy/{id}"), Authorize]
+    public Strategy Get(string id)
+        => _strategyService.Get(new Guid(id));
 
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
     {
+        // s.IsPrivate = true;
         await _strategyService.CreateAsync(s);
 
         return s;
@@ -39,7 +43,7 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
-        return await _strategyService.SubmitAsync(s); ;
+        return await _strategyService.SubmitAsync(s);
     }
 
     [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
