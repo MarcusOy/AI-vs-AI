@@ -40,13 +40,7 @@ import {
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import {
-    devComplete,
-    developerAi,
-    easyAi,
-    emptyStarter,
-    helperFunctions,
-} from '../helpers/hardcodeAi'
+import { devComplete, developerAi, easyAi, emptyStarter, hardAi, helperFunctions, mediumAi } from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
@@ -70,6 +64,8 @@ function Programming() {
     const { isOpen, onOpen, onClose } = useDisclosure()
     const [code, setCode] = useState(helperFunctions + devComplete)
     const [select, setSelect] = useState(false)
+    const [medium, setMedium] = useState(false)
+    const [hard, setHard] = useState(false)
     const [buffer, setBuffer] = useState(0)
     const [name, setName] = useState('')
     const [emptyClipboard, setEmptyClipboard] = useState(false)
@@ -134,6 +130,14 @@ function Programming() {
     function handleEditorDidMount(editor, monaco) {
         editor.setHiddenAreas([new monaco.Range(1, 0, 490, 0)])
         editorRef.current = editor
+    }
+    const toggleStock = (value) => {
+        switch (value) {
+            case 1: setSelect(true); setMedium(false); setHard(false); break;
+            case 2: setSelect(false); setMedium(true); setHard(false); break;
+            case 3: setSelect(false); setMedium(false); setHard(true); break;
+        }
+            
     }
     const updateSave = (value) => {
         setCode(value === undefined ? '' : value)
@@ -369,21 +373,15 @@ function Programming() {
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
-                    <ButtonGroup isAttached variant='outline' margin='4' isDisabled>
+                    <ButtonGroup isAttached variant='outline' margin='4'>
                         <Button color={'orange'}>Medium Stock</Button>
-                        <CodeModal
-                            strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
-                            color={'orange'}
-                        />
+                        <CodeModal strategy={mediumAi} color={select ? 'white' : 'orange'} />
                     </ButtonGroup>
-                    <ButtonGroup variant='outline' margin='3' isDisabled isAttached>
-                        <Button color={'red'} disabled>
+                    <ButtonGroup variant='outline' margin='3' isAttached>
+                        <Button color={'red'}>
                             Hard Stock
                         </Button>
-                        <CodeModal
-                            strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
-                            color={'red'}
-                        />
+                        <CodeModal strategy={ hardAi } color={select ? 'white' : 'red'}/>
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
