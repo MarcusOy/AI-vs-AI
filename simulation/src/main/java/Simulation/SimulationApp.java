@@ -73,8 +73,8 @@ public class SimulationApp {
     static boolean JAVASCRIPT_STOCK;
     static boolean DEMO_STOCK;
 
-    static boolean attackerStockOverride = true;
-    static boolean defenderStockOverride = true;
+    static boolean attackerStockOverride;
+    static boolean defenderStockOverride;
 
     static final int BOARD_LENGTH = 10;
 
@@ -87,7 +87,10 @@ public class SimulationApp {
     // used to access defender strategy source and version for selecting a stock
     // defender override, if necessary
     // doesn't track with the battle throughout all modifications
-    static Battle mostlyCurrentBattle;
+    static Battle mostlyCurrentBattle = null;
+
+    // used to select a stock for manual play
+    static UUID manualPlayStockId = null;
 
     // Runs a battle with an infinite number of BattleGames, starting a fresh
     // BattleGame when the previous completes
@@ -115,6 +118,8 @@ public class SimulationApp {
 
             // Sends callback to sender (2-AI battle)
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                mostlyCurrentBattle = null;
+                manualPlayStockId = null;
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
 
@@ -127,12 +132,15 @@ public class SimulationApp {
 
             // Sends callback to sender (1 manual player vs stock AI)
             DeliverCallback deliverCallbackManual = (consumerTag, delivery) -> {
+                mostlyCurrentBattle = null;
+                manualPlayStockId = null;
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
 
                 // also initializes gameState upon success
                 SimulationStepRequest manRequest = processMessageManual(message);
                 initializeManualGameState(manRequest);
+                manualPlayStockId = manRequest.chosenStockId;
                 setupStrategies();
                 Color potentialWinner = playTurn(true, null, null);
                 String[][] responseBoard = addPieceIds(manRequest);
@@ -604,19 +612,26 @@ public class SimulationApp {
         stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
         if (DEMO_STOCK)
             stockDefender = new TrueRandomAI();
-        else if (mostlyCurrentBattle != null && defenderStockOverride) {
-            if (mostlyCurrentBattle.defendingStrategy.id == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
-                stockDefender = new EasyAI();
-            else if (mostlyCurrentBattle.defendingStrategy.id == UUID
-                    .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
-                stockDefender = new MediumAI();
-            else if (mostlyCurrentBattle.defendingStrategy.id == UUID
-                    .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
-                stockDefender = new HardAI();
-            else
-                stockDefender = new RandomAI();
-        } else
+        else if (mostlyCurrentBattle != null && defenderStockOverride)
+            stockDefender = getStockAI((mostlyCurrentBattle.defendingStrategy.id));
+        else if (manualPlayStockId != null)
+            stockDefender = getStockAI(manualPlayStockId);
+        else
             stockDefender = new RandomAI();
+    }
+
+    // gets a Java StockAI from a UUID
+    static IStrategy getStockAI(UUID sentId) {
+        if (mostlyCurrentBattle.defendingStrategy.id == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
+            return new EasyAI();
+        else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+                .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
+            return new MediumAI();
+        else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+                .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
+            return new HardAI();
+
+        return new RandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
