@@ -121,7 +121,7 @@ public class AiController : Controller
 
         Strategy strat = _strategiesService.Get(StratId);
 
-        // strat.IsPrivate = !strat.IsPrivate;
+        strat.IsPrivate = !strat.IsPrivate;
 
         await _strategiesService.UpdateAsync(strat);
 

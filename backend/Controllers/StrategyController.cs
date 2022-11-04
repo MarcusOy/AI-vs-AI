@@ -20,7 +20,7 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
     {
-        // s.IsPrivate = true;
+        s.IsPrivate = true;
         await _strategyService.CreateAsync(s);
 
         return s;

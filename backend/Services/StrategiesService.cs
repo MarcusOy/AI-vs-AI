@@ -118,7 +118,7 @@ namespace AVA.API.Services
             originalStrategy.Name = strategy.Name;
             originalStrategy.SourceCode = strategy.SourceCode;
             originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
-            // originalStrategy.IsPrivate = strategy.IsPrivate;
+            originalStrategy.IsPrivate = strategy.IsPrivate;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
