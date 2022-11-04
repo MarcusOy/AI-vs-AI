@@ -12,6 +12,8 @@ import NotFoundPage from './pages/NotFoundPage'
 import Header from './components/Header'
 import { WarningIcon } from '@chakra-ui/icons'
 import FeedPage from './pages/FeedPage'
+import BattlePage from './pages/BattlePage'
+import StrategyPage from './pages/strategy/StrategyPage'
 import Programming from './pages/Programming'
 import ModalProvider from './components/modals/ModalProvider'
 import ReplayPage from './pages/ReplayPage'
@@ -68,9 +70,12 @@ function App() {
                                 path='/Profile/Submissions'
                                 element={<Navigate to={`/Profile/${whoAmI.id}/Submissions`} />}
                             />
+
                             <Route path='/Profile/:id/:tab' element={<ProfilePage />} />
+                            <Route path='/Strategy/:id/:tab' element={<StrategyPage />} />
+                            <Route path='/Battle/:id' element={<BattlePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
-                            <Route path='/Replay' element={<ReplayPage />} />
+                            <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />

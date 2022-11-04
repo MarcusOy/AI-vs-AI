@@ -18,6 +18,11 @@ public class BattleGame : BaseEntity
     [Required]
     public Guid BattleId { get; set; }
     public Battle Battle { get; set; }
+    public String FinalBoard { get; set; }
+    public int AttackerPiecesLeft { get; set; }
+    public int AttackerPawnsLeft { get; set; }
+    public int DefenderPiecesLeft { get; set; }
+    public int DefenderPawnsLeft { get; set; }
 
     // Turn Relationship (Battle game consists of turns)
     public List<Turn> Turns { get; set; }

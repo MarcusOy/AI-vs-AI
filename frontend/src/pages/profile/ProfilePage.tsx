@@ -27,7 +27,7 @@ import EditFullName from '../../components/profile/EditFullName'
 import ProfileViewTab from './ProfileViewTab'
 import { User } from '../../models/user'
 import ProfileStrategiesTab from './ProfileStrategiesTab'
-import ProfileBattlesTab from './ProfileBattlesTab'
+import ProfileBattlesTab from './ProfileAndStratBattlesTab'
 import ProfileSubmissionsTab from './ProfileSubmissionsTab'
 import { WarningIcon } from '@chakra-ui/icons'
 
@@ -115,10 +115,10 @@ const ProfilePage = () => {
                         <ProfileViewTab user={user} isSelf={isSelf} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileStrategiesTab />
+                        <ProfileStrategiesTab user={user} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileBattlesTab />
+                        <ProfileBattlesTab userId={user.id!} />
                     </TabPanel>
                     <TabPanel>
                         <ProfileSubmissionsTab />

@@ -9,20 +9,88 @@ public class StatsController : Controller
 
     private readonly IBattlesService _battleService;
 
-    public StatsController(IBattlesService battlesService)
+    private readonly IStrategiesService _strategyService;
+
+    public StatsController(IBattlesService battlesService, IStrategiesService strategyService)
     {
         _battleService = battlesService;
+        _strategyService = strategyService;
     }
 
+    [HttpGet, Route("/GetStats/{BattleId}")]
+    public async Task<ActionResult> GetBattleStats(String BattleId)
+    {
+        Guid IdBattle = new Guid(BattleId);
 
-    [HttpGet, Route("/getStats/{BattleId}/{StratId}")]
-    public ActionResult getStats(String BattleId, String StratId)
+        Battle b = await _battleService.GetAsync(IdBattle);
+        List<BattleGame> bg = b.BattleGames;
+
+        int size = bg.Count;
+        String[,] outcome = new String[size, 3];
+        int idx = 0;
+
+        foreach (BattleGame g in bg)
+        {
+            outcome[idx, 0] = "Game Number: " + g.GameNumber;
+            if (g.DidAttackerWin)
+            {
+                outcome[idx, 1] = "Attacker Won";
+            }
+            else
+            {
+                outcome[idx, 1] = "Defender Won";
+            }
+
+            outcome[idx, 2] = "Turns: " + g.Turns.Count;
+
+            idx++;
+        }
+
+        return Ok(outcome);
+    }
+
+    [HttpGet, Route("/GetStats/StratId/{StratId}")]
+    public ActionResult GetStratStats(String StratId)
+    {
+        Guid idStrat = new Guid(StratId);
+
+        Strategy strat = _strategyService.Get(idStrat);
+
+        int version = strat.Version;
+
+        List<Battle> attacker = strat.AttackerBattles;
+        List<Battle> defender = strat.DefenderBattles;
+
+        int NumWins = 0;
+        int NumLoss = 0;
+
+        foreach (Battle b in attacker)
+        {
+            NumWins += b.AttackerWins;
+            NumLoss += b.DefenderWins;
+        }
+
+        foreach (Battle b in defender)
+        {
+            NumWins += b.DefenderWins;
+            NumLoss += b.AttackerWins;
+        }
+
+        double WinLoss = NumWins / NumLoss;
+
+        var ret = new { version = version, WinLoss = WinLoss };
+
+        return Ok(ret);
+    }
+
+    [HttpGet, Route("/GetStats/{BattleId}/{StratId}")]
+    public async Task<ActionResult> GetStratStats(String BattleId, String StratId)
     {
         // The incoming message will be the battle id to display the stats from. This may 
         Guid idBattle = new Guid(BattleId);
         Guid idStrat = new Guid(StratId);
 
-        Battle b = _battleService.Get(idBattle);
+        Battle b = await _battleService.GetAsync(idBattle);
         Boolean isAttacker = b.AttackingStrategy.Id == idStrat;
         int totalTurn = 0;
         int count = 0;
