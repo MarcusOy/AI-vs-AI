@@ -44,7 +44,7 @@ namespace AVA.API.Services
 
         public async Task<List<Battle>> GetAsync(GetBattlesParameters p)
         {
-            var q = _dbContext.Battles
+            IQueryable<Battle> q = _dbContext.Battles
                 .Include(b => b.AttackingStrategy)
                 .Include(b => b.DefendingStrategy)
                 .Include(b => b.BattleGames)
@@ -53,23 +53,23 @@ namespace AVA.API.Services
             if (p.UserId is not null)
             {
                 if (p.CombatantType == CombatantType.Both)
-                    q.Where(b => b.AttackingStrategy.CreatedByUserId == p.UserId
+                    q = q.Where(b => b.AttackingStrategy.CreatedByUserId == p.UserId
                               || b.DefendingStrategy.CreatedByUserId == p.UserId);
                 else if (p.CombatantType == CombatantType.Attacker)
-                    q.Where(b => b.AttackingStrategy.CreatedByUserId == p.UserId);
+                    q = q.Where(b => b.AttackingStrategy.CreatedByUserId == p.UserId);
                 else if (p.CombatantType == CombatantType.Defender)
-                    q.Where(b => b.DefendingStrategy.CreatedByUserId == p.UserId);
+                    q = q.Where(b => b.DefendingStrategy.CreatedByUserId == p.UserId);
             }
 
             if (p.StrategyId is not null)
             {
                 if (p.CombatantType == CombatantType.Both)
-                    q.Where(b => b.AttackingStrategy.Id == p.StrategyId
+                    q = q.Where(b => b.AttackingStrategy.Id == p.StrategyId
                               || b.DefendingStrategy.Id == p.StrategyId);
                 else if (p.CombatantType == CombatantType.Attacker)
-                    q.Where(b => b.AttackingStrategy.Id == p.StrategyId);
+                    q = q.Where(b => b.AttackingStrategy.Id == p.StrategyId);
                 else if (p.CombatantType == CombatantType.Defender)
-                    q.Where(b => b.DefendingStrategy.Id == p.StrategyId);
+                    q = q.Where(b => b.DefendingStrategy.Id == p.StrategyId);
             }
 
             return await q.ToListAsync();
