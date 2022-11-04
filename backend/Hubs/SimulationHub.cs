@@ -9,13 +9,13 @@ using Newtonsoft.Json;
 
 namespace AVA.API.Hubs
 {
-    public class SimulationStepHub : Hub
+    public class SimulationHub : Hub
     {
-        private readonly ILogger<SimulationStepHub> _logger;
+        private readonly ILogger<SimulationHub> _logger;
         private readonly ISendEndpointProvider _sendEndpointProvider;
 
-        public SimulationStepHub(ISendEndpointProvider sendEndpointProvider,
-                                 ILogger<SimulationStepHub> logger)
+        public SimulationHub(ISendEndpointProvider sendEndpointProvider,
+                                 ILogger<SimulationHub> logger)
         {
             _sendEndpointProvider = sendEndpointProvider;
             _logger = logger;

@@ -1,16 +1,60 @@
 import React, { useEffect, useRef, useState } from 'react'
-import Editor from '@monaco-editor/react';
-import { Flex, Spacer, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, ButtonGroup, Center, Image, Divider, Grid, GridItem, Heading, HStack, Tab, TabList, TabPanel, TabPanels, Tabs, VStack, IconButton, Tag, TagCloseButton, TagLabel, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure } from '@chakra-ui/react'
+import Editor from '@monaco-editor/react'
+import {
+    Flex,
+    Spacer,
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
+    Box,
+    Button,
+    ButtonGroup,
+    Center,
+    Image,
+    Divider,
+    Grid,
+    GridItem,
+    Heading,
+    HStack,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+    VStack,
+    IconButton,
+    Tag,
+    TagCloseButton,
+    TagLabel,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    useDisclosure,
+} from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import { devComplete, developerAi, easyAi, emptyStarter, helperFunctions } from '../helpers/hardcodeAi'
+import {
+    devComplete,
+    developerAi,
+    easyAi,
+    emptyStarter,
+    helperFunctions,
+} from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
-import IdentityService from '../data/IdentityService';
+import IdentityService from '../data/IdentityService'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
-import EditDraftName from '../components/EditDraftName';
-import { Strategy } from '../models/strategy';
+import EditDraftName from '../components/EditDraftName'
+import { Strategy } from '../models/strategy'
 import { AVAStore } from '../data/DataStore'
+import { Battle } from '../models/battle'
+import { StrategyStatus } from '../models/strategy-status'
 function Programming() {
     const navigate = useNavigate()
     const [connection, setConnection] = useState<HubConnection | null>(null)
@@ -21,34 +65,34 @@ function Programming() {
     const [name, setName] = useState('')
     const [emptyClipboard, setEmptyClipboard] = useState(false)
     const [copied, setCopied] = useState(false)
-    const [submissions, setSubmissions] = useState([]);
+    const [submissions, setSubmissions] = useState([])
     const { id } = useParams()
     const { whoAmI } = AVAStore.useState()
 
-    useEffect(() => { 
+    useEffect(() => {
         const signalRConnection = new HubConnectionBuilder()
             // @ts-ignore
-            .withUrl(process.env.REACT_APP_API_ENDPOINT + 'AI/Step')
+            .withUrl(process.env.REACT_APP_API_ENDPOINT + 'AI')
             .withAutomaticReconnect()
             .build()
         setConnection(signalRConnection)
     }, [])
     useEffect(() => {
         if (connection) {
-            connection.start()
+            connection
+                .start()
                 .then(() => {
                     console.log('Connected.')
-                    connection!.on('Response', (response) => {
-                        const newBoard = response
-                        console.log('Response:')
-                        console.log(newBoard)
+                    connection!.on('TestSubmissionResult', (response) => {
+                        const battle = response.resultingBattle as Battle
+                        console.log('TestSubmissionResult Response:', battle)
                     })
                 })
                 .catch((e) => console.log('Connection failed: ', e))
         }
     }, [connection])
     console.log(whoAmI)
-    const load =  useAVAFetch('/getAi/' + id)
+    const load = useAVAFetch('/getAi/' + id)
     let strategy = load.data
     const data = useAVAFetch(id === undefined ? '/Games/1' : '/Games/1').data
     const { isLoading, error, execute } = useAVAFetch(
@@ -56,23 +100,14 @@ function Programming() {
         { method: 'PUT' },
         { manual: true },
     )
-    const submit = useAVAFetch(
-        '/Strategy/Submit',
-        { method: 'PUT' },
-        { manual: true },
-    ).execute
-    const run = useAVAFetch(
-        '/Strategy/TestPublish',
-        { method: 'POST'},
-        { manual: true },
-    ).execute
+    const submit = useAVAFetch('/Strategy/Submit', { method: 'PUT' }, { manual: true }).execute
+    const run = useAVAFetch('/Strategy/TestStrategy/', { method: 'POST' }, { manual: true }).execute
+    // const run = useAVAFetch('/Strategy/TestPublish', { method: 'POST' }, { manual: true }).execute
     useEffect(() => {
         if (strategy !== undefined) {
             if (editorRef !== null && editorRef.current !== null) {
                 // @ts-ignore
-                editorRef.current.setValue(
-                    strategy === undefined ? code : strategy.sourceCode,
-                )
+                editorRef.current.setValue(strategy === undefined ? code : strategy.sourceCode)
             }
             setName(strategy.name)
             setCode(strategy === undefined ? code : strategy.sourceCode)
@@ -86,7 +121,7 @@ function Programming() {
     const editorRef = useRef(null)
 
     function handleEditorDidMount(editor, monaco) {
-        editor.setHiddenAreas([new monaco.Range(1,0,490,0)]);
+        editor.setHiddenAreas([new monaco.Range(1, 0, 490, 0)])
         editorRef.current = editor
     }
     const updateSave = (value) => {
@@ -103,23 +138,27 @@ function Programming() {
             name: name,
             sourceCode: code,
             createdByUserId: strategy.createdByUserId,
-            id: strategy.id
+            id: strategy.id,
         }
-        strategy.status = 1;
+        strategy.status = 1
         await submit({ data: build })
         IdentityService.refreshIdentity()
     }
     const runStrategy = async () => {
-        const build: Strategy = {
-            name: name,
-            sourceCode: code,
-            createdByUserId: strategy.createdByUserId,
-            id: strategy.id
+        const data = {
+            strategyToTest: {
+                name: name,
+                sourceCode: code,
+                createdByUserId: strategy.createdByUserId,
+                id: strategy.id,
+                strategy: StrategyStatus.Draft,
+            },
+            stock: -1,
+            clientId: connection?.connectionId,
         }
-        strategy.status = 0;
-        strategy = await execute({ data: build })
+        strategy = await execute({ data: data.strategyToTest })
         if (select) {
-            console.log(await run({ url: '/Strategy/TestPublish/-1', data: build }))
+            console.log(await run({ data }))
         }
         // @ts-ignore
         setSubmissions((past) => [...past, 'Stats for Previous Submission display here'])
@@ -129,38 +168,66 @@ function Programming() {
     return (
         <Box pt='0'>
             <Flex>
-                <Heading>{strategy === undefined ? 'Loading Strategy...' : <EditDraftName name={name} setName={setName.bind(this)} />}</Heading>
+                <Heading>
+                    {strategy === undefined ? (
+                        'Loading Strategy...'
+                    ) : (
+                        <EditDraftName name={name} setName={setName.bind(this)} />
+                    )}
+                </Heading>
                 <Spacer />
-                <Heading>{strategy === undefined ? '' : 'Status: ' + (strategy.status === 0 ? 'Draft' : 'Active')}</Heading>
+                <Heading>
+                    {strategy === undefined
+                        ? ''
+                        : 'Status: ' + (strategy.status === 0 ? 'Draft' : 'Active')}
+                </Heading>
                 <Spacer />
-                {!copied && <Button onClick={() => { sessionStorage.setItem('clipboard', editorRef.current.getValue()); setCopied(true) }}>
-                    Copy
-                </Button>}
-                {copied &&
-    <Tag
-      size={'lg'}
-      borderRadius='full'
-      variant='solid'
-                        colorScheme='green'
+                {!copied && (
+                    <Button
+                        onClick={() => {
+                            sessionStorage.setItem('clipboard', editorRef.current.getValue())
+                            setCopied(true)
+                        }}
+                    >
+                        Copy
+                    </Button>
+                )}
+                {copied && (
+                    <Tag size={'lg'} borderRadius='full' variant='solid' colorScheme='green' mx='2'>
+                        <TagLabel>Copied!</TagLabel>
+                        <TagCloseButton onClick={() => setCopied(false)} />
+                    </Tag>
+                )}
+                {!emptyClipboard && (
+                    <Button
                         mx='2'
-    >
-      <TagLabel>Copied!</TagLabel>
-      <TagCloseButton onClick={() => setCopied(false)}/>
-    </Tag>}
-                {!emptyClipboard && <Button mx='2' display={'flex'} justifyContent='flex-end' onClick={() => { sessionStorage.getItem('clipboard') !== null ? editorRef.current.setValue(sessionStorage.getItem('clipboard')) : setEmptyClipboard(true) }}>Paste</Button>}
-                {emptyClipboard &&
-    <Tag
-      size={'lg'}
-      borderRadius='full'
-      variant='solid'
-                        colorScheme='red'
-                        mx='2'
-    >
-      <TagLabel>Cannot Paste Empty Clipboard</TagLabel>
-      <TagCloseButton onClick={() => setEmptyClipboard(false)}/>
-    </Tag>}
-                <Button display={'flex'} justifyContent='flex-end' onClick={() => { editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)]); }}>Hide Helper</Button>
-                </Flex>
+                        display={'flex'}
+                        justifyContent='flex-end'
+                        onClick={() => {
+                            sessionStorage.getItem('clipboard') !== null
+                                ? editorRef.current.setValue(sessionStorage.getItem('clipboard'))
+                                : setEmptyClipboard(true)
+                        }}
+                    >
+                        Paste
+                    </Button>
+                )}
+                {emptyClipboard && (
+                    <Tag size={'lg'} borderRadius='full' variant='solid' colorScheme='red' mx='2'>
+                        <TagLabel>Cannot Paste Empty Clipboard</TagLabel>
+                        <TagCloseButton onClick={() => setEmptyClipboard(false)} />
+                    </Tag>
+                )}
+                <Button
+                    display={'flex'}
+                    justifyContent='flex-end'
+                    onClick={() => {
+                        editorRef.current.setHiddenAreas([new monaco.Range(1, 0, 490, 0)])
+                    }}
+                >
+                    Hide Helper
+                </Button>
+            </Flex>
             <HStack>
                 <Box width='45%' borderRadius='1g' borderWidth='1px'>
                     <Tabs variant='enclosed'>
@@ -172,53 +239,75 @@ function Programming() {
                         </TabList>
                         <TabPanels height='72vh'>
                             <TabPanel>
-                                {data !== undefined && strategy !== undefined  && <Image src='/Finished_Board.png' alt='logo' />}
+                                {data !== undefined && strategy !== undefined && (
+                                    <Image src='/Finished_Board.png' alt='logo' />
+                                )}
                             </TabPanel>
                             <TabPanel>
                                 <Center>
                                     <Heading margin='3'>
-                                        {data === undefined || strategy === undefined ? 'Game Name' : data.name}
+                                        {data === undefined || strategy === undefined
+                                            ? 'Game Name'
+                                            : data.name}
                                     </Heading>
                                 </Center>
                                 <p>
-                                    {data === undefined || strategy === undefined ? 'Game Description' : data.longDescription}
+                                    {data === undefined || strategy === undefined
+                                        ? 'Game Description'
+                                        : data.longDescription}
                                 </p>
                             </TabPanel>
                             <TabPanel>
-                                {strategy !== undefined && <HStack justifyContent={'center'} gap='2'>
-                                    <h1>View Complete Developer Code</h1>
-                                    <CodeModal strategy={{name: 'Developer Ai', gameId: 1, sourceCode: devComplete}} />
-                                </HStack>
-                                }
-                                {strategy !== undefined && <HStack  m='2' justifyContent={'center'} gap='2'>
-                                    <h1>View Incomplete Starter Code</h1>
-                                    <CodeModal strategy={{name: 'Initial Ai with Comments', gameId: 1, sourceCode: emptyStarter}} />
-                                </HStack>
-                                }
+                                {strategy !== undefined && (
+                                    <HStack justifyContent={'center'} gap='2'>
+                                        <h1>View Complete Developer Code</h1>
+                                        <CodeModal
+                                            strategy={{
+                                                name: 'Developer Ai',
+                                                gameId: 1,
+                                                sourceCode: devComplete,
+                                            }}
+                                        />
+                                    </HStack>
+                                )}
+                                {strategy !== undefined && (
+                                    <HStack m='2' justifyContent={'center'} gap='2'>
+                                        <h1>View Incomplete Starter Code</h1>
+                                        <CodeModal
+                                            strategy={{
+                                                name: 'Initial Ai with Comments',
+                                                gameId: 1,
+                                                sourceCode: emptyStarter,
+                                            }}
+                                        />
+                                    </HStack>
+                                )}
                                 <Center>
-                                    <a href="https://docs.google.com/document/d/1gTAEE-0M2rklHGBfeS9CtV1GIerUqjE-Yyp2TkZ8RTU/edit#heading=h.hp2c6iz21hyn" target="_blank" rel="noreferrer">
-                                    <Button>
-                                            Link to Documentation
-                                    </Button>
+                                    <a
+                                        href='https://docs.google.com/document/d/1gTAEE-0M2rklHGBfeS9CtV1GIerUqjE-Yyp2TkZ8RTU/edit#heading=h.hp2c6iz21hyn'
+                                        target='_blank'
+                                        rel='noreferrer'
+                                    >
+                                        <Button>Link to Documentation</Button>
                                     </a>
                                 </Center>
                             </TabPanel>
                             <TabPanel>
                                 <Accordion allowToggle>
                                     {submissions.map((value, key) => {
-                                        return (<AccordionItem key={key}>
-                                            <h2>
-                                                <AccordionButton>
-                                                    <Box flex='1' textAlign='left'>
-                                                        Submission #{key+1}
-                                                    </Box>
-                                                    <AccordionIcon />
-                                                </AccordionButton>
-                                            </h2>
-                                            <AccordionPanel pb={4}>
-                                                {value}
-                                            </AccordionPanel>
-                                        </AccordionItem>)
+                                        return (
+                                            <AccordionItem key={key}>
+                                                <h2>
+                                                    <AccordionButton>
+                                                        <Box flex='1' textAlign='left'>
+                                                            Submission #{key + 1}
+                                                        </Box>
+                                                        <AccordionIcon />
+                                                    </AccordionButton>
+                                                </h2>
+                                                <AccordionPanel pb={4}>{value}</AccordionPanel>
+                                            </AccordionItem>
+                                        )
                                     })}
                                 </Accordion>
                             </TabPanel>
@@ -228,9 +317,7 @@ function Programming() {
                 <Box width='55%' height='75vh'>
                     <Editor
                         defaultLanguage='javascript'
-                        defaultValue={
-                            code
-                        }
+                        defaultValue={code}
                         theme='vs-dark'
                         onChange={(value) => updateSave(value)}
                         onMount={handleEditorDidMount}
@@ -257,47 +344,71 @@ function Programming() {
                             Easy Stock
                         </Button>
                         <CodeModal
-                            strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}}
+                            strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
                     <ButtonGroup isAttached variant='outline' margin='4' isDisabled>
                         <Button color={'orange'}>Medium Stock</Button>
-                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'orange'} />
+                        <CodeModal
+                            strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
+                            color={'orange'}
+                        />
                     </ButtonGroup>
                     <ButtonGroup variant='outline' margin='3' isDisabled isAttached>
                         <Button color={'red'} disabled>
                             Hard Stock
                         </Button>
-                        <CodeModal strategy={{name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi}} color={'red'} />
+                        <CodeModal
+                            strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
+                            color={'red'}
+                        />
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
-                    <Button margin='3' disabled={!select} onClick={() => strategy.status === 0 ? runStrategy() : onOpen()} isLoading={isLoading}>
+                    <Button
+                        margin='3'
+                        disabled={!select}
+                        onClick={() => (strategy.status === 0 ? runStrategy() : onOpen())}
+                        isLoading={isLoading}
+                    >
                         Run Strategy
                     </Button>
-                    <Button margin='3' disabled={!select || strategy.status === 1} onClick={() =>submitStrategy()}>
+                    <Button
+                        margin='3'
+                        disabled={!select || strategy.status === 1}
+                        onClick={() => submitStrategy()}
+                    >
                         Submit Strategy
                     </Button>
                 </GridItem>
             </Grid>
             <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Confirmation</ModalHeader>
-                <ModalCloseButton />
-                            <ModalBody>
-                                Your draft is currently Active, continuing will place it back in Draft status.
-                </ModalBody>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Confirmation</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        Your draft is currently Active, continuing will place it back in Draft
+                        status.
+                    </ModalBody>
 
-                <ModalFooter>
-                <Button colorScheme='blue' mr={3} onClick={onClose}>
-                    Close
-                </Button>
-                        <Button variant='ghost' onClick={() => { onClose(); runStrategy()}}>Continue</Button>
+                    <ModalFooter>
+                        <Button colorScheme='blue' mr={3} onClick={onClose}>
+                            Close
+                        </Button>
+                        <Button
+                            variant='ghost'
+                            onClick={() => {
+                                onClose()
+                                runStrategy()
+                            }}
+                        >
+                            Continue
+                        </Button>
                     </ModalFooter>
                 </ModalContent>
-                </Modal>
+            </Modal>
         </Box>
     )
 }

@@ -18,13 +18,13 @@ public class Turn : BaseEntity
     // Battle Relationship PK (Turns make up a battle game, which make up a battle.)
     [Required, TsOptional]
     public Guid BattleId { get; set; }
-    [TsOptional]
+    [JsonIgnore, TsOptional]
     public Battle Battle { get; set; }
 
     // BattleGame Relationship PK (Turns make up a battle game.)
     [Required, TsOptional]
     public int BattleGameNumber { get; set; }
-    [TsOptional]
+    [JsonIgnore, TsOptional]
     public BattleGame BattleGame { get; set; }
 
 }

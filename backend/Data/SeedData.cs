@@ -133,6 +133,24 @@ Blah blah blah
                 Status = StrategyStatus.Active,
                 SourceCode = null,
                 CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"), // system user
+            },
+            new Strategy
+            {
+                Id = new Guid("ff567412-30a5-444c-9ff8-437eda8a73a7"),
+                Name = "Stock Medium AI",
+                GameId = 1,
+                Status = StrategyStatus.Active,
+                SourceCode = null,
+                CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"), // system user
+            },
+            new Strategy
+            {
+                Id = new Guid("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"),
+                Name = "Stock Hard AI",
+                GameId = 1,
+                Status = StrategyStatus.Active,
+                SourceCode = null,
+                CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"), // system user
             }
         );
 
