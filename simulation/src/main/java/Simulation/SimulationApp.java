@@ -564,6 +564,13 @@ public class SimulationApp {
             BattleGame currentBattleGame = battle.addBattleGame();
             gameState = new GameState();
 
+            Color gameWinner = playGame(battle, currentBattleGame);
+            boolean attackerIsWhite = battle.getAttackerColor().equals(Color.WHITE);
+            int aPi = attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+            int dPi = !attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+            int aPa = attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+            int dPa = !attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+
             // writes JSON obj
             ObjectMapper mapper = new ObjectMapper();
             mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
@@ -574,13 +581,6 @@ public class SimulationApp {
                 e.printStackTrace();
                 System.out.println("JSON writing of JSON board failed");
             }
-
-            Color gameWinner = playGame(battle, currentBattleGame);
-            boolean attackerIsWhite = battle.getAttackerColor().equals(Color.WHITE);
-            int aPi = attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
-            int dPi = !attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
-            int aPa = attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
-            int dPa = !attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
 
             currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
             battle.processGameWinner(currentBattleGame, gameWinner);
@@ -1081,8 +1081,10 @@ public class SimulationApp {
         }
     }
 
-    // adds piece ids with unreliable ids (this means that the ids are there for the frontend)
-    // it does not add piece ids that match with what the id should actually be if the game was played fully
+    // adds piece ids with unreliable ids (this means that the ids are there for the
+    // frontend)
+    // it does not add piece ids that match with what the id should actually be if
+    // the game was played fully
     static String[][] addPieceIdsUnreliableIds(String[][] prevBoard) {
         String[][] newBoard = new String[prevBoard.length][prevBoard[0].length];
 
@@ -1100,7 +1102,6 @@ public class SimulationApp {
                     idString = "0" + idString;
 
                 newBoard[c][r] = idString + prevBoard[c][r];
-
                 lastIdAdded++;
             }
         }

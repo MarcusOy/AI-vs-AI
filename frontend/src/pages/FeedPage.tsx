@@ -21,7 +21,7 @@ const FeedPage = () => {
                 <Spacer />
                 <Box>
                     <Text>Feed page</Text>
-                    <Link to='/Replay'> Replay Test </Link>
+                    <Link to='/ManualPlay'> Manual Play </Link>
                 </Box>
                 <Spacer />
             </Flex>
