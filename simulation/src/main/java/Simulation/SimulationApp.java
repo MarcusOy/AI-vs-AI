@@ -659,7 +659,7 @@ public class SimulationApp {
                 .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
             return new HardAI();
 
-        return new HardAI();
+        return new TrueRandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
