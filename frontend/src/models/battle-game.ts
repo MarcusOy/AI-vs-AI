@@ -13,5 +13,10 @@ export interface BattleGame extends BaseEntity {
     stackTrace: string;
     battleId: string;
     battle: Battle;
+    finalBoard: string;
+    attackerPiecesLeft: number;
+    attackerPawnsLeft: number;
+    defenderPiecesLeft: number;
+    defenderPawnsLeft: number;
     turns: Turn[];
 }

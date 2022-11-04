@@ -9,6 +9,12 @@ public class BattleGame {
 
     public String battleId;
 
+    public String finalBoard;
+    public int attackerPiecesLeft;
+    public int attackerPawnsLeft;
+    public int defenderPiecesLeft;
+    public int defenderPawnsLeft;
+
     public ArrayList<Turn> turns;
 
     private Color AttackerColor;
@@ -24,8 +30,13 @@ public class BattleGame {
         turns.add(new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
     }
 
-    public void setWinner(Color winnerColor) {
+    public void setWinner(Color winnerColor, String finalBoard, int aPieces, int aPawns, int dPieces, int dPawns) {
         didAttackerWin = winnerColor.equals(AttackerColor);
+        this.finalBoard = finalBoard;
+        attackerPiecesLeft = aPieces;
+        attackerPawnsLeft = aPawns;
+        defenderPiecesLeft = dPieces;
+        defenderPawnsLeft = dPawns;
     }
 
     public int getGameNumber() { return gameNumber; }

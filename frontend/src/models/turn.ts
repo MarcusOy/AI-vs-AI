@@ -8,11 +8,11 @@ import { Battle } from './battle';
 import { BattleGame } from './battle-game';
 
 export interface Turn extends BaseEntity {
-    turnNumber: number;
-    isAttackTurn: boolean;
+    turnNumber?: number;
+    isAttackTurn?: boolean;
     turnData: string;
-    battleId: string;
-    battle: Battle;
-    battleGameNumber: number;
-    battleGame: BattleGame;
+    battleId?: string;
+    battle?: Battle;
+    battleGameNumber?: number;
+    battleGame?: BattleGame;
 }

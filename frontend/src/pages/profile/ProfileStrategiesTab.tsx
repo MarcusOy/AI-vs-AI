@@ -1,25 +1,10 @@
 import React from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { AVAStore } from '../../data/DataStore'
-import IdentityService from '../../data/IdentityService'
-import useAVAFetch from '../../helpers/useAVAFetch'
+import { useNavigate } from 'react-router-dom'
 
-import {
-    Center,
-    Box,
-    Text,
-    Menu,
-    MenuButton,
-    MenuList,
-    MenuItem,
-    Button,
-    Stack,
-    MenuDivider,
-    Avatar,
-} from '@chakra-ui/react'
+import { Center, Box, Text, Button, Stack, Avatar } from '@chakra-ui/react'
 import { User } from '../../models/user'
-import { ChevronDownIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
-import { TbBook2, TbSwords } from 'react-icons/tb'
+import { ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
+import { TbBook2 } from 'react-icons/tb'
 import { randomColor } from '@chakra-ui/theme-tools'
 
 interface IProfileStrategiesTabProps {
@@ -38,9 +23,6 @@ const ProfileStrategiesTab = (p: IProfileStrategiesTabProps) => {
                     <WarningIcon w={50} h={50} />
                     <Text fontSize='5xl'>No strategies</Text>
                     <Text fontSize='lg'>This user does not have any strategies.</Text>
-                    {/* <Text color='teal.500'>
-                        <RouterLink to='/'>Go back to the home page.</RouterLink>
-                    </Text> */}
                 </Stack>
             </Center>
         )

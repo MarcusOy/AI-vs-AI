@@ -29,7 +29,7 @@ public class SimTestProducer {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
 
-            channel.queueDeclare(SimulationApp.QUEUE_NAME, false, false, false, null);
+            channel.queueDeclare(SimulationApp.REQ_QUEUE_NAME, false, false, false, null);
 
             IStrategy attackingStrategy = new RandomAI();
             IStrategy defendingStrategy = new EasyAI();
@@ -50,7 +50,7 @@ public class SimTestProducer {
 
             String delimiter = SimulationApp.MESSAGE_DELIMITER;
             String message = UUID.randomUUID() + delimiter + attackingStrategySource + delimiter + UUID.randomUUID() + delimiter + defendingStrategySource + delimiter + numGames;
-            channel.basicPublish("", SimulationApp.QUEUE_NAME, null, message.getBytes());
+            channel.basicPublish("", SimulationApp.REQ_QUEUE_NAME, null, message.getBytes());
             System.out.println(" [x] Sent '" + message + "'");
         } catch (Exception e) {
             e.printStackTrace();
