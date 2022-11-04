@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Code, IconButton, Modal, Center, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure } from '@chakra-ui/react';
+import { Button, Box, Code, IconButton, Modal, Center, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import ModalAi from './ModalAi';
 import Copy from '../helpers/Copy';
@@ -7,6 +7,7 @@ import { Strategy } from '../models/strategy';
 interface CodeModalProps {
     strategy: Strategy
     color?: string
+    stock?: boolean
 }
 const CodeModal = (props: CodeModalProps) => {
     const { isOpen, onOpen, onClose } = useDisclosure()
@@ -20,20 +21,24 @@ const CodeModal = (props: CodeModalProps) => {
                     <ModalCloseButton />
                     
                     <ModalBody>
-                        <Center>
+                        <Box overflowX='scroll'>
                             <Code colorScheme={'gray'}>
                                 <pre>
                                     {props.strategy.sourceCode}
                                 </pre>
                             </Code> 
-                        </Center>
+                        </Box>
                     </ModalBody>
             
                     <ModalFooter p='2'>
+                        {!props.stock &&
+                            <>
                         <ModalAi overwrite={true} strategy={props.strategy} />
                         <Center ml='4'>
                             <Copy sourceCode={props.strategy.sourceCode} />
                             </Center>
+                            </>
+                        }
                         <Center ml='4'>
                             <Button colorScheme='blue' mr={3} onClick={onClose}>
                                 Close

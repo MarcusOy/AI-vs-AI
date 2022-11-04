@@ -414,6 +414,7 @@ function Programming() {
                         <CodeModal
                             strategy={{ name: 'Easy Stock Code', gameId: 1, sourceCode: easyAi }}
                             color={select ? 'white' : 'green'}
+                            stock={true}
                         />
                     </ButtonGroup>
                     <ButtonGroup
@@ -426,7 +427,7 @@ function Programming() {
                         <Button color={medium ? 'white' : 'orange'} onClick={() => toggleStock(2)}>
                             Medium Stock
                         </Button>
-                        <CodeModal strategy={mediumAi} color={medium ? 'white' : 'orange'} />
+                        <CodeModal strategy={mediumAi} color={medium ? 'white' : 'orange'} stock={true} />
                     </ButtonGroup>
                     <ButtonGroup
                         variant='outline'
@@ -438,7 +439,7 @@ function Programming() {
                         <Button color={hard ? 'white' : 'red'} onClick={() => toggleStock(3)}>
                             Hard Stock
                         </Button>
-                        <CodeModal strategy={hardAi} color={hard ? 'white' : 'red'} />
+                        <CodeModal strategy={hardAi} color={hard ? 'white' : 'red'} stock={true}/>
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
