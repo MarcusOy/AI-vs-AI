@@ -99,6 +99,8 @@ builder.Services.AddScoped<IStrategiesService, StrategiesService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
 builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
+builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
 
 var app = builder.Build();
 #endregion

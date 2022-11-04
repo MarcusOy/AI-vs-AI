@@ -26,46 +26,6 @@ public class AiController : Controller
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
-    // TODO Have frontend send stock to test with in uri
-    [HttpPost, Route("/Strategy/TestPublish/{stock}")]
-    public async Task<ActionResult> TestPublish([FromBody] Strategy s, String stock)
-    {
-        var attackGuid = s.Id;
-        var defendGuid = Guid.NewGuid();
-
-        var request = new SimulationRequest
-        {
-            PendingBattle = new Battle
-            {
-                Id = Guid.NewGuid(),
-                Name = "Test Publish",
-                BattleStatus = BattleStatus.Pending,
-                Iterations = 9,
-                AttackingStrategyId = attackGuid,
-                AttackingStrategy = new Strategy
-                {
-                    Id = attackGuid,
-                    Name = s.Name,
-                    Status = StrategyStatus.Active,
-                    SourceCode = s.SourceCode
-                },
-                DefendingStrategyId = defendGuid,
-                DefendingStrategy = new Strategy
-                {
-                    Id = defendGuid,
-                    Name = "Stock Defender",
-                    Status = StrategyStatus.Active,
-                    SourceCode = "function getMove() { return 'A8, A7' }"
-                }
-            }
-        };
-
-        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
-        await endpoint.Send(request);
-
-        return Ok("Simulation request sent.");
-    }
-
     [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {

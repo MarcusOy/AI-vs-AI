@@ -1,5 +1,5 @@
 import React from 'react'
-import { Center, Box, Text, Flex, Spacer } from '@chakra-ui/react'
+import { Center, Box, Text, Flex, Spacer, Heading, Button } from '@chakra-ui/react'
 import ModalAi from './ModalAi'
 import { Link } from 'react-router-dom'
 const FeedPage = () => {
@@ -15,9 +15,11 @@ const FeedPage = () => {
                             Login/Create a free account
                         </Button>
                     </Link>
-                </Center> */}
+    </Center> */}
             <Flex>
-                <Box>{/* <ModalAi /> */}</Box>
+                <Box>
+                    <ModalAi overwrite={false} />
+                </Box>
                 <Spacer />
                 <Box>
                     <Text>Feed page</Text>
