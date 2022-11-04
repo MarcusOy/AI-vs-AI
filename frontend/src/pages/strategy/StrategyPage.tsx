@@ -41,11 +41,13 @@ import { GoGlobe, GoLock } from 'react-icons/go'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
 import DuplicateModal from '../../components/modals/DuplicateModal'
+import DeleteModal from '../../components/modals/DeleteModal'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
     const { isOpen, onOpen, onClose } = useDisclosure()
+    const deleteModal = useDisclosure()
     const { id, tab } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
@@ -168,7 +170,7 @@ const StrategyPage = () => {
                         <MenuList>
                             <MenuItem>Attack</MenuItem>
                             <MenuItem>Manually Attack</MenuItem>
-                            <MenuItem onClick={onOpen}>Duplicate</MenuItem>
+                            {(isSelf || !strategy.isPrivate) && <><MenuItem onClick={onOpen}>Duplicate</MenuItem>
                             <MenuItem onClick={() => {
                                 sessionStorage.setItem('clipboard', strategy.sourceCode);
                                 toast({
@@ -178,12 +180,18 @@ const StrategyPage = () => {
                                     duration: 5000,
                                     isClosable: true,
                                 })
-                            }}>Copy</MenuItem>
+                            }}>Copy</MenuItem></>}
                             {/* <MenuItem>Mark as Draft</MenuItem> */}
                             {isSelf && (
+                                <>
                                 <MenuItem onClick={onSubmit}>
                                     {strategy.isPrivate ? 'Set Public' : 'Set Private'}
                                 </MenuItem>
+                                    <MenuItem onClick={deleteModal.onOpen} color='red'>
+                                        Delete Strategy
+                                    </MenuItem>
+                                    <DeleteModal isOpen={deleteModal.isOpen} strategy={strategy} onOpen={deleteModal.onOpen} onClose={deleteModal.onClose.bind(this)}/>
+                                </>
                             )}
                         </MenuList>
                     </Menu>
