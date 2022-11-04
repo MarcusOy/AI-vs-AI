@@ -47,7 +47,7 @@ const StrategyPage = () => {
     const strategy: Strategy = data
     const toast = useToast()
 
-    // const isSelf = strategy.createdByUserId == whoAmI?.id
+    // const isSelf = id == strategy.createdByUserId
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
@@ -142,6 +142,7 @@ const StrategyPage = () => {
                             </MenuItem>
                         </MenuList>
                     </Menu>
+                    
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>
