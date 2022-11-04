@@ -170,32 +170,55 @@ const StrategyPage = () => {
                         <MenuList>
                             <MenuItem>Attack</MenuItem>
                             <MenuItem>Manually Attack</MenuItem>
-                            {(isSelf || !strategy.isPrivate) && <><MenuItem onClick={onOpen}>Duplicate</MenuItem>
-                            <MenuItem onClick={() => {
-                                sessionStorage.setItem('clipboard', strategy.sourceCode);
-                                toast({
-                                    title: 'Code copied successfully.',
-                                    description: 'You just copied this strategy\'s source code to clipboard',
-                                    status: 'success',
-                                    duration: 5000,
-                                    isClosable: true,
-                                })
-                            }}>Copy</MenuItem></>}
-                            {/* <MenuItem>Mark as Draft</MenuItem> */}
+                            {isSelf && (
+                                <MenuItem onClick={() => navigate(`/Programming/${strategy.id}`)}>
+                                    Edit
+                                </MenuItem>
+                            )}
+                            {(isSelf || !strategy.isPrivate) && (
+                                <>
+                                    <MenuItem onClick={onOpen}>Duplicate</MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            sessionStorage.setItem('clipboard', strategy.sourceCode)
+                                            toast({
+                                                title: 'Code copied successfully.',
+                                                description:
+                                                    'Strategy source code copied to clipboard',
+                                                status: 'success',
+                                                duration: 5000,
+                                                isClosable: true,
+                                            })
+                                        }}
+                                    >
+                                        Copy to clipboard
+                                    </MenuItem>
+                                </>
+                            )}
                             {isSelf && (
                                 <>
-                                <MenuItem onClick={onSubmit}>
-                                    {strategy.isPrivate ? 'Set Public' : 'Set Private'}
-                                </MenuItem>
+                                    <MenuItem onClick={onSubmit}>
+                                        {strategy.isPrivate ? 'Set Public' : 'Set Private'}
+                                    </MenuItem>
                                     <MenuItem onClick={deleteModal.onOpen} color='red'>
                                         Delete Strategy
                                     </MenuItem>
-                                    <DeleteModal isOpen={deleteModal.isOpen} strategy={strategy} onOpen={deleteModal.onOpen} onClose={deleteModal.onClose.bind(this)}/>
+                                    <DeleteModal
+                                        isOpen={deleteModal.isOpen}
+                                        strategy={strategy}
+                                        onOpen={deleteModal.onOpen}
+                                        onClose={deleteModal.onClose.bind(this)}
+                                    />
                                 </>
                             )}
                         </MenuList>
                     </Menu>
-                    <DuplicateModal isOpen={isOpen} strategy={strategy} onOpen={onOpen.bind(this)} onClose={onClose.bind(this)} />
+                    <DuplicateModal
+                        isOpen={isOpen}
+                        strategy={strategy}
+                        onOpen={onOpen.bind(this)}
+                        onClose={onClose.bind(this)}
+                    />
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>

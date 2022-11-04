@@ -52,8 +52,8 @@ namespace AVA.API.Services
                 throw new InvalidOperationException($"Strategy id [{id}] not valid.");
 
             // prevent others from seeing source code of private strategies
-            // if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
-            //     s.SourceCode = null;
+            if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
+                s.SourceCode = null;
 
             return s;
         }
