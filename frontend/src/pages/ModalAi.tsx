@@ -60,7 +60,12 @@ const ModalAi = (props: ModalAiProps) => {
         name: 'framework',
         onChange: setSelected,
       })
-      const group = getRootProps()
+    const group = getRootProps()
+    useEffect(() => {
+        if (!props.overwrite) {
+            IdentityService.refreshIdentity()
+        }
+    }, [])
     useEffect(() => {
         let count = 0;
         const game = {id: 1 }
@@ -138,6 +143,7 @@ const ModalAi = (props: ModalAiProps) => {
                             <RadioCard key={value} {...radio}>
                                 {n.name}
                                 </RadioCard>
+                                <Center>
                                 <Box
                                     color='gray.500'
                                     fontWeight='semibold'
@@ -148,7 +154,8 @@ const ModalAi = (props: ModalAiProps) => {
                                     mt='2'
                                 >
                                    0 wins &bull; 0 losses
-                                </Box>
+                                    </Box>
+                                    </Center>
                             </Box>
                         )
                     }

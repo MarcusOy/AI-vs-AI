@@ -8,10 +8,14 @@ namespace AVA.API.Services
     {
         // List<Strategy> GetAll();
         Strategy Get(Guid id);
-        string GetStockStategyCode(string strategyName);
+        Strategy GetStockStrategy(int stockToChoose);
         Task<Strategy> CreateAsync(Strategy strategy);
         Task<Strategy> UpdateAsync(Strategy strategy);
+        Task<Strategy> SubmitAsync(Strategy strategy);
         Task<Strategy> DeleteAsync(Guid id);
+
+        String getStockName(int StockCodeInt);
+        Guid getStockGuid(int StockCodeInt);
     }
 
     public class StrategiesService : IStrategiesService
@@ -48,22 +52,34 @@ namespace AVA.API.Services
                 throw new InvalidOperationException($"Strategy id [{id}] not valid.");
 
             // prevent others from seeing source code of private strategies
-            if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
-                s.SourceCode = null;
+            // if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
+            //     s.SourceCode = null;
 
             return s;
         }
 
         // assumes that we are reserving certain names as prototype names
-        public string GetStockStategyCode(string strategyName)
+        // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
+        public Strategy GetStockStrategy(int stocktoChoose)
         {
+            // make sure stockToChoose is within bounds
+            if (stocktoChoose < -3 || stocktoChoose > -1)
+            {
+                throw new InvalidOperationException($"Stock Strategy [{stocktoChoose}] invalid.  Must be between [-1] and [-3]. ");
+            }
+
+            Guid strategyGUID = getStockGuid(stocktoChoose);
+            string strategyName = getStockName(stocktoChoose);
+
             Strategy s = _dbContext.Strategies
-               .FirstOrDefault(s => s.Name == strategyName);
+               .FirstOrDefault(s => s.Id == strategyGUID);
 
             if (s is null)
-                throw new InvalidOperationException($"Stock Strategy name [{strategyName}] not valid.");
+            {
+                throw new InvalidOperationException($"Stock Strategy [{strategyName}] not found in database.");
+            }
 
-            return s.SourceCode;
+            return s;
         }
 
         public async Task<Strategy> CreateAsync(Strategy strategy)
@@ -101,7 +117,8 @@ namespace AVA.API.Services
             // trust these fields
             originalStrategy.Name = strategy.Name;
             originalStrategy.SourceCode = strategy.SourceCode;
-            originalStrategy.IsPrivate = strategy.IsPrivate;
+            originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
+            // originalStrategy.IsPrivate = strategy.IsPrivate;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
@@ -109,22 +126,23 @@ namespace AVA.API.Services
 
             return originalStrategy;
         }
+        public async Task<Strategy> SubmitAsync(Strategy strategy)
+        {
+            var originalStrategy = await _dbContext.Strategies
+                .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+                .FirstOrDefaultAsync(s => s.Id == strategy.Id);
 
-        // public async Task<Strategy> SubmitAsync(Strategy strategy)
-        // {
-        //     var originalStrategy = await _dbContext.Strategies
-        //         .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
-        //         .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+            // trust these fields
+            originalStrategy.Name = strategy.Name;
+            originalStrategy.SourceCode = strategy.SourceCode;
+            originalStrategy.Status = AVA.API.Models.StrategyStatus.Active;
 
-        //     // trust these fields
-        //     originalStrategy.Status = Active;
+            _dbContext.Strategies.Update(originalStrategy);
+            _dbContext.Update(originalStrategy);
+            await _dbContext.SaveChangesAsync();
 
-        //     _dbContext.Strategies.Update(originalStrategy);
-        //     _dbContext.Update(originalStrategy);
-        //     await _dbContext.SaveChangesAsync();
-
-        //     return originalStrategy;
-        // }
+            return originalStrategy;
+        }
 
         public async Task<Strategy> DeleteAsync(Guid id)
         {
@@ -134,6 +152,37 @@ namespace AVA.API.Services
             await _dbContext.SaveChangesAsync();
 
             return g;
+        }
+
+        // converts an integer StockCodeInt to the corresponding name of the stock AI
+        public string getStockName(int stockCodeInt)
+        {
+            if (stockCodeInt == -1)
+                return "Easy AI";
+            else if (stockCodeInt == -2)
+                return "Medium AI";
+            else if (stockCodeInt == -3)
+                return "Hard AI";
+            else
+                return "INVALID STOCK";
+        }
+
+        // converts an integer StockCodeInt to the corresponding Guid of the stock AI in the database
+        public Guid getStockGuid(int stockCodeInt)
+        {
+            // TODO hardcode GUIDS of stockAI
+            Guid EASY_AI_GUID = Guid.Empty;
+            Guid MED_AI_GUID = Guid.Empty;
+            Guid HARD_AI_GUID = Guid.Empty;
+
+            if (stockCodeInt == -1)
+                return EASY_AI_GUID;
+            else if (stockCodeInt == -2)
+                return MED_AI_GUID;
+            else if (stockCodeInt == -3)
+                return HARD_AI_GUID;
+            else
+                return Guid.Empty;
         }
     }
 }

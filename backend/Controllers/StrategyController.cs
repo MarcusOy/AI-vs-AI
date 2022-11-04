@@ -20,7 +20,7 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy"), Authorize]
     public async Task<Strategy> Create([FromBody] Strategy s)
     {
-        s.IsPrivate = true;
+        // s.IsPrivate = true;
         await _strategyService.CreateAsync(s);
 
         return s;
@@ -43,10 +43,18 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
-        return await _strategyService.UpdateAsync(s); ;
+        return await _strategyService.SubmitAsync(s);
     }
 
     [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
     public async Task<Strategy> Delete(String id)
         => await _strategyService.DeleteAsync(new Guid(id));
+
+
+    // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
+    [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
+    public async Task<Strategy> GetStockStrategy(String stockToChoose)
+    {
+        return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
+    }
 }

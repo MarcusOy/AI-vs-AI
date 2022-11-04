@@ -1791,3 +1791,189 @@ function getMove() {
 
   return getRandomMove();
 }`
+export const hardAi = { id: '-3', name: 'Hard Ai', gameId: 1, sourceCode: ` HardAI.prototype.tryThisMove$java_lang_String_A_A$java_lang_String = function (original, moveString) {
+    var board = (function (dims) { var allocate = function (dims) { if (dims.length === 0) {
+        return null;
+    }
+    else {
+        var array = [];
+        for (var i = 0; i < dims[0]; i++) {
+            array.push(allocate(dims.slice(1)));
+        }
+        return array;
+    } }; return allocate(dims); })([this.api.BOARD_LENGTH, this.api.BOARD_LENGTH]);
+    for (var i = 0; i < this.api.BOARD_LENGTH; i++) {
+        {
+            for (var j = 0; j < this.api.BOARD_LENGTH; j++) {
+                {
+                    board[i][j] = original[i][j];
+                }
+                ;
+            }
+        }
+        ;
+    }
+    var moveCells = moveString.split(", ");
+    var fromCell = moveCells[0];
+    var toCell = moveCells[1];
+    var fromMoveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(fromCell, board);
+    var toMoveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(toCell, board);
+    var fromCol = this.api.cellToCol(fromCell);
+    var fromRow = this.api.cellToRow(fromCell);
+    var toCol = this.api.cellToCol(toCell);
+    var toRow = this.api.cellToRow(toCell);
+    var fromPiece = board[fromCol][fromRow];
+    var toPiece = board[toCol][toRow];
+    if (fromMoveDistance > toMoveDistance) {
+        board[toCol][toRow] = board[fromCol][fromRow];
+    }
+    else if (fromMoveDistance === toMoveDistance) {
+        board[toCol][toRow] = "";
+    }
+    else {
+    }
+    board[fromCol][fromRow] = "";
+    return board;
+};
+HardAI.prototype.evaluatePosition = function (board, playerToMove) {
+    var evaluation = 5 - 10 * playerToMove;
+    var numWhite1s = 0;
+    var numWhiteLF2s = 0;
+    var numWhiteRF2s = 0;
+    var numWhiteB2s = 0;
+    var numWhite3s = 0;
+    var pieceLocations = this.api.getMyPieceLocations(this.api.WHITE, board);
+    for (var index7586 = 0; index7586 < pieceLocations.length; index7586++) {
+        var piece = pieceLocations[index7586];
+        {
+            if (piece === (""))
+                break;
+            var moveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(piece, board);
+            if (moveDistance === 1) {
+                evaluation += this.positionalValueOfWhite1s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                numWhite1s++;
+            }
+            else if (moveDistance === 2) {
+                evaluation += this.positionalValueOfWhite2s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                if (this.api.cellToRow(piece) % 2 !== this.api.WHITE) {
+                    numWhiteB2s++;
+                }
+                else if (this.api.cellToCol(piece) % 2 === this.api.WHITE) {
+                    numWhiteLF2s++;
+                }
+                else {
+                    numWhiteRF2s++;
+                }
+            }
+            else if (moveDistance === 3) {
+                evaluation += this.positionalValueOfWhite3s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                numWhite3s++;
+            }
+            else {
+                evaluation += this.positionalValueOfWhite4s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+            }
+        }
+    }
+    evaluation += this.pieceValueOfWhite1s[numWhite1s];
+    evaluation += this.pieceValueOfWhiteB2s[numWhiteB2s];
+    evaluation += this.pieceValueOfWhiteLF2s[numWhiteLF2s];
+    evaluation += this.pieceValueOfWhiteRF2s[numWhiteRF2s];
+    evaluation += this.pieceValueOfWhite3s[numWhite3s];
+    if (numWhiteB2s >= 2 && numWhiteLF2s >= 1 && numWhiteRF2s >= 1) {
+        evaluation += this.allFourWhite2sBonus;
+    }
+    var numBlack1s = 0;
+    var numBlackLF2s = 0;
+    var numBlackRF2s = 0;
+    var numBlackB2s = 0;
+    var numBlack3s = 0;
+    pieceLocations = this.api.getMyPieceLocations(this.api.BLACK, board);
+    for (var index7587 = 0; index7587 < pieceLocations.length; index7587++) {
+        var piece = pieceLocations[index7587];
+        {
+            if (piece === (""))
+                break;
+            var moveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(piece, board);
+            if (moveDistance === 1) {
+                evaluation += this.positionalValueOfBlack1s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                numBlack1s++;
+            }
+            else if (moveDistance === 2) {
+                evaluation += this.positionalValueOfBlack2s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                if (this.api.cellToRow(piece) % 2 !== this.api.BLACK) {
+                    numBlackB2s++;
+                }
+                else if (this.api.cellToCol(piece) % 2 === this.api.BLACK) {
+                    numBlackLF2s++;
+                }
+                else {
+                    numBlackRF2s++;
+                }
+            }
+            else if (moveDistance === 3) {
+                evaluation += this.positionalValueOfBlack3s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+                numBlack3s++;
+            }
+            else {
+                evaluation += this.positionalValueOfBlack4s[this.api.cellToRow(piece)][this.api.cellToCol(piece)];
+            }
+        }
+    }
+    evaluation += this.pieceValueOfBlack1s[numBlack1s];
+    evaluation += this.pieceValueOfBlackB2s[numBlackB2s];
+    evaluation += this.pieceValueOfBlackLF2s[numBlackLF2s];
+    evaluation += this.pieceValueOfBlackRF2s[numBlackRF2s];
+    evaluation += this.pieceValueOfBlack3s[numBlack3s];
+    if (numBlackB2s >= 2 && numBlackLF2s >= 1 && numBlackRF2s >= 1) {
+        evaluation += this.allFourBlack2sBonus;
+    }
+    return evaluation;
+};
+return HardAI;
+}());`}
+export const mediumAi = { id: '-2', name: 'Medium Ai', gameId: 1, sourceCode: `  MediumAI.prototype.tryThisMove = function (gameState, moveString) {
+    var original = this.api.getBoard(gameState);
+    var board = (function (dims) { var allocate = function (dims) { if (dims.length === 0) {
+        return null;
+    }
+    else {
+        var array = [];
+        for (var i = 0; i < dims[0]; i++) {
+            array.push(allocate(dims.slice(1)));
+        }
+        return array;
+    } }; return allocate(dims); })([this.api.BOARD_LENGTH, this.api.BOARD_LENGTH]);
+    for (var i = 0; i < this.api.BOARD_LENGTH; i++) {
+        {
+            for (var j = 0; j < this.api.BOARD_LENGTH; j++) {
+                {
+                    board[i][j] = original[i][j];
+                }
+                ;
+            }
+        }
+        ;
+    }
+    var moveCells = moveString.split(", ");
+    var fromCell = moveCells[0];
+    var toCell = moveCells[1];
+    var fromMoveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(fromCell, board);
+    var toMoveDistance = this.api.getPieceMoveDistance$java_lang_String$java_lang_String_A_A(toCell, board);
+    var fromCol = this.api.cellToCol(fromCell);
+    var fromRow = this.api.cellToRow(fromCell);
+    var toCol = this.api.cellToCol(toCell);
+    var toRow = this.api.cellToRow(toCell);
+    var fromPiece = board[fromCol][fromRow];
+    var toPiece = board[toCol][toRow];
+    if (fromMoveDistance > toMoveDistance) {
+        board[toCol][toRow] = board[fromCol][fromRow];
+    }
+    else if (fromMoveDistance === toMoveDistance) {
+        board[toCol][toRow] = "";
+    }
+    else {
+        return null;
+    }
+    board[fromCol][fromRow] = "";
+    return board;
+};` }

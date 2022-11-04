@@ -126,7 +126,7 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseEndpoints(endpoints => endpoints.MapControllers());
 
-app.MapHub<SimulationStepHub>("AI/Step");
+app.MapHub<SimulationHub>("AI");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())

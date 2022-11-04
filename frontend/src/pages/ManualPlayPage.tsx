@@ -43,7 +43,7 @@ const ReplayPage = () => {
     useEffect(() => {
         const signalRConnection = new HubConnectionBuilder()
             // @ts-ignore
-            .withUrl(process.env.REACT_APP_API_ENDPOINT + 'AI/Step')
+            .withUrl(process.env.REACT_APP_API_ENDPOINT + 'AI')
             .withAutomaticReconnect()
             .build()
         connectionRef.current = signalRConnection

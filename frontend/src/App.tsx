@@ -16,6 +16,7 @@ import BattlePage from './pages/BattlePage'
 import BattleGamePage from './pages/BattleGamePage'
 import StrategyPage from './pages/strategy/StrategyPage'
 import Programming from './pages/Programming'
+import InvalidStrategyPage from './pages/InvalidStrategyPage'
 import ModalProvider from './components/modals/ModalProvider'
 import ReplayPage from './pages/ReplayPage'
 import ManualPlayPage from './pages/ManualPlayPage'
@@ -77,6 +78,7 @@ function App() {
                             <Route path='/Battle/:id' element={<BattlePage />} />
                             <Route path='/BattleGame/:id' element={<BattleGamePage />} />
                             <Route path='/Programming/:id' element={<Programming />} />
+                            <Route path='/Programming/' element={<InvalidStrategyPage />} />
                             <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
                             {/* 👇️ only match this when no other routes match */}

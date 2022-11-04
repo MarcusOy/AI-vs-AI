@@ -3,6 +3,7 @@ using System;
 using AVA.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AVA.Migrations
 {
     [DbContext(typeof(AVADbContext))]
-    partial class AVADbContextModelSnapshot : ModelSnapshot
+    [Migration("20221104015403_MediumAndHardAIs")]
+    partial class MediumAndHardAIs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,29 +129,14 @@ namespace AVA.Migrations
                     b.Property<int>("GameNumber")
                         .HasColumnType("int");
 
-                    b.Property<int>("AttackerPawnsLeft")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttackerPiecesLeft")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("DefenderPawnsLeft")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DefenderPiecesLeft")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("DidAttackerWin")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("FinalBoard")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("StackTrace")
                         .HasColumnType("longtext");
@@ -286,9 +273,6 @@ namespace AVA.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsPrivate")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -321,7 +305,6 @@ namespace AVA.Migrations
                             CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             GameId = 1,
-                            IsPrivate = false,
                             Name = "Stock Easy AI",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
