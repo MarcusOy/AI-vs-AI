@@ -640,12 +640,12 @@ public class SimulationApp {
 
     // gets a Java StockAI from a UUID
     static IStrategy getStockAI(UUID sentId) {
-        if (mostlyCurrentBattle.defendingStrategy.id == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
+        if (sentId == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
             return new EasyAI();
-        else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+        else if (sentId == UUID
                 .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
             return new MediumAI();
-        else if (mostlyCurrentBattle.defendingStrategy.id == UUID
+        else if (sentId == UUID
                 .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
             return new HardAI();
 
