@@ -5,6 +5,7 @@ import java.util.ArrayList;
 // One specific game within the battle.
 public class BattleGame {
     public int gameNumber;
+    public boolean isAttackerWhite;
     public boolean didAttackerWin;
 
     public String battleId;
@@ -23,11 +24,13 @@ public class BattleGame {
         this.gameNumber = gameNumber;
         this.battleId = battleId;
         this.AttackerColor = attackerColor;
+        this.isAttackerWhite = this.AttackerColor.equals(Color.WHITE);
         turns = new ArrayList<>();
     }
 
     public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
-        turns.add(new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
+        turns.add(
+                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
     }
 
     public void setWinner(Color winnerColor, String finalBoard, int aPieces, int aPawns, int dPieces, int dPawns) {
@@ -39,11 +42,17 @@ public class BattleGame {
         defenderPawnsLeft = dPawns;
     }
 
-    public int getGameNumber() { return gameNumber; }
+    public int getGameNumber() {
+        return gameNumber;
+    }
 
-    public Color getAttackerColor() { return AttackerColor; }
+    public Color getAttackerColor() {
+        return AttackerColor;
+    }
 
-    public Color getDefenderColor() { return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE; }
+    public Color getDefenderColor() {
+        return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+    }
 
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();
@@ -61,7 +70,7 @@ public class BattleGame {
                 ", gameNumber=" + gameNumber +
                 ", didAttackerWin=" + didAttackerWin +
                 ", attackerColor=" + AttackerColor +
-                ", turns=" +  getTurnsString() /*turns*/ +
+                ", turns=" + getTurnsString() /* turns */ +
                 '}';
     }
 }

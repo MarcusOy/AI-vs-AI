@@ -17,6 +17,7 @@ import {
     ModalHeader,
     ModalOverlay,
     useDisclosure,
+    Select,
 } from '@chakra-ui/react'
 import { initialState } from '../data/ChessBoard'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
@@ -32,6 +33,7 @@ export const BOARD_SIZES = {
 const ReplayPage = () => {
     const connectionRef = useRef<HubConnection | null>(null)
     const [board, setBoard] = useState(initialState)
+    const selectedAi = useRef<string>('00000000-0000-0000-0000-000000000000')
     const boardRef = useRef<string[][]>(initialState)
     const [isWaiting, setIsWaiting] = useState(false)
     const [winner, setWinner] = useState<'Player' | 'AI' | null>(null)
@@ -88,6 +90,7 @@ const ReplayPage = () => {
                     sentBoard: newBoard,
                     isWhiteAi: !isPlayerWhite,
                     clientid: connectionRef.current.connectionId,
+                    chosenStockId: selectedAi.current,
                 })
             } catch (e) {
                 console.log('Could not send StepRequest', e)
@@ -111,6 +114,8 @@ const ReplayPage = () => {
 
     const size = BOARD_SIZES.INTERACTIVE
 
+    console.log({ selectedAi })
+
     return (
         <>
             <Stack alignItems='center'>
@@ -128,9 +133,17 @@ const ReplayPage = () => {
                     <Box flexGrow={1} />
                     {isWaiting && <Spinner />}
                     {isWaiting && <ArrowForwardIcon w={8} h={8} />}
-                    <Heading fontSize='xl' textAlign='right'>
-                        Stock AI
-                    </Heading>
+                    <Select
+                        fontSize='xl'
+                        fontWeight='bold'
+                        w='10rem'
+                        onChange={(a) => {
+                            selectedAi.current = a.target.value
+                        }}
+                    >
+                        <option value='00000000-0000-0000-0000-000000000000'>Random AI</option>
+                        <option value='ecce68c3-9ce0-466c-a7b5-5bf7affd5189'>Hard AI</option>
+                    </Select>
                     <Box
                         bg={GAME_COLORS.BLACK_PIECE.FILL}
                         borderColor={GAME_COLORS.BLACK_PIECE.STROKE}

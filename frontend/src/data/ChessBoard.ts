@@ -64,8 +64,10 @@ export const generatePieceListFromBoard = (
         if (curNewPiece.isDead) {
             curNewPiece.id = i
             curNewPiece.isWhite = prevPiece.isWhite
-            curNewPiece.col = prevPiece.col
-            curNewPiece.row = prevPiece.row
+            if (curNewPiece.col < 0) {
+                curNewPiece.col = prevPiece.col
+                curNewPiece.row = prevPiece.row
+            }
             curNewPiece.rank = prevPiece.rank
             curNewPiece.row = prevPiece.row
         }

@@ -12,7 +12,6 @@ import {
     Button,
     ButtonGroup,
     Center,
-    Image,
     Divider,
     Grid,
     GridItem,
@@ -24,7 +23,6 @@ import {
     TabPanels,
     Tabs,
     VStack,
-    IconButton,
     Tag,
     TagCloseButton,
     TagLabel,
@@ -37,10 +35,17 @@ import {
     ModalOverlay,
     useDisclosure,
 } from '@chakra-ui/react'
-import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import GameboardViewer from '../components/GameboardViewer'
+import { useNavigate, useParams } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import { devComplete, developerAi, easyAi, emptyStarter, hardAi, helperFunctions, mediumAi } from '../helpers/hardcodeAi'
+import {
+    devComplete,
+    easyAi,
+    emptyStarter,
+    hardAi,
+    helperFunctions,
+    mediumAi,
+} from '../helpers/hardcodeAi'
 import CodeModal from './CodeModal'
 import IdentityService from '../data/IdentityService'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
@@ -49,16 +54,17 @@ import { Strategy } from '../models/strategy'
 import { AVAStore } from '../data/DataStore'
 import { Battle } from '../models/battle'
 import { StrategyStatus } from '../models/strategy-status'
+import { initialState } from '../data/ChessBoard'
 function Programming() {
     const navigate = useNavigate()
     const [tabIndex, setTabIndex] = useState(0)
 
     const handleShowSubmission = () => {
-      setTabIndex(3)
+        setTabIndex(3)
     }
-  
+
     const handleTabsChange = (index) => {
-      setTabIndex(index)
+        setTabIndex(index)
     }
     const [connection, setConnection] = useState<HubConnection | null>(null)
     const { isOpen, onOpen, onClose } = useDisclosure()
@@ -133,12 +139,26 @@ function Programming() {
     }
     const toggleStock = (value) => {
         switch (value) {
-            case 1: setSelect(true); setMedium(false); setHard(false); break;
-            case 2: setSelect(false); setMedium(true); setHard(false); break;
-            case 3: setSelect(false); setMedium(false); setHard(true); break;
-            default: setSelect(false); setMedium(false); setHard(false);
+            case 1:
+                setSelect(true)
+                setMedium(false)
+                setHard(false)
+                break
+            case 2:
+                setSelect(false)
+                setMedium(true)
+                setHard(false)
+                break
+            case 3:
+                setSelect(false)
+                setMedium(false)
+                setHard(true)
+                break
+            default:
+                setSelect(false)
+                setMedium(false)
+                setHard(false)
         }
-            
     }
     const updateSave = (value) => {
         setCode(value === undefined ? '' : value)
@@ -161,13 +181,13 @@ function Programming() {
         IdentityService.refreshIdentity()
     }
     const runStrategy = async () => {
-        let chosen;
+        let chosen
         if (select) {
-            chosen = -1;
+            chosen = -1
         } else if (medium) {
-            chosen = -2;
+            chosen = -2
         } else {
-            chosen = -3;
+            chosen = -3
         }
         const data = {
             strategyToTest: {
@@ -263,7 +283,11 @@ function Programming() {
                         <TabPanels height='72vh'>
                             <TabPanel>
                                 {data !== undefined && strategy !== undefined && (
-                                    <Image src='/Finished_Board.png' alt='logo' />
+                                    <GameboardViewer
+                                        size={500}
+                                        type='Non-interactive'
+                                        board={initialState}
+                                    />
                                 )}
                             </TabPanel>
                             <TabPanel>
@@ -322,7 +346,15 @@ function Programming() {
                                             <AccordionItem key={key}>
                                                 <h2>
                                                     <AccordionButton>
-                                                        <Box flex='1' textAlign='left' color={value.attackerWins === 1 ? 'green' : 'red'}>
+                                                        <Box
+                                                            flex='1'
+                                                            textAlign='left'
+                                                            color={
+                                                                value.attackerWins === 1
+                                                                    ? 'green'
+                                                                    : 'red'
+                                                            }
+                                                        >
                                                             Submission #{submissions.length - key}
                                                         </Box>
                                                         <AccordionIcon />
@@ -330,16 +362,18 @@ function Programming() {
                                                 </h2>
                                                 <AccordionPanel pb={4}>
                                                     <VStack>
+                                                        <Box>{value.name}</Box>
                                                         <Box>
-                                                            {value.name}
+                                                            {value.attackerWins === 1
+                                                                ? 'You Win!'
+                                                                : 'Iterate and Improve, You Lost...'}
                                                         </Box>
                                                         <Box>
-                                                            {value.attackerWins === 1 ? 'You Win!' : 'Iterate and Improve, You Lost...'}
+                                                            Turns:{' '}
+                                                            {value.battleGames[0].turns.length}
                                                         </Box>
-                                                        <Box>
-                                                            Turns: {value.battleGames[0].turns.length}
-                                                        </Box>
-                                                    </VStack></AccordionPanel>
+                                                    </VStack>
+                                                </AccordionPanel>
                                             </AccordionItem>
                                         )
                                     })}
@@ -382,15 +416,29 @@ function Programming() {
                             color={select ? 'white' : 'green'}
                         />
                     </ButtonGroup>
-                    <ButtonGroup isAttached variant='outline' margin='4' color={medium ? 'white' : 'orange'} background={medium ? 'orange' : ''}>
-                        <Button color={medium ? 'white' : 'orange'} onClick={() => toggleStock(2)}>Medium Stock</Button>
+                    <ButtonGroup
+                        isAttached
+                        variant='outline'
+                        margin='4'
+                        color={medium ? 'white' : 'orange'}
+                        background={medium ? 'orange' : ''}
+                    >
+                        <Button color={medium ? 'white' : 'orange'} onClick={() => toggleStock(2)}>
+                            Medium Stock
+                        </Button>
                         <CodeModal strategy={mediumAi} color={medium ? 'white' : 'orange'} />
                     </ButtonGroup>
-                    <ButtonGroup variant='outline' margin='3' isAttached color={hard ? 'white' : 'red'} background={hard ? 'red' : ''}>
+                    <ButtonGroup
+                        variant='outline'
+                        margin='3'
+                        isAttached
+                        color={hard ? 'white' : 'red'}
+                        background={hard ? 'red' : ''}
+                    >
                         <Button color={hard ? 'white' : 'red'} onClick={() => toggleStock(3)}>
                             Hard Stock
                         </Button>
-                        <CodeModal strategy={ hardAi } color={hard ? 'white' : 'red'}/>
+                        <CodeModal strategy={hardAi} color={hard ? 'white' : 'red'} />
                     </ButtonGroup>
                 </GridItem>
                 <GridItem colStart={9}>
