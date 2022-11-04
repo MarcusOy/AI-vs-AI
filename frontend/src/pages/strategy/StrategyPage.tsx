@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Center,
@@ -8,7 +8,6 @@ import {
     Button,
     HStack,
     Stack,
-    ButtonGroup,
     Avatar,
     Tab,
     TabList,
@@ -26,18 +25,20 @@ import {
     MenuItem,
     MenuList,
     useToast,
+    Tooltip,
+    Badge,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
 import StrategySourceCodeTab from './StrategySourceCodeTab'
 import useAVAFetch from '../../helpers/useAVAFetch'
-import { ChevronDownIcon, WarningIcon, LockIcon, UnlockIcon, Icon } from '@chakra-ui/icons'
-import EditFullName from '../../components/profile/EditFullName'
+import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
 import { TbBook2 } from 'react-icons/tb'
+import { GoGlobe, GoLock } from 'react-icons/go'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
-import { SubmitErrorHandler, SubmitHandler } from 'react-hook-form'
+import { StrategyStatus } from '../../models/strategy-status'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -46,8 +47,6 @@ const StrategyPage = () => {
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
     const toast = useToast()
-
-    // const isSelf = id == strategy.createdByUserId
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
@@ -68,10 +67,12 @@ const StrategyPage = () => {
         }
         const response = await visibilityRequest.execute({ data: newStrategy })
         if (response.status == 200) {
-            execute()
+            await execute()
             toast({
-                title: 'Code visibility Statue changed Successful.',
-                description: 'You just changed visibility.',
+                title: 'Code visibility changed successfully.',
+                description: `You just changed this strategy's visibility to ${
+                    !strategy.isPrivate ? 'private' : 'public'
+                }.`,
                 status: 'success',
                 duration: 5000,
                 isClosable: true,
@@ -84,6 +85,9 @@ const StrategyPage = () => {
                 <Spinner />
             </Center>
         )
+
+    const isSelf = whoAmI?.id == strategy.createdByUserId
+
     if (error)
         return (
             <Center>
@@ -110,9 +114,9 @@ const StrategyPage = () => {
             <Box mx='100'>
                 <HStack>
                     <Avatar
-                        size='2xl'
+                        size='xl'
                         bg={randomColor({ string: strategy.name })}
-                        icon={<TbBook2 size='25' />}
+                        icon={<TbBook2 size='50' />}
                     />
                     <Stack spacing='0'>
                         {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
@@ -120,13 +124,38 @@ const StrategyPage = () => {
                             <Heading fontSize='4xl' mt={0}>
                                 {strategy.name}
                             </Heading>
-                            {strategy.isPrivate ? (
-                                <Icon size='lg' as={UnlockIcon} />
-                            ) : (
-                                <Icon size='lg' as={LockIcon} />
-                            )}
+                            <Tooltip
+                                label={strategy.isPrivate ? 'Private strategy' : 'Public strategy'}
+                            >
+                                <Box>
+                                    {strategy.isPrivate ? (
+                                        <GoLock size='25' />
+                                    ) : (
+                                        <GoGlobe size='25' />
+                                    )}
+                                </Box>
+                            </Tooltip>
                         </HStack>
-                        <Text>@{strategy.createdByUser?.username}</Text>
+                        <Text>
+                            <span style={{ marginRight: 10 }}>
+                                @{strategy.createdByUser?.username}
+                            </span>
+                            {strategy.status == StrategyStatus.Draft && (
+                                <Badge variant='outline' colorScheme='cyan'>
+                                    Draft
+                                </Badge>
+                            )}
+                            {strategy.status == StrategyStatus.Active && (
+                                <Badge variant='solid' colorScheme='cyan'>
+                                    Active
+                                </Badge>
+                            )}
+                            {strategy.status == StrategyStatus.InActive && (
+                                <Badge variant='subtle' colorScheme='cyan'>
+                                    InActive
+                                </Badge>
+                            )}
+                        </Text>
                     </Stack>
                     <Box flexGrow={1} />
                     <Menu>
@@ -134,20 +163,22 @@ const StrategyPage = () => {
                             Actions
                         </MenuButton>
                         <MenuList>
-                            <MenuItem>Download</MenuItem>
-                            <MenuItem>Create a Copy</MenuItem>
-                            <MenuItem>Mark as Draft</MenuItem>
-                            <MenuItem onClick={onSubmit}>
-                                {strategy.isPrivate ? 'Set Private' : 'Set Public'}
-                            </MenuItem>
+                            <MenuItem>Attack</MenuItem>
+                            <MenuItem>Manually Attack</MenuItem>
+                            <MenuItem>Duplicate</MenuItem>
+                            {/* <MenuItem>Mark as Draft</MenuItem> */}
+                            {isSelf && (
+                                <MenuItem onClick={onSubmit}>
+                                    {strategy.isPrivate ? 'Set Public' : 'Set Private'}
+                                </MenuItem>
+                            )}
                         </MenuList>
                     </Menu>
-                    
                 </HStack>
                 <Tabs index={index} onChange={handleTabsChange}>
                     <TabList>
                         <Tab>Stats</Tab>
-                        <Tab>SourceCode</Tab>
+                        <Tab>Source Code</Tab>
                         <Tab>Battles</Tab>
                     </TabList>
 

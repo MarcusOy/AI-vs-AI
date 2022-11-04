@@ -6,7 +6,7 @@ namespace AVA.API.Services
 {
     public interface IStrategiesService
     {
-        List<Strategy> GetAll();
+        // List<Strategy> GetAll();
         Strategy Get(Guid id);
         string GetStockStategyCode(string strategyName);
         Task<Strategy> CreateAsync(Strategy strategy);
@@ -29,11 +29,11 @@ namespace AVA.API.Services
             _logger = logger;
         }
 
-        public List<Strategy> GetAll()
-        {
-            return _dbContext.Strategies
-                .ToList();
-        }
+        // public List<Strategy> GetAll()
+        // {
+        //     return _dbContext.Strategies
+        //         .ToList();
+        // }
 
         public Strategy Get(Guid id)
         {
@@ -42,10 +42,14 @@ namespace AVA.API.Services
                 .Include(s => s.Game)
                 .Include(s => s.AttackerBattles)
                 .Include(s => s.DefenderBattles)
-               .FirstOrDefault(s => s.Id == id);
+                .FirstOrDefault(s => s.Id == id);
 
             if (s is null)
                 throw new InvalidOperationException($"Strategy id [{id}] not valid.");
+
+            // prevent others from seeing source code of private strategies
+            if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
+                s.SourceCode = null;
 
             return s;
         }
