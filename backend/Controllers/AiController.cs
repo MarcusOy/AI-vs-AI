@@ -85,21 +85,24 @@ public class AiController : Controller
     [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {
-        var strategy = _dbContext.Strategies
+        var easy = _dbContext.Strategies
             .FirstOrDefault(s => s.Id == new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"));
+
+        var medium = _dbContext.Strategies
+            .FirstOrDefault(s => s.Id == new Guid("ff567412-30a5-444c-9ff8-437eda8a73a7"));
 
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
             {
                 Id = Guid.NewGuid(),
-                Name = "Stock Easy AI vs Stock Easy AI",
+                Name = "Stock Easy AI vs Stock Medium AI",
                 BattleStatus = BattleStatus.Pending,
                 Iterations = 9,
-                AttackingStrategyId = new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"),
-                AttackingStrategy = strategy,
-                DefendingStrategyId = new Guid("27961240-5173-4a3d-860e-d4f2b236d35c"),
-                DefendingStrategy = strategy
+                AttackingStrategyId = easy.Id,
+                AttackingStrategy = easy,
+                DefendingStrategyId = medium.Id,
+                DefendingStrategy = medium
             }
         };
 

@@ -100,9 +100,6 @@ const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
                                     </Text>
                                 </HStack>
                             </Stack>
-                            {/* <Text fontSize='xs'>
-                                Attacker wins: {b.attackerWins} | Defender wins: {b.defenderWins}
-                            </Text> */}
                         </Stack>
                         <Box flexGrow={1} />
                         <Stack>
