@@ -35,7 +35,7 @@ namespace AVA.API.Hubs
             public String[][] SentBoard { get; set; }
             public bool IsWhiteAI { get; set; }
             public String ClientId { get; set; }
-            public int ChosenStock { get; set; }
+            public Guid ChosenStockId { get; set; }
         }
 
     }
