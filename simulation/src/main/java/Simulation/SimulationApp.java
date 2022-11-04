@@ -73,8 +73,8 @@ public class SimulationApp {
     static boolean JAVASCRIPT_STOCK;
     static boolean DEMO_STOCK;
 
-    static boolean attackerStockOverride;
-    static boolean defenderStockOverride;
+    static boolean attackerStockOverride = true;
+    static boolean defenderStockOverride = true;
 
     static final int BOARD_LENGTH = 10;
 
