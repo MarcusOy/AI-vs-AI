@@ -10,7 +10,7 @@ const FeedPage = () => {
             </Box>
             <Spacer />
             <Box>
-                <Text>Feed page</Text>
+                <Text>🚧 Feed page 🚧</Text>
                 <Link to='/ManualPlay'> Manual Play </Link>
             </Box>
             <Spacer />
