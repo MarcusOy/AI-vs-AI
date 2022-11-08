@@ -1,24 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Configuration;
+using AVA.API.Models;
+using AVA.API.Services;
+using Microsoft.AspNetCore.Mvc;
+using static AVA.API.Services.BattlesService;
 
-namespace DefaultNamespace;
+namespace AVA.API.Controllers;
 
 public class BattleController : Controller
 {
-    [Route("/battlePerson")]
-    public ActionResult startBattle(Strategy s1, Strategy s2)
+    private readonly IBattlesService _battleService;
+    public BattleController(IBattlesService battleService)
     {
-        // As of right now, the incoming message will consist of two strategies to battle each other
-        
-        // TODO - run the battle, and send the information back to the client
-
-        return Ok("Battle info sent here");
+        _battleService = battleService;
     }
+    [HttpGet, Route("/Battles")]
+    public async Task<List<Battle>> GetBattles([FromQuery] GetBattlesParameters p)
+        => await _battleService.GetAsync(p);
 
-    [Route("/battleNpc")]
-    public ActionResult startBattle(Strategy s1, Strategy s2) // Might get rid of this one
-    {
-        // As of right now, the incoming message will consist of two strategies, one the user's, one ours
-        
-        // TODO - run the battle, and send the information back to the client
-    }
+    [HttpGet, Route("/Battle/{id}")]
+    public async Task<Battle> Get(string id)
+        => _battleService.Get(new Guid(id));
+
+    [HttpGet, Route("/Battle/{id}/{num}")]
+    public async Task<BattleGame> GetBattleGame(string id, string num)
+        => await _battleService.GetBattleGameAsync(new Guid(id), int.Parse(num));
 }

@@ -1,15 +1,15 @@
 using System.Text;
-using Snappy.API.GraphQL.Mutations;
-using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Snappy.API.Data;
-using Snappy.API.GraphQL.Extensions;
-using Snappy.API.Helpers;
-using Snappy.API.Services;
-using Snappy.API.GraphQL.Queries;
-using Snappy.API.GraphQL.Subscriptions;
+using AVA.API.Data;
+using AVA.API.Helpers;
+using AVA.API.Services;
+using AVA.API.Controllers;
+using AVA.API.Middleware;
+using MassTransit;
+using AVA.API.Consumers;
+using AVA.API.Hubs;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -22,27 +22,51 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 // Get settings from environment configuration
-var settings = new SnappySettings();
-builder.Configuration.GetSection("Snappy").Bind(settings);
+var settings = new AVASettings();
+builder.Configuration.GetSection("AVA").Bind(settings);
+
+if (String.IsNullOrEmpty(settings.ConnectionString))
+    throw new ArgumentException("The environment variable AVA__CONNECTIONSTRING must be set with a valid connection string pointing towards a MySQL database.");
+
+if (String.IsNullOrEmpty(settings.JwtKey))
+    throw new ArgumentException("The envronment variable AVA__JWTKEY must be set with a secret key.");
+
 
 // Add EntityFramework Context
-var dbPath = System.IO.Path.Join(
-    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-     "Snappy.db"
-);
-builder.Services.AddDbContextPool<SnappyDBContext>(
+builder.Services.AddDbContextPool<AVADbContext>(
     dbContextOptions => dbContextOptions
-        .UseSqlite($"Data Source={dbPath}")
+        .UseMySql(settings.ConnectionString, new MySqlServerVersion(new Version(5, 7)))
         .EnableDetailedErrors()
         .EnableSensitiveDataLogging()
 );
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+    );
+
+builder.Services.AddMassTransit(mt =>
+{
+    mt.AddConsumer<SimulationResponsesConsumer>();
+    mt.AddConsumer<SimulationStepResponsesConsumer>();
+
+    mt.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(settings.RabbitMQ.Host, "/", h =>
+        {
+            h.Username(settings.RabbitMQ.User);
+            h.Password(settings.RabbitMQ.Password);
+        });
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
+// Add websockets functionality
+builder.Services.AddSignalR();
 
 // Added custom JWT Identity Authentication Service
-builder.Services.AddScoped<ITwoFactorService, TotpTwoFactorService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
-builder.Services.Configure<SnappySettings>(o => builder.Configuration.GetSection("Snappy").Bind(o));
+builder.Services.Configure<AVASettings>(o => builder.Configuration.GetSection("AVA").Bind(o));
 builder.Services.AddHttpContextAccessor();
 
 // Added JWT authenitcation
@@ -50,80 +74,64 @@ var tokenValidator = new TokenValidationParameters
 {
     ValidateIssuerSigningKey = true,
     ValidateIssuer = true,
-    ValidateAudience = true,
+    ValidateAudience = false,
     ValidateLifetime = true,
-    ValidAudience = settings.Jwt.Audience,
-    ValidIssuer = settings.Jwt.Issuer,
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.Jwt.Key))
+    ValidIssuer = "AVA",
+    ClockSkew = TimeSpan.Zero,
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtKey))
 };
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = tokenValidator;
     o.RequireHttpsMetadata = false;
     o.SaveToken = true;
+    o.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ServerSideJWTMiddleware.OnMessageRecieved,
+        OnAuthenticationFailed = ServerSideJWTMiddleware.OnAuthenticationFailed
+    };
 });
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidator);
 
-// Setting up GraphQL server
-builder.Services.AddGraphQLServer()
-    .AddType<UploadType>()
-    .BindRuntimeType<DateTime, UtcDateTimeType>()
-    .AddMutationType(d => d.Name("Mutation"))
-        .AddTypeExtension<AuthMutations>()
-        .AddTypeExtension<MessageMutations>()
-    .AddQueryType(d => d.Name("Query"))
-        .AddTypeExtension<UserQueries>()
-        .AddTypeExtension<MessageQueries>()
-    .AddSubscriptionType(d => d.Name("Subscription"))
-        .AddTypeExtension<AuthSubscriptions>()
-        .AddTypeExtension<MessageSubscriptions>()
-    .AddAuthorization()
-    .AddSocketSessionInterceptor<SubscriptionAuthMiddleware>()
-    .AddInMemorySubscriptions()
-    .AddErrorFilter<ErrorFilter>()
-    .AddFiltering()
-    .AddSorting();
-
 // Setting up domain services
-builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IGamesService, GamesService>();
+builder.Services.AddScoped<IStrategiesService, StrategiesService>();
+builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
+builder.Services.AddScoped<IBugsService, BugsService>();
+builder.Services.AddScoped<IBattlesService, BattlesService>();
 
 var app = builder.Build();
 #endregion
 #region Configure
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseStatusCodePages();
-}
-
-app.UseHttpsRedirection();
 app.UseWebSockets();
 app.UseRouting();
 
 app.UseCors(x => x
-    .AllowAnyOrigin()
+    .AllowCredentials()
+    .WithOrigins(
+        "https://localhost:3000", // local development url
+        "https://127.0.0.1:3000", // local development url
+        "https://ai-vs-ai.vercel.app", // production url
+        "https://ai-vs-ai-git-dev-marcusoy.vercel.app" // remote development url
+    )
     .AllowAnyMethod()
     .AllowAnyHeader());
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-    endpoints.MapGraphQL("/api/v1/graphql");
-});
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseEndpoints(endpoints => endpoints.MapControllers());
 
-app.UsePlayground("/api/v1/graphql");
+app.MapHub<SimulationHub>("AI");
 
+// Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())
-{
     scope.ServiceProvider.GetRequiredService<IInitializationService>()
         .InitializeDatabase();
-}
 
-app.Run();
+app.Run("https://0.0.0.0:443");
 #endregion

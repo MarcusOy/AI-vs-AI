@@ -24,13 +24,20 @@
     ],
     "rules": {
         "react/react-in-jsx-scope": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "no-useless-escape": "off",
+        "react/prop-types": "off",
         "camelcase": "error",
         "spaced-comment": "error",
         "quotes": [
             "error",
             "single"
         ],
-        "no-duplicate-imports": "error"
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-duplicate-imports": "error",
+        "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+        "@typescript-eslint/no-inferrable-types": "off",
+        "no-debugger": "warn"
     },
     "settings": {
         "import/resolver": {

@@ -1,32 +1,43 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using TypeGen.Core.TypeAnnotations;
 
-namespace Snappy.API.Models;
+namespace AVA.API.Models;
 
+[ExportTsInterface]
 public class User : BaseEntity
 {
-    [Required, JsonIgnore]
+    [Required, TsOptional]
     public Guid Id { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    [Required]
+    [Required, StringLength(15)]
     public string Username { get; set; }
-    [Required, JsonIgnore, GraphQLIgnore]
+    [Required, StringLength(254)]
+    public string Email { get; set; }
+    [Required, StringLength(50)]
+    public string FirstName { get; set; }
+    [Required, StringLength(50)]
+    public string LastName { get; set; }
+    [Required, JsonIgnore]
     public string Password { get; set; }
-    [Required, JsonIgnore, GraphQLIgnore]
+    [Required, JsonIgnore]
     public string Salt { get; set; }
-    // [Required] // TODO: reactivate this when encryption is implemented
-    public string PublicKey { get; set; }
-    [JsonIgnore, GraphQLIgnore]
-    public string TwoFactorKey { get; set; }
+    [StringLength(2000)]
+    public string Bio { get; set; }
     [Required]
     public Boolean Active { get; set; }
 
-    // Token Relationship
-    [JsonIgnore, GraphQLIgnore]
+    // Token Relationship (User uses Tokens to authenticate and refresh authentication)
+    [JsonIgnore, TsIgnore]
     public List<AuthToken> Tokens { get; set; }
-    // Message Relationship
-    public List<Message> MessagesSent { get; set; }
-    public List<Message> MessagesReceived { get; set; }
+
+    // Strategy Relationship (User creates strategies)
+    public List<Strategy> Strategies { get; set; }
+
+    // BugReport Relationship (User creates bug reports)
+    public List<BugReport> BugReports { get; set; }
+
+    // Game Relationship (User has a favorite game)
+    public int? FavoriteGameId { get; set; }
+    public Game FavoriteGame { get; set; }
 }

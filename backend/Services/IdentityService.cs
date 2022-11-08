@@ -6,50 +6,47 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Snappy.API.Data;
-using Snappy.API.Helpers;
-using Snappy.API.Models;
+using AVA.API.Data;
+using AVA.API.Helpers;
+using AVA.API.Models;
 
-namespace Snappy.API.Services
+namespace AVA.API.Services
 {
     public interface IIdentityService
     {
-        Task<(User User, string TotpSecret)> Register(string firstName, string lastName, string username, string password, string publicKey);
-        Task<(string AuthToken, string RefreshToken)> ActivateAccount(string username, string code);
-        Task<(string AuthToken, string RefreshToken)> Authenticate(string username, string password, string code);
-        Task<(string AuthToken, string RefreshToken)> Reauthenticate(string refreshToken);
+        Task<User> Register(string firstName, string lastName, string email, string username, string password);
+        Task<TokenPair> Authenticate(string username, string password);
+        Task<TokenPair> Reauthenticate(string refreshToken);
+        Task<User> GetUserAsync(Guid id);
+        Task<User> UpdateAsync(User user);
+        Task<User> DeleteAsync(Guid userId);
         User CurrentUser { get; }
+        bool IsLoggedIn { get; }
     }
 
     public class IdentityService : IIdentityService
     {
         private readonly HttpContext _context;
         private readonly ILogger<IdentityService> _logger;
-        private readonly SnappyDBContext _dbContext;
-        private readonly SnappySettings _settings;
-        private readonly ITwoFactorService _twoFactorService;
-
+        private readonly AVADbContext _dbContext;
+        private readonly AVASettings _settings;
         public IdentityService(IHttpContextAccessor context,
                                ILogger<IdentityService> logger,
-                               SnappyDBContext dbContext,
-                               IOptions<SnappySettings> settings,
-                               ITwoFactorService twoFactorService)
+                               AVADbContext dbContext,
+                               IOptions<AVASettings> settings)
         {
             _context = context.HttpContext;
             _logger = logger;
             _dbContext = dbContext;
             _settings = settings.Value;
-            _twoFactorService = twoFactorService;
         }
 
-        public async Task<(User User, string TotpSecret)> Register(string firstName, string lastName, string username, string password, string publicKey)
+        public async Task<User> Register(string firstName, string lastName, string email, string username, string password)
         {
             if (String.IsNullOrEmpty(username))
                 throw new InvalidOperationException("Must provide a username.");
             if (String.IsNullOrEmpty(password))
                 throw new InvalidOperationException("Must provide a password.");
-            if (String.IsNullOrEmpty(publicKey))
-                throw new InvalidOperationException("Must provide a public key.");
 
             var u = _dbContext.Users
                 .FirstOrDefault(u => u.Username == username);
@@ -59,50 +56,23 @@ namespace Snappy.API.Services
 
             var s = SecurityHelpers.GenerateSalt();
             var p = SecurityHelpers.GenerateHashedPassword(password, s.AsBytes);
-            var t = SecurityHelpers.GenerateTwoFactorSecret();
             var newUser = new User
             {
                 FirstName = firstName,
                 LastName = lastName,
                 Username = username,
+                Email = email,
                 Password = p,
                 Salt = s.AsString,
-                PublicKey = publicKey,
-                TwoFactorKey = t,
-                Active = false,
+                Active = true, // TODO: do email confirmation??
             };
 
             await _dbContext.Users.AddAsync(newUser);
             await _dbContext.SaveChangesAsync();
 
-            var totpQRCode = _twoFactorService.GetAuthQRBase64(newUser);
-            return (newUser, totpQRCode);
+            return newUser;
         }
-        public async Task<(string AuthToken, string RefreshToken)> ActivateAccount(string username, string code)
-        {
-            var u = _dbContext.Users
-                .Where(u => u.Active == false)
-                .FirstOrDefault(u => u.Username == username);
-
-            if (u is null)
-                throw new AuthenticationException("No user to activate under this username.");
-
-            if (!await _twoFactorService.ResolveChallengeAsync(u, code))
-                throw new AuthenticationException("Invalid two factor code.");
-
-            u.Active = true;
-            _dbContext.Update(u);
-            await _dbContext.SaveChangesAsync();
-
-            var newAuthToken = await GenerateAuthToken(u);
-            var newRefreshToken = await GenerateRefreshToken(u);
-
-            return (
-                newAuthToken.Token,
-                newRefreshToken.Token
-            );
-        }
-        public async Task<(string AuthToken, string RefreshToken)> Authenticate(string username, string password, string code)
+        public async Task<TokenPair> Authenticate(string username, string password)
         {
             var u = _dbContext.Users
                 .Where(u => u.Active)
@@ -111,26 +81,17 @@ namespace Snappy.API.Services
             if (u is null || u.Password != SecurityHelpers.GenerateHashedPassword(password, Convert.FromBase64String(u.Salt)))
                 throw new AuthenticationException("Credentials not valid.");
 
-            // If Totp is enabled, create challenge
-            if (_settings.Security.IsTotpEnabled)
-            {
-                if (code is null || code == String.Empty)
-                    throw new AuthenticationException("Please verify your login by providing a two factor code. |2FA_CHALLENGE|");
-
-                if (!await _twoFactorService.ResolveChallengeAsync(u, code))
-                    throw new AuthenticationException("Invalid two factor code.");
-            }
-
             var newAuthToken = await GenerateAuthToken(u);
             var newRefreshToken = await GenerateRefreshToken(u);
 
-            return (
-                newAuthToken.Token,
-                newRefreshToken.Token
-            );
+            return new TokenPair
+            {
+                AuthToken = newAuthToken.Token,
+                RefreshToken = newRefreshToken.Token
+            };
         }
 
-        public async Task<(string AuthToken, string RefreshToken)> Reauthenticate(string refreshToken)
+        public async Task<TokenPair> Reauthenticate(string refreshToken)
         {
             var hash = SecurityHelpers.GenerateHash(refreshToken);
             var u = _dbContext.Users
@@ -155,20 +116,99 @@ namespace Snappy.API.Services
             t.RevokedOn = DateTime.UtcNow;
             t.ReplacedByTokenId = newRefreshToken.EntityId;
 
-            return (
-                newAuthToken.Token,
-                newRefreshToken.Token
-            );
+            return new TokenPair
+            {
+                AuthToken = newAuthToken.Token,
+                RefreshToken = newRefreshToken.Token
+            };
+        }
+
+        public async Task<User> GetUserAsync(Guid id)
+        {
+            var user = await _dbContext.Users
+                .Where(u => u.Active)
+                .Include(u => u.FavoriteGame)
+                .Include(u => u.Strategies
+                        .OrderByDescending(s => s.UpdatedOn))
+                    .ThenInclude(s => s.Game)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null)
+                throw new InvalidOperationException("User with provided id does not exist.");
+
+            return user;
+        }
+
+
+        public async Task<User> UpdateAsync(User user)
+        {
+            var originalUser = _dbContext.Users
+                .Where(u => u.Active)
+                .FirstOrDefault(u => user.Id == u.Id);
+
+            if (originalUser is null)
+                throw new InvalidOperationException("User to update does not exist.");
+
+            // trust only these incoming fields
+            originalUser.FirstName = user.FirstName;
+            originalUser.LastName = user.LastName;
+            originalUser.Bio = user.Bio;
+            originalUser.FavoriteGameId = user.FavoriteGameId;
+
+            _dbContext.Update(originalUser);
+            await _dbContext.SaveChangesAsync();
+
+            return originalUser;
+        }
+
+        public async Task<User> DeleteAsync(Guid userId)
+        {
+            var user = _dbContext.Users
+                .FirstOrDefault(u => u.Id == userId);
+
+            if (user is null)
+                throw new InvalidOperationException("User does not exist.");
+
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
+
+            return user;
         }
 
         public User CurrentUser
         {
             get
             {
+                if (!_context.User.Claims.Any())
+                    throw new AuthenticationException("User is not logged in.");
+
                 var userid = new Guid(_context.User.Claims
                         .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+
+                if (userid == null)
+                    throw new AuthenticationException("Malformed user. Please log in again");
+
                 return _dbContext.Users
+                    .Include(u => u.Strategies
+                        .OrderByDescending(s => s.UpdatedOn))
+                    .ThenInclude(s => s.Game)
                     .FirstOrDefault(u => u.Id == userid);
+            }
+        }
+
+        public bool IsLoggedIn
+        {
+            get
+            {
+                try
+                {
+                    var testUser = this.CurrentUser;
+                }
+                catch (AuthenticationException ex)
+                {
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -178,20 +218,20 @@ namespace Snappy.API.Services
                 throw new ArgumentNullException("Must pass a user to generate an auth token.");
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_settings.Jwt.Key));
+                Encoding.UTF8.GetBytes(_settings.JwtKey));
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
             };
 
-            var expiry = DateTime.UtcNow.AddMinutes(15);
+            var expiry = DateTime.UtcNow.AddMinutes(5);
 
             var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                _settings.Jwt.Issuer,
-                _settings.Jwt.Audience,
+                "AVA",
+                "AVA",
                 claims,
                 expires: expiry,
                 signingCredentials: signingCredentials);
@@ -233,5 +273,11 @@ namespace Snappy.API.Services
                 return (token, e.Entity.Id);
             }
         }
+    }
+
+    public class TokenPair
+    {
+        public string AuthToken { get; set; }
+        public string RefreshToken { get; set; }
     }
 }

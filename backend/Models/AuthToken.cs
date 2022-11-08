@@ -1,8 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TypeGen.Core.TypeAnnotations;
 
-namespace Snappy.API.Models
+namespace AVA.API.Models
 {
     public class AuthToken : BaseEntity
     {
@@ -14,18 +15,15 @@ namespace Snappy.API.Models
         public string Token { get; set; }
         [Required]
         public DateTime ExpiresOn { get; set; }
-        [GraphQLIgnore]
         public bool IsExpired => DateTime.UtcNow >= ExpiresOn;
-
         public DateTime? RevokedOn { get; set; }
-        [GraphQLIgnore]
         public bool IsActive => RevokedOn == null && !IsExpired;
 
-        // User relationship
+        // User Relationship (Auth token is used by user to auth)
         public Guid UserId { get; set; }
         public User User { get; set; }
 
-        // Token relationship
+        // Token Relationship (Auth token is replaced by another auth token)
         public Guid? ReplacedByTokenId { get; set; }
         public AuthToken ReplacedByToken { get; set; }
 

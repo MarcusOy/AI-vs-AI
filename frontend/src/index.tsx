@@ -1,31 +1,16 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
-import App from './pages/App'
-import LoginSignupPage from './pages/LoginSignupPage'
-import WelcomePage from './pages/WelcomePage'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-
+import App from './App'
 import { ChakraProvider } from '@chakra-ui/react'
+import theme from './theme'
+
+import './index.css'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
     <React.StrictMode>
-        <ChakraProvider>
-            <BrowserRouter>
-                <nav
-                    style={{
-                        borderBottom: 'solid 1px',
-                        paddingBottom: '1rem',
-                    }}
-                >
-                    <Link to=''>Home Page</Link> | <Link to='/loginSignup'>Login/Signup</Link>
-                </nav>
-                <Routes>
-                    <Route path='' element={<WelcomePage />} />
-                    <Route path='/loginSignup' element={<LoginSignupPage />} />
-                </Routes>
-            </BrowserRouter>
+        <ChakraProvider theme={theme}>
+            <App />
         </ChakraProvider>
     </React.StrictMode>,
 )

@@ -1,35 +1,68 @@
-# version: "3"
-# services:
-#   # Database
-#   db:
-#     image: mysql:8.0
-#     command: --default-authentication-plugin=mysql_native_password --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
-#     restart: always
-#     ports:
-#       - ${Snappy__Database__Port}:3306
-#     environment:
-#       MYSQL_ROOT_PASSWORD: ${Snappy__Database__RootPassword}
-#       MYSQL_USER: ${Snappy__Database__Username}
-#       MYSQL_PASSWORD: ${Snappy__Database__Password}
-#       MYSQL_DATABASE: ${Snappy__Database__DatabaseName}
-#   # Database viewer
-#   adminer:
-#     image: adminer
-#     restart: always
-#     ports:
-#       - 8080:8080
-#   # api:
-#   #   container_name: audex
-#   #   build:
-#   #     context: ./Audex.API
-#   #     dockerfile: ./Audex.API/Dockerfile
-#   #   volumes:
-#   #     - ./LocorumBackend.API:/app/LocorumBackend.API
-#   #     - ./LocorumBackend.Models:/app/LocorumBackend.Models
-#   #   environment:
-#   #     - DOTNET_USE_POLLING_FILE_WATCHER=1
-#   #     - DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
-#   #     - DOTNET_CLI_TELEMETRY_OPTOUT=1
-#   #     - AUDEX_DEVELOPMENT=1
-#   #   ports:
-#   #       - "5000:5000"
+version: "3"
+services:
+  # Database
+  db:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "!rootpasswd!"
+      MYSQL_USER: "ava"
+      MYSQL_PASSWORD: "!ava_app!"
+      MYSQL_DATABASE: "app"
+
+  # Database viewer
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  # RabbitMQ message broker
+  rabbitmq:
+    image: rabbitmq:3.11.0-management
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=ava
+      - RABBITMQ_DEFAULT_PASS=!ava_app!
+
+  # Backend (for docker buid testing only)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   environment:
+  #     AVA__VERSION: 0.1
+  #     # Connection string uses Docker DNS name for the database (db)
+  #     AVA__CONNECTIONSTRING: "Server=db;Database=app;Uid=ava;Pwd=!ava_app!;"
+  #     AVA__JWTKEY: DevelopmentKey!!
+  #     AVA__RABBITMQ__HOST: rabbitmq
+  #     AVA__RABBITMQ__USER: ava
+  #     AVA__RABBITMQ__PASSWORD: "!ava_app!"
+  #   ports:
+  #     - 5000:80
+  #   depends_on:
+  #     - rabbitmq
+  #     - db
+
+  # Simulation
+  sim:
+    build:
+      context: ./simulation
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - AVA__RABBITMQ__HOST=rabbitmq
+      - AVA__RABBITMQ__USER=ava
+      - AVA__RABBITMQ__PASS=!ava_app!
+      - AVA__RABBITMQ__PORT=5672
+    depends_on:
+      - rabbitmq
