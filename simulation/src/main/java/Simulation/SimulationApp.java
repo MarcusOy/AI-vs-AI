@@ -3,7 +3,6 @@ package Simulation;
 import API.Java.API;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,6 +29,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import delight.nashornsandbox.NashornSandbox;
+import delight.nashornsandbox.NashornSandboxes;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.cli.*;
 
@@ -59,8 +60,10 @@ public class SimulationApp {
     public static String ENV_PASS = "AVA__RABBITMQ__PASS";
     public static String ENV_PORT = "AVA__RABBITMQ__PORT";
 
-    static ScriptEngine attackingEngine;
-    static ScriptEngine defendingEngine;
+    //static ScriptEngine attackingEngine;
+    //static ScriptEngine defendingEngine;
+    static NashornSandbox attackingSandbox;
+    static NashornSandbox defendingSandbox;
 
     static IStrategy stockAttacker;
     static IStrategy stockDefender;
@@ -508,16 +511,16 @@ public class SimulationApp {
                     attackerStockOverride = sentBattle.attackingStrategy.sourceCode == null;
 
                     if (sentBattle.attackingStrategy.sourceCode != null)
-                        attackingEngine = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
+                        attackingSandbox = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
                 }
                 if (sentBattle.defendingStrategy != null) {
                     defenderStockOverride = sentBattle.defendingStrategy.sourceCode == null;
 
                     if (sentBattle.defendingStrategy.sourceCode != null)
-                        defendingEngine = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
+                        defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
                 } else if (JAVASCRIPT_STOCK) {
-                    attackingEngine = evaluateSourceCode(getRandomAIJS());
-                    defendingEngine = evaluateSourceCode(getRandomAIJS());
+                    attackingSandbox = evaluateSourceCode(getRandomAIJS());
+                    defendingSandbox = evaluateSourceCode(getRandomAIJS());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -756,7 +759,7 @@ public class SimulationApp {
             if (isManualCom || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
             } else // ATTACKER is sent from backend
-                moveString = processStrategySource(attackingEngine);// attackingStrategy.getMove(gameState);
+                moveString = processStrategySource(attackingSandbox);// attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             if (DEBUG)
@@ -784,7 +787,7 @@ public class SimulationApp {
             if (isManualCom || defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
             } else // DEFENDER is sent from backend
-                moveString = processStrategySource(defendingEngine);// defendingStrategy.getMove(gameState);
+                moveString = processStrategySource(defendingSandbox);// defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
             if (DEBUG)
@@ -795,28 +798,26 @@ public class SimulationApp {
     }
 
     // evaluates source code for later fast running
-    static ScriptEngine evaluateSourceCode(String strategySource) throws ScriptException {
+    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource) throws ScriptException {
         // sets up evaluator
-        ScriptEngineManager factory = new ScriptEngineManager();
-
-        // List<ScriptEngineFactory> factories = factory.getEngineFactories();
-
-        ScriptEngine engine = factory.getEngineByName("nashorn");
-        // allows the strategy's source code to access the gameState as a global
-        // variable
-        // engine.put("gameState", new GameState());
+        //ScriptEngineManager factory = new ScriptEngineManager();
+        //ScriptEngine engine = factory.getEngineByName("nashorn");
+        NashornSandbox sandbox = NashornSandboxes.create();
 
         // evaluates the script
-        engine.eval(strategySource);
-        return engine;
+        //engine.eval(strategySource);
+        sandbox.eval(strategySource);
+
+        return sandbox;
     }
 
     // gets a moveString from evaluating the strategy's source code
-    static String processStrategySource(ScriptEngine strategyEngine) {
+    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox) {
         // for JS parsing
         // allows the strategy's source code to access the gameState as a global
         // variable
-        strategyEngine.put("gameState", gameState);
+        //strategyEngine.put("gameState", gameState);
+        strategySandbox.inject("gameState", gameState);
 
         // invokes the script function to get moveString
         try {
@@ -824,7 +825,7 @@ public class SimulationApp {
 
             // engine.eval(strategySource/*script*/);
 
-            Invocable inv = (Invocable) strategyEngine;
+            Invocable inv = strategySandbox.getSandboxedInvocable(); //(Invocable) strategyEngine;
             return "" + inv.invokeFunction("getMove");
         } catch (Exception e) {
             e.printStackTrace();
@@ -1188,7 +1189,7 @@ public class SimulationApp {
     }
 
     static String getRandomAIJS() {
-        return "// cell values are NEVER null - they should be \"\" if empty\n" +
+        String s = "// cell values are NEVER null - they should be \"\" if empty\n" +
                 "var NUM_PIECES_PER_SIDE = 20; // int\n" +
                 "var NUM_PAWNS_PER_SIDE = 9; // int\n" +
                 "var BOARD_LENGTH = 10; // int\n" +
@@ -1707,6 +1708,12 @@ public class SimulationApp {
                 "        return \"CHECKMATED\";\n" +
                 "    }\n" +
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
+                "}";
+
+        return "function getMove() {\n" +
+                "var File = Java.type('java.io.File'); File;" +
+                "    print(\"JS print\");\n" +
+                "    return \"A1, A2\";\n" +
                 "}";
     }
 }
