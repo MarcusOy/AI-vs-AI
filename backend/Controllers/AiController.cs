@@ -23,7 +23,7 @@ public class AiController : Controller
     }
 
     [HttpGet, Route("/getAi/{id}")]
-    public async Task<Strategy> getAi(String id)
+    public Strategy getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
     // TODO Have frontend send stock to test with in uri

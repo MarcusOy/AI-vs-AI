@@ -53,7 +53,7 @@ public class StrategyController : Controller
 
     // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
     [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
-    public async Task<Strategy> GetStockStrategy(String stockToChoose)
+    public Strategy GetStockStrategy(String stockToChoose)
     {
         return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }
