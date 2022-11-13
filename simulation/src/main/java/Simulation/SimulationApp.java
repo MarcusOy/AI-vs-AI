@@ -4,13 +4,17 @@ import API.Java.API;
 
 import javax.script.ScriptEngine;
 import javax.script.*;
+import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import IStrategy.IStrategy;
 import IStrategy.RandomAI;
@@ -59,6 +63,9 @@ public class SimulationApp {
     public static String ENV_USER = "AVA__RABBITMQ__USER";
     public static String ENV_PASS = "AVA__RABBITMQ__PASS";
     public static String ENV_PORT = "AVA__RABBITMQ__PORT";
+    
+    public static String EXECUTION_TRACKER_VAR_NAME = "ExecString";
+    public static String EXECUTION_TRACKER_FUNC_NAME = "get" + EXECUTION_TRACKER_VAR_NAME;
 
     //static ScriptEngine attackingEngine;
     //static ScriptEngine defendingEngine;
@@ -99,6 +106,34 @@ public class SimulationApp {
     // BattleGame when the previous completes
     public static void main(String[] args)
             throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+
+        if (9 * 7 - 2 > 0) {
+            String testString = getRandomAIJS(); /*"//this is random text\n" +
+                    "function getMove() {\n" +
+                    //"var File = Java.type('java.io.File'); File;\n" +
+                    "    if (true)\n" +
+                    "       print(\"JS ifPrint\");\n" +
+                    "    if (true && true) {\n" +
+                    "       print(\"JS enclosed ifPrint\");\n" +
+                    "    }\n" +
+                    "    print(\"JS print\");\n" +
+                    "    return \"A1, A2\";\n" +
+                    "}";*/
+
+            /*
+            String regex = "^(.)$";//"^( \t)*(if|for|switch|while)( \t\n)*$" + Pattern.quote("(");// + "(.)+" + Pattern.quote(")";//"^(a|b|c)*$";
+            boolean doesMatch = Pattern.matches(regex, testString);//structureMatcher.matches();
+            System.out.println(testString + doesMatch);
+            if (9 - 6 != 0)
+                return;
+            */
+            try {
+                evaluateSourceCode(testString);
+            } catch (ScriptException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
 
         // parse command line arguments
         if (parseCLI(args)) {
@@ -808,16 +843,444 @@ public class SimulationApp {
         //engine.eval(strategySource);
         sandbox.eval(strategySource);
 
+        // perform test processing
+        if (gameState == null)
+            gameState = new GameState();
+        String testProcessingResult = processStrategySource(sandbox);
+        boolean erroredOut = testProcessingResult == null;
+
+        // inject line tracking code
+        if (!erroredOut) {
+            System.out.println("input: " + strategySource);
+            strategySource = injectLineTrackingCode(strategySource);
+            System.out.println("\n\n\n\noutput: " + strategySource);
+            try {
+                sandbox.eval(strategySource);
+                processStrategySource(sandbox);
+                String executionTrace = sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
+                System.out.println("\nExecutedLines: " + executionTrace);
+                String rawExecutionTrace = executionTrace;
+                long lastTime = System.currentTimeMillis();
+                System.out.println(0);
+                executionTrace = compressExecutionTraceCycles(executionTrace);
+                long curTime = System.currentTimeMillis();
+                System.out.println((curTime - lastTime));
+                lastTime = curTime;
+                executionTrace = compressExecutionTraceConsecutive(executionTrace);
+                curTime = System.currentTimeMillis();
+                System.out.println((curTime - lastTime));
+                lastTime = curTime;
+                getMinimalExecutionTrace(rawExecutionTrace);
+                curTime = System.currentTimeMillis();
+                System.out.println((curTime - lastTime));
+                lastTime = curTime;
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+
         return sandbox;
+    }
+
+    // injects a line of code after every possible line of user code to track the lines that have been executed in a given turn
+    static String injectLineTrackingCode(String strategySource) {
+        // the resulting string with injected code
+        String result = "";
+
+        // the unprocessed portion of the strategy source
+        String workingString = strategySource;
+
+        // track what the current working string matches
+        boolean hasAnEndLine;
+        boolean hasAnotherLine;
+        boolean cannotInjectLine;
+
+        // determines the starting line number so the proper execution tracking line can be injected
+        // ASSUMES that all user code will be below the getMove() declaration
+        int lineOfGetMove = 1;
+        int indexOfGetMove = workingString.indexOf("getMove()");
+        String lineCountingString = workingString.substring(0, indexOfGetMove);
+        int currentLineNum = 1; // starts at 1 because this is how line numbering is
+        int newLineIndex;
+        while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
+            // counts the read newline character to determine what line getMove() starts on
+            lineOfGetMove++;
+
+            if (newLineIndex >= lineCountingString.length())
+                break;
+
+            lineCountingString = lineCountingString.substring(newLineIndex + 1);
+        }
+
+        // starts the line counting with the calling of getMove()
+        result += workingString.substring(0, indexOfGetMove);
+        workingString = workingString.substring(indexOfGetMove);
+        currentLineNum = lineOfGetMove;
+
+        // defines patterns to match intermediate strings against
+        String endingString = ".*";
+        Pattern hasAnotherLinePattern = Pattern.compile(".*[^ }\\n\\t]+" + endingString, Pattern.DOTALL);
+        String structureDetectionString = "\\A[ \\t]*(if|for|switch|while)[ \\t\\n]*\\([^\\n]*\\)";
+        Pattern hasStructurePattern = Pattern.compile(structureDetectionString + endingString, Pattern.DOTALL);
+        Pattern hasCommentedBraceAfterStructurePattern = Pattern.compile(structureDetectionString + "[ \\t]*//[^\\n]*\\{" + endingString, Pattern.DOTALL);
+        Pattern hasClosedStructureDiffLineNoCommentPattern = Pattern.compile(structureDetectionString + "[ \\t\\n]*\\n*[ \\t\\n]*\\{" + endingString, Pattern.DOTALL);
+        Pattern hasClosedStructureInSameLinePattern = Pattern.compile(structureDetectionString + "[^\\n]*\\{" + endingString, Pattern.DOTALL);
+        Pattern hasReturnStatement = Pattern.compile(("\\A[ \\t]*return[ \\t][^\\n]+;.*"), Pattern.DOTALL);
+
+        boolean shouldCloseAfterNextLine = false;
+
+        do {
+            cannotInjectLine = false;
+
+            // tries to find where a newline character is
+            newLineIndex = workingString.indexOf("\n");
+            hasAnEndLine = newLineIndex >= 0;//workingString.matches("(.*)\n");
+
+            // determines where the current line ends
+            int indexAfterCurrentLine = hasAnEndLine ? (newLineIndex + 1) : workingString.length();
+
+            // splits working string into [currentLine + workingString]
+            String currentLine = workingString.substring(0, indexAfterCurrentLine);
+            String prevWorkingString = workingString;
+            workingString = workingString.substring(indexAfterCurrentLine);
+
+            // determines if the current line cannot be injected after
+            Matcher structureMatcher = hasStructurePattern.matcher(prevWorkingString);
+            //"[ \t]*(if|for|switch|while)[ \t\n]*"
+            boolean hasStructure = structureMatcher.matches();
+            //if (hasStructure)
+            //    System.out.println("struc: " + prevWorkingString.substring(structureMatcher.start(), structureMatcher.end()));
+            boolean hasCommentedBraceAfterStructure = hasStructure && hasCommentedBraceAfterStructurePattern.matcher(prevWorkingString).matches();
+            boolean hasClosedStructureInSameLine = hasStructure && hasClosedStructureInSameLinePattern.matcher(prevWorkingString).matches();
+            boolean hasClosedStructureDiffLineNoComment = hasStructure && hasClosedStructureDiffLineNoCommentPattern.matcher(prevWorkingString).matches();
+            cannotInjectLine = hasStructure && ((hasClosedStructureInSameLine && hasCommentedBraceAfterStructure) || !(hasClosedStructureDiffLineNoComment || hasClosedStructureInSameLine));
+
+            String closingBrace = "";
+
+            if (shouldCloseAfterNextLine) {
+                closingBrace = "}";
+                shouldCloseAfterNextLine = false;
+                cannotInjectLine = false;
+            }
+            else if (cannotInjectLine) {
+                Matcher matcher = Pattern.compile(structureDetectionString, Pattern.DOTALL).matcher(currentLine);
+                boolean matchFound = matcher.find();
+                /*MatchResult matchResult = matcher.toMatchResult();
+                int numGroups = matchResult.groupCount();*/
+                //System.out.println(numGroups + "    " + matchResult.groupCount());*/
+                //matchResult = matcher.toMatchResult();
+                //..System.out.println(matcher.groupCount() + "    " + matcher.);
+                int structureEndIndex = matcher.end(0);
+                String newCurrentLineString = currentLine.substring(0, structureEndIndex + 1) + " {" + currentLine.substring((structureEndIndex + 1));
+                System.out.println(newCurrentLineString);
+                currentLine = newCurrentLineString;
+                shouldCloseAfterNextLine = true;
+            }
+            // injects the line, if possible
+            String codeToInject = String.format("\t\t\t%s += \"%d, \";\n", EXECUTION_TRACKER_VAR_NAME, currentLineNum);
+
+            // this "flag" can be toggled to enable injection of execution tracking code in the first line within a structure
+            final boolean shouldTrackStructuresWhenExecutingWithin = false;
+
+            if (hasStructure && !shouldTrackStructuresWhenExecutingWithin/*cannotInjectLine*/)
+                result += currentLine;
+            else if (hasReturnStatement.matcher(prevWorkingString).matches())
+                result += codeToInject + currentLine;
+            else // injects code after current line
+                result += currentLine + codeToInject;
+
+            result += closingBrace;
+
+            // tracks the current line number so the proper execution tracking line can be injected
+            currentLineNum++;
+
+            // test printing
+            Matcher matcher = hasAnotherLinePattern.matcher(workingString);
+            hasAnotherLine = matcher.matches();
+            System.out.println(String.format("\nmatchTest: %s hasAnotherLine? %b    hasStruc? %b    hasStrucComment? %b    hasCloseSameLine? %b    hasCloseDiffLine? %b",
+                    prevWorkingString, hasAnotherLine, hasStructure, hasCommentedBraceAfterStructure, hasClosedStructureInSameLine, hasClosedStructureDiffLineNoComment));
+                    //"\nmatchTest: " + prevWorkingString + " matches? " + hasAnotherLine + /*"\ncurrentLine:" + currentLine +*/ " hasUnclosedStructure? " + cannotInjectLine);
+        } while (hasAnotherLine); // has another line with actual content
+
+        // appends any missed characters
+        result += workingString;
+
+        // inject function to retrieve lineTrace (JavaScript)
+        result += "\nfunction " + EXECUTION_TRACKER_FUNC_NAME + "() {\n" +
+                "    return " + EXECUTION_TRACKER_VAR_NAME + ";\n" +
+                "}";
+
+        return result;
+    }
+
+    static String compressExecutionTraceCycles(String executionTrace) {
+        String result = "";
+        StringBuilder builderResult = new StringBuilder("");
+
+        // compresses cycles of code ranges
+        ArrayList<ArrayList<String>> lineStringsToCheck = new ArrayList<>();
+        String[] lineStringSplit = executionTrace.split(", ");
+
+        // populates lineStringsToCheck
+        for (int i = 0; i < lineStringSplit.length; i++) {
+            String curLineString = lineStringSplit[i];
+            int curLineNum = Integer.parseInt(curLineString);
+
+            int lineStringIndex = getlineStringIndexInLineStringsList(curLineString, lineStringsToCheck);
+            if (lineStringIndex < 0) {
+                lineStringsToCheck.add(new ArrayList<>());
+                lineStringIndex = lineStringsToCheck.size() - 1;
+                lineStringsToCheck.get(lineStringIndex).add(curLineString);
+            }
+
+            lineStringsToCheck.get(lineStringIndex).add(i + "");
+        }
+
+        // prints lineStringsList
+        /*String printString = "";
+        for (int i = 0; i < lineStringsToCheck.size(); i++) {
+            printString += "{ ";
+
+            for (int j = 0; j < lineStringsToCheck.get(i).size(); j++)
+                printString += lineStringsToCheck.get(i).get(j) + ", ";
+
+            printString += "} \n";
+        }*/
+        //System.out.println(printString);
+
+        // detects cycles
+        PriorityQueue<CycleInfo> cycleInfoHeap = new PriorityQueue<>();
+        // looks for cycles that start with the line number stored in lineStringsToCheck.get(i).
+            // this is unique in the lineStringsToCheck list
+        for (int i = 0; i < lineStringsToCheck.size(); i++) {
+            ArrayList<String> curSubList = lineStringsToCheck.get(i);
+
+            // doesn't check subLists that only have the head node
+            if (curSubList.size() <= 1)
+                continue;
+
+            // checks for cycles in the sublist for every possible spacing
+            for (int spacing = 1; spacing < curSubList.size() - 1; spacing++) {
+                // iterates through the current sublist to determine potential cycles based on spacing of length spacing
+                int leftIndex = -1;
+                for (int j = 1 + spacing; j < curSubList.size(); j++) {
+                    if (leftIndex < 0)
+                        leftIndex = Integer.parseInt(curSubList.get(j - spacing));
+
+                    // see how many cycle repetitions there are
+                    int numCycleRepititions = 1;
+                    for (int k = leftIndex + spacing; k < lineStringSplit.length; k += spacing) {
+                        boolean foundCycle = doesWindowHoldExpectedCycle(lineStringSplit, leftIndex, k, spacing);
+                        //System.out.printf("doesWindowHold(left: %d, right: %d, spacing: %d    -    %s\n", leftIndex, k, spacing, foundCycle + "");
+
+                        if (!foundCycle)
+                            break;
+
+                        numCycleRepititions++;
+                    }
+
+                    if (numCycleRepititions > 1) {
+                        /*String cycleInfoString = "(";
+
+                        for (int k = 0; k < spacing; k++)
+                            cycleInfoString += lineStringSplit[leftIndex + k] + ", ";
+
+                        cycleInfoString += ")x" + numCycleRepititions + " -- indeces[" + leftIndex + "-" + (leftIndex + spacing - 1) + "]";*/
+                        CycleInfo newCycleInfo = new CycleInfo(lineStringSplit, numCycleRepititions, leftIndex, spacing);
+                        //System.out.println(cycleInfoString + "     " + newCycleInfo.getCompressedCycleString());
+                        cycleInfoHeap.add(newCycleInfo);
+
+                        leftIndex = newCycleInfo.lastCycleEndIndex + 1;
+                        //System.out.println("newLeftIndex: " + leftIndex);
+                    }
+                    else
+                        leftIndex += spacing;
+
+                    //System.out.println("newLeftIndex: " + leftIndex);
+                }
+            }
+        }
+
+        String[] cycledStringArray = lineStringSplit.clone();
+        // replaces lineStrings in the array with the
+        ArrayList<CycleInfo> usedCycleInfos = new ArrayList<>();
+        while (!cycleInfoHeap.isEmpty()) {
+            CycleInfo curInfo = cycleInfoHeap.remove();
+            String curLineString = cycledStringArray[curInfo.firstCycleStartIndex];
+            //System.out.println("examined cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex);
+
+            // continue if already compressed into another index
+            if (curLineString.equals(""))
+                continue;
+
+            // coninue if this index holds compressed info
+            if (curLineString.contains("("))
+                continue;
+            int curLineNum;
+            try {
+                curLineNum = Integer.parseInt(curLineString);
+            } catch (Exception e) {
+                continue;
+            }
+
+            // continue if compressing at least 2 iterations would attempt to compress already compressed info
+            boolean containsCompressedInfo = false;
+            for (int i = curInfo.firstCycleStartIndex; i <= curInfo.lastCycleEndIndex; i++) {
+                if (cycledStringArray[i].equals("") || cycledStringArray[i].contains("(")) {
+                    containsCompressedInfo = true;
+                    break;
+                }
+            }
+            if (containsCompressedInfo)
+                continue;;
+
+            //System.out.println("using cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex);
+
+            cycledStringArray[curInfo.firstCycleStartIndex] = curInfo.getCompressedCycleString();
+            //System.out.println(curInfo.getNumCompressedLineNumsBeforeIndex(curInfo.lastCycleEndIndex));
+
+            for (int i = curInfo.firstCycleStartIndex + 1; i <= curInfo.lastCycleEndIndex; i++) {
+                cycledStringArray[i] = "";
+            }
+
+            usedCycleInfos.add(curInfo);
+        }
+
+        // prints out the compressed cycle strings
+        //System.out.print("CompressedCycles: ");
+        for (int i = 0; i < cycledStringArray.length; i++) {
+            String curString = cycledStringArray[i];
+
+            if (curString.equals(""))
+                continue;
+
+            //System.out.print(curString + ", ");
+            //result += curString + ", ";
+            builderResult.append(curString + ", ");
+        }
+        //System.out.println("");
+
+        result = builderResult.toString();
+        System.out.println("CompressedCycles: " + result);
+        return result;
+    }
+
+    static boolean doesWindowHoldExpectedCycle(String[] lineNumArray, int referenceIndex, int testIndex, int windowSize) {
+        // verifies that a cycle has been found
+        for (int offset = 0; offset < windowSize; offset++) {
+            if (!lineNumArray[referenceIndex + offset].equals(lineNumArray[testIndex + offset]))
+                return false;
+        }
+
+        return true;
+    }
+
+    static String compressExecutionTraceConsecutive(String executionTrace) {
+        String result = "";
+        StringBuilder builderResult = new StringBuilder("");
+
+        // compresses consecutive code ranges
+        String workingString = executionTrace;
+        int prevLineNum = -5;
+        int chainStartLineNum = -5;
+        while (true) {
+            int nextCommaIndex = workingString.indexOf(", ");
+            if (nextCommaIndex < 0)
+                break;
+
+            String curLineString = workingString.substring(0, nextCommaIndex);
+            workingString = workingString.length() > nextCommaIndex + 1 ? workingString.substring(nextCommaIndex + 2) : "";
+
+            int curLineNum;
+            try {
+                curLineNum = Integer.parseInt(curLineString);
+            } catch (Exception e) {
+                /*if (prevLineNum >= 0)
+                    result += prevLineNum + ",A ";*/
+                /*result += curLineString + ",a ";
+                prevLineNum = -5;
+                continue;*/
+                curLineNum = -5;
+            }
+
+            if (chainStartLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0)) {
+                if (prevLineNum - chainStartLineNum > 1)
+                    builderResult.append("[" + chainStartLineNum + "-" + prevLineNum + "], ");// + curLineString + ", ");
+                else {
+                    builderResult.append(chainStartLineNum + ", ");
+
+                    if (prevLineNum >= 0)
+                        builderResult.append(prevLineNum + ", ");
+                }
+                chainStartLineNum = -5;
+            }
+            else if (prevLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0)) {
+                builderResult.append(prevLineNum + ", ");
+            }
+            else if (curLineNum == prevLineNum + 1) {
+                if (chainStartLineNum < 0)
+                    chainStartLineNum = prevLineNum;
+            }
+
+            if (workingString.length() <= 0) {
+                builderResult.append(curLineString + ", ");
+                break;
+            }
+            else if (curLineNum < 0)
+                builderResult.append(curLineString + ", ");
+
+            prevLineNum = curLineNum;
+        }
+
+        System.out.println("Compressed: " + result);
+
+        return result;
+    }
+
+    // only used for compressExecutionTrace
+    static int getlineStringIndexInLineStringsList(String lineString, ArrayList<ArrayList<String>> lineStringsList) {
+        for (int i = 0; i < lineStringsList.size(); i++) {
+            if (lineString.equals(lineStringsList.get(i).get(0)))
+                return i;
+        }
+
+        return -1;
+    }
+
+    static String getMinimalExecutionTrace(String executionTrace) {
+        String result = "";
+        StringBuilder builderResult = new StringBuilder("");
+        String[] splitArr = executionTrace.split(", ");
+        Arrays.sort(splitArr);
+
+        String prevLineString = "";
+        for (int i = 0; i < splitArr.length; i++) {
+            String curLineString = splitArr[i];
+            if (curLineString.equals("") || curLineString.equals(" "))
+                break;
+
+            if (!curLineString.equals(prevLineString))
+                builderResult.append(curLineString + ", ");//result += curLineString + ", ";
+
+            prevLineString = curLineString;
+        }
+
+        result = builderResult.toString();
+        System.out.println("Minimal: " + result);
+        return result;
     }
 
     // gets a moveString from evaluating the strategy's source code
     static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox) {
+        String result;
+        String execTrace = "";
+
         // for JS parsing
         // allows the strategy's source code to access the gameState as a global
         // variable
         //strategyEngine.put("gameState", gameState);
         strategySandbox.inject("gameState", gameState);
+        strategySandbox.inject(EXECUTION_TRACKER_VAR_NAME, "");
 
         // invokes the script function to get moveString
         try {
@@ -826,11 +1289,20 @@ public class SimulationApp {
             // engine.eval(strategySource/*script*/);
 
             Invocable inv = strategySandbox.getSandboxedInvocable(); //(Invocable) strategyEngine;
-            return "" + inv.invokeFunction("getMove");
+
+            result = "" + inv.invokeFunction("getMove");
+
+            try {
+                execTrace = "" + inv.invokeFunction(EXECUTION_TRACKER_FUNC_NAME);
+            } catch (NoSuchMethodException ex) {
+                System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return "JS INVOKE ERROR";
+            result = "JS INVOKE ERROR";
         }
+
+        return result;
     }
 
     // adjusts the gameState based upon the moveString
@@ -1710,10 +2182,23 @@ public class SimulationApp {
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
-        return "function getMove() {\n" +
-                "var File = Java.type('java.io.File'); File;" +
+        return s;/*"//this is random text\n" +
+                "//some more random text\n" +
+                "function getMove() {\n" +
+                //"var File = Java.type('java.io.File'); File;\n" +
+                "    if (!(true))\n" +
+                "       print(\"JS notIfPrint\");\n" +
+                "    if (true)     // this is a comment {\n" +
+                "       print(\"JS ifPrintComment\");\n" +
+                "    if (true && true)\n" +
+                "       print(\"JS ifPrint\");\n" +
+                "    if (true && true && true) {\n" +
+                "       print(\"JS enclosed ifPrint\");\n" +
+                "    }\n" +
                 "    print(\"JS print\");\n" +
+                "    if (true)\n" +
+                "       return \"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
-                "}";
+                "}";*/
     }
 }
