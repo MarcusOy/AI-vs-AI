@@ -1,6 +1,7 @@
 using AVA.API.Data;
 using AVA.API.Models;
 using AVA.API.Services;
+using DocParser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,6 +37,13 @@ public class StarterCodeController : Controller
         var boilerplate = starterCode
             .FirstOrDefault(c => c.Type == StarterCodeType.Boilerplate);
 
+        if (helper is not null)
+        {
+            var js = new JSDocParser();
+            js.LoadText(helper.Code);
+            var parsed = js.Parse(includeComments: true);
+        }
+
         return new GameStarterCode
         {
             HelperCode = helper is not null ? helper.Code : null,
@@ -47,5 +55,12 @@ public class StarterCodeController : Controller
     {
         public string HelperCode { get; set; }
         public string Boilerplate { get; set; }
+        public List<FunctionDocumentation> Documentation { get; set; }
+    }
+
+    public class FunctionDocumentation
+    {
+        public string FunctionName { get; set; }
+        public string FunctionDescription { get; set; }
     }
 }
