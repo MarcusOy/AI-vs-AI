@@ -107,33 +107,15 @@ public class SimulationApp {
     public static void main(String[] args)
             throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 
-        if (9 * 7 - 2 > 0) {
-            String testString = getRandomAIJS(); /*"//this is random text\n" +
-                    "function getMove() {\n" +
-                    //"var File = Java.type('java.io.File'); File;\n" +
-                    "    if (true)\n" +
-                    "       print(\"JS ifPrint\");\n" +
-                    "    if (true && true) {\n" +
-                    "       print(\"JS enclosed ifPrint\");\n" +
-                    "    }\n" +
-                    "    print(\"JS print\");\n" +
-                    "    return \"A1, A2\";\n" +
-                    "}";*/
-
-            /*
-            String regex = "^(.)$";//"^( \t)*(if|for|switch|while)( \t\n)*$" + Pattern.quote("(");// + "(.)+" + Pattern.quote(")";//"^(a|b|c)*$";
-            boolean doesMatch = Pattern.matches(regex, testString);//structureMatcher.matches();
-            System.out.println(testString + doesMatch);
-            if (9 - 6 != 0)
-                return;
-            */
+        /*if (9 * 7 - 2 > 0) {
+            String testString = getRandomAIJS()''
             try {
                 evaluateSourceCode(testString);
             } catch (ScriptException e) {
                 e.printStackTrace();
             }
             return;
-        }
+        }*/
 
         // parse command line arguments
         if (parseCLI(args)) {
@@ -851,29 +833,19 @@ public class SimulationApp {
 
         // inject line tracking code
         if (!erroredOut) {
-            System.out.println("input: " + strategySource);
+            //System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
-            System.out.println("\n\n\n\noutput: " + strategySource);
+            //System.out.println("\n\n\n\noutput: " + strategySource);
             try {
                 sandbox.eval(strategySource);
                 processStrategySource(sandbox);
                 String executionTrace = sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
-                System.out.println("\nExecutedLines: " + executionTrace);
                 String rawExecutionTrace = executionTrace;
-                long lastTime = System.currentTimeMillis();
-                System.out.println(0);
                 executionTrace = compressExecutionTraceCycles(executionTrace);
-                long curTime = System.currentTimeMillis();
-                System.out.println((curTime - lastTime));
-                lastTime = curTime;
+                //System.out.println("CompressedCycles: " + executionTrace);
                 executionTrace = compressExecutionTraceConsecutive(executionTrace);
-                curTime = System.currentTimeMillis();
-                System.out.println((curTime - lastTime));
-                lastTime = curTime;
+                //System.out.println("CompressedConsecutive: " + executionTrace);
                 getMinimalExecutionTrace(rawExecutionTrace);
-                curTime = System.currentTimeMillis();
-                System.out.println((curTime - lastTime));
-                lastTime = curTime;
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             }
@@ -972,7 +944,7 @@ public class SimulationApp {
                 //..System.out.println(matcher.groupCount() + "    " + matcher.);
                 int structureEndIndex = matcher.end(0);
                 String newCurrentLineString = currentLine.substring(0, structureEndIndex + 1) + " {" + currentLine.substring((structureEndIndex + 1));
-                System.out.println(newCurrentLineString);
+                //System.out.println(newCurrentLineString);
                 currentLine = newCurrentLineString;
                 shouldCloseAfterNextLine = true;
             }
@@ -997,9 +969,9 @@ public class SimulationApp {
             // test printing
             Matcher matcher = hasAnotherLinePattern.matcher(workingString);
             hasAnotherLine = matcher.matches();
-            System.out.println(String.format("\nmatchTest: %s hasAnotherLine? %b    hasStruc? %b    hasStrucComment? %b    hasCloseSameLine? %b    hasCloseDiffLine? %b",
+            /*System.out.println(String.format("\nmatchTest: %s hasAnotherLine? %b    hasStruc? %b    hasStrucComment? %b    hasCloseSameLine? %b    hasCloseDiffLine? %b",
                     prevWorkingString, hasAnotherLine, hasStructure, hasCommentedBraceAfterStructure, hasClosedStructureInSameLine, hasClosedStructureDiffLineNoComment));
-                    //"\nmatchTest: " + prevWorkingString + " matches? " + hasAnotherLine + /*"\ncurrentLine:" + currentLine +*/ " hasUnclosedStructure? " + cannotInjectLine);
+                    *///"\nmatchTest: " + prevWorkingString + " matches? " + hasAnotherLine + /*"\ncurrentLine:" + currentLine +*/ " hasUnclosedStructure? " + cannotInjectLine);
         } while (hasAnotherLine); // has another line with actual content
 
         // appends any missed characters
@@ -1161,7 +1133,7 @@ public class SimulationApp {
         //System.out.println("");
 
         result = builderResult.toString();
-        System.out.println("CompressedCycles: " + result);
+        //System.out.println("CompressedCycles: " + result);
         return result;
     }
 
@@ -1232,7 +1204,8 @@ public class SimulationApp {
             prevLineNum = curLineNum;
         }
 
-        System.out.println("Compressed: " + result);
+        result = builderResult.toString();
+        //System.out.println("Compressed: " + result);
 
         return result;
     }
@@ -1266,7 +1239,7 @@ public class SimulationApp {
         }
 
         result = builderResult.toString();
-        System.out.println("Minimal: " + result);
+        //System.out.println("Minimal: " + result);
         return result;
     }
 
@@ -1294,6 +1267,10 @@ public class SimulationApp {
 
             try {
                 execTrace = "" + inv.invokeFunction(EXECUTION_TRACKER_FUNC_NAME);
+                //System.out.println("\nExecutedLines: " + executionTrace);
+                String rawExecutionTrace = execTrace;
+                execTrace = compressExecutionTraceCycles(execTrace);
+                execTrace = compressExecutionTraceConsecutive(execTrace);
             } catch (NoSuchMethodException ex) {
                 System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
             }
