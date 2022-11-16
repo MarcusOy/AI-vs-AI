@@ -10,6 +10,10 @@ public class CycleInfo implements Comparable {
     public int secondCycleEndIndex;
     public int lastCycleEndIndex;
 
+    public static String DELIMITER = "|";
+    public static String REPETITION_START_CHAR = "<";
+    public static String REPETITION_END_CHAR = ">";
+
     public CycleInfo (String[] cycleStringArr, int numRepetitions, int firstCycleStartIndex, int cycleLength) {
         this.cycleStringArr = cycleStringArr;
         this.numRepetitions = numRepetitions;
@@ -31,11 +35,17 @@ public class CycleInfo implements Comparable {
     public String getUncompressedCycleString(int indexToStopAt) {
         int actualRepetitions = (indexToStopAt - firstCycleStartIndex + 1) / cycleLength;
 
-        String cycleString = "(, ";
-        for (int i = 0; i < cycleLength; i++)
-            cycleString += cycleStringArr[firstCycleStartIndex + i] + ", ";
-        cycleString += ")x" + actualRepetitions;
+        StringBuilder stringBuilder = new StringBuilder(REPETITION_START_CHAR);
+        String cycleString = "";
+        for (int i = 0; i < cycleLength; i++) {
+            stringBuilder.append(cycleStringArr[firstCycleStartIndex + i]);
 
+            if (i < cycleLength - 1)
+                stringBuilder.append(DELIMITER/*", "*/);
+        }
+        stringBuilder.append(REPETITION_END_CHAR + "x" + actualRepetitions);
+
+        cycleString = stringBuilder.toString();
         return cycleString;
     }
 

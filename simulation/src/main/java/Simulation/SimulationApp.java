@@ -833,19 +833,21 @@ public class SimulationApp {
 
         // inject line tracking code
         if (!erroredOut) {
-            //System.out.println("input: " + strategySource);
+            System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
-            //System.out.println("\n\n\n\noutput: " + strategySource);
+            System.out.println("\n\n\n\noutput: " + strategySource);
             try {
                 sandbox.eval(strategySource);
                 processStrategySource(sandbox);
                 String executionTrace = sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
                 String rawExecutionTrace = executionTrace;
+                System.out.println("Executed Lines: " + executionTrace);
                 executionTrace = compressExecutionTraceCycles(executionTrace);
-                //System.out.println("CompressedCycles: " + executionTrace);
+                System.out.println("CompressedCycles: " + executionTrace);
                 executionTrace = compressExecutionTraceConsecutive(executionTrace);
-                //System.out.println("CompressedConsecutive: " + executionTrace);
-                getMinimalExecutionTrace(rawExecutionTrace);
+                System.out.println("CompressedConsecutive: " + executionTrace);
+                rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
+                System.out.println("Minimal: " + rawExecutionTrace);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             }
@@ -887,7 +889,7 @@ public class SimulationApp {
         // starts the line counting with the calling of getMove()
         result += workingString.substring(0, indexOfGetMove);
         workingString = workingString.substring(indexOfGetMove);
-        currentLineNum = lineOfGetMove;
+        //currentLineNum = lineOfGetMove;
 
         // defines patterns to match intermediate strings against
         String endingString = ".*";
@@ -898,6 +900,11 @@ public class SimulationApp {
         Pattern hasClosedStructureDiffLineNoCommentPattern = Pattern.compile(structureDetectionString + "[ \\t\\n]*\\n*[ \\t\\n]*\\{" + endingString, Pattern.DOTALL);
         Pattern hasClosedStructureInSameLinePattern = Pattern.compile(structureDetectionString + "[^\\n]*\\{" + endingString, Pattern.DOTALL);
         Pattern hasReturnStatement = Pattern.compile(("\\A[ \\t]*return[ \\t][^\\n]+;.*"), Pattern.DOTALL);
+
+        Pattern hasPureConditionalStructurePattern = Pattern.compile("\\A[ \\t]*(if|while).*", Pattern.DOTALL);
+        Pattern hasImpureConditionalStructurePattern = Pattern.compile("\\A[ \\t]*switch.*", Pattern.DOTALL);
+        Pattern hasFlowJumpPattern = Pattern.compile(("\\A[ \\t]*(break|continue);.*"), Pattern.DOTALL);
+        Pattern hasForLoopPattern = Pattern.compile(("\\A[ \\t]*for[ \\t\\n]*\\([^;]*;[^;]+;[^;]*\\).*"), Pattern.DOTALL);
 
         boolean shouldCloseAfterNextLine = false;
 
@@ -920,14 +927,29 @@ public class SimulationApp {
             Matcher structureMatcher = hasStructurePattern.matcher(prevWorkingString);
             //"[ \t]*(if|for|switch|while)[ \t\n]*"
             boolean hasStructure = structureMatcher.matches();
+            boolean hasPureConditionalStructure = hasPureConditionalStructurePattern.matcher(prevWorkingString).matches();
+            boolean hasImpureConditionalStructure = hasImpureConditionalStructurePattern.matcher(prevWorkingString).matches();
             //if (hasStructure)
             //    System.out.println("struc: " + prevWorkingString.substring(structureMatcher.start(), structureMatcher.end()));
             boolean hasCommentedBraceAfterStructure = hasStructure && hasCommentedBraceAfterStructurePattern.matcher(prevWorkingString).matches();
             boolean hasClosedStructureInSameLine = hasStructure && hasClosedStructureInSameLinePattern.matcher(prevWorkingString).matches();
             boolean hasClosedStructureDiffLineNoComment = hasStructure && hasClosedStructureDiffLineNoCommentPattern.matcher(prevWorkingString).matches();
+            boolean hasFlowJump = hasFlowJumpPattern.matcher(currentLine).matches();
+            Matcher hasForLoopMatcher = hasForLoopPattern.matcher(prevWorkingString);
             cannotInjectLine = hasStructure && ((hasClosedStructureInSameLine && hasCommentedBraceAfterStructure) || !(hasClosedStructureDiffLineNoComment || hasClosedStructureInSameLine));
 
             String closingBrace = "";
+
+            // code to inject w/out semicolon or surrounding conditional content
+            String codeToInject = String.format("%s += \"%d, \"", EXECUTION_TRACKER_VAR_NAME, currentLineNum);
+            int indexOfOpenParenthesis = currentLine.indexOf("(");
+
+            if (hasPureConditionalStructure)
+                currentLine = String.format(currentLine.substring(0, indexOfOpenParenthesis + 1) + "(%s) != null && " + currentLine.substring(indexOfOpenParenthesis + 1), codeToInject);
+            else if (hasForLoopMatcher.matches()) {
+                int loopConditionalStart = prevWorkingString.indexOf(";");
+                currentLine = String.format(currentLine.substring(0, loopConditionalStart + 1) + "(%s) != null && " + currentLine.substring(loopConditionalStart + 1), codeToInject);
+            }
 
             if (shouldCloseAfterNextLine) {
                 closingBrace = "}";
@@ -949,17 +971,28 @@ public class SimulationApp {
                 shouldCloseAfterNextLine = true;
             }
             // injects the line, if possible
-            String codeToInject = String.format("\t\t\t%s += \"%d, \";\n", EXECUTION_TRACKER_VAR_NAME, currentLineNum);
 
             // this "flag" can be toggled to enable injection of execution tracking code in the first line within a structure
             final boolean shouldTrackStructuresWhenExecutingWithin = false;
 
-            if (hasStructure && !shouldTrackStructuresWhenExecutingWithin/*cannotInjectLine*/)
-                result += currentLine;
-            else if (hasReturnStatement.matcher(prevWorkingString).matches())
+            // determine if there is valuable content in this current line or in the remaining code
+            Matcher matcher = hasAnotherLinePattern.matcher(workingString);
+            hasAnotherLine = matcher.matches();
+            boolean hasContentInThisLine = hasAnotherLinePattern.matcher(currentLine).matches();
+
+            codeToInject = "\t\t\t" + codeToInject + ";\n";
+            if (hasStructure && !shouldTrackStructuresWhenExecutingWithin/*cannotInjectLine*/) {
+                if (hasImpureConditionalStructure)
+                    result += codeToInject + currentLine;
+                else
+                    result += currentLine;
+            }
+            else if (hasFlowJump || hasReturnStatement.matcher(prevWorkingString).matches())
                 result += codeToInject + currentLine;
-            else // injects code after current line
+            else if (hasContentInThisLine)// injects code after current line
                 result += currentLine + codeToInject;
+            else
+                result += currentLine;
 
             result += closingBrace;
 
@@ -967,8 +1000,6 @@ public class SimulationApp {
             currentLineNum++;
 
             // test printing
-            Matcher matcher = hasAnotherLinePattern.matcher(workingString);
-            hasAnotherLine = matcher.matches();
             /*System.out.println(String.format("\nmatchTest: %s hasAnotherLine? %b    hasStruc? %b    hasStrucComment? %b    hasCloseSameLine? %b    hasCloseDiffLine? %b",
                     prevWorkingString, hasAnotherLine, hasStructure, hasCommentedBraceAfterStructure, hasClosedStructureInSameLine, hasClosedStructureDiffLineNoComment));
                     *///"\nmatchTest: " + prevWorkingString + " matches? " + hasAnotherLine + /*"\ncurrentLine:" + currentLine +*/ " hasUnclosedStructure? " + cannotInjectLine);
@@ -1086,7 +1117,7 @@ public class SimulationApp {
                 continue;
 
             // coninue if this index holds compressed info
-            if (curLineString.contains("("))
+            if (curLineString.contains(/*"("*/CycleInfo.REPETITION_START_CHAR))
                 continue;
             int curLineNum;
             try {
@@ -1095,7 +1126,7 @@ public class SimulationApp {
                 continue;
             }
 
-            // continue if compressing at least 2 iterations would attempt to compress already compressed info
+            // continue if compressing at least 2 iterations would overlap with an edge of another compression
             boolean containsCompressedInfo = false;
             for (int i = curInfo.firstCycleStartIndex; i <= curInfo.lastCycleEndIndex; i++) {
                 if (cycledStringArray[i].equals("") || cycledStringArray[i].contains("(")) {
@@ -1128,7 +1159,7 @@ public class SimulationApp {
 
             //System.out.print(curString + ", ");
             //result += curString + ", ";
-            builderResult.append(curString + ", ");
+            builderResult.append(curString + CycleInfo.DELIMITER);
         }
         //System.out.println("");
 
@@ -1156,50 +1187,81 @@ public class SimulationApp {
         int prevLineNum = -5;
         int chainStartLineNum = -5;
         while (true) {
-            int nextCommaIndex = workingString.indexOf(", ");
-            if (nextCommaIndex < 0)
+            int nextDelimiterIndex = workingString.indexOf(CycleInfo.DELIMITER/*", "*/);
+            if (nextDelimiterIndex < 0)
                 break;
 
-            String curLineString = workingString.substring(0, nextCommaIndex);
-            workingString = workingString.length() > nextCommaIndex + 1 ? workingString.substring(nextCommaIndex + 2) : "";
+            int delimiterLength = CycleInfo.DELIMITER.length();
+            String curLineString = workingString.substring(0, nextDelimiterIndex);
+            workingString = workingString.length() > nextDelimiterIndex + delimiterLength - 1 ? workingString.substring(nextDelimiterIndex + delimiterLength) : "";
 
             int curLineNum;
-            try {
-                curLineNum = Integer.parseInt(curLineString);
-            } catch (Exception e) {
-                /*if (prevLineNum >= 0)
-                    result += prevLineNum + ",A ";*/
-                /*result += curLineString + ",a ";
-                prevLineNum = -5;
-                continue;*/
-                curLineNum = -5;
-            }
+            boolean startingOrEndingCycle = false;
+            String cycleStringNoDigits = "";
+            //try {
+                int cycleOpenIndex = curLineString.indexOf(CycleInfo.REPETITION_START_CHAR);
+                int cycleCloseIndex = curLineString.indexOf(CycleInfo.REPETITION_END_CHAR);
 
-            if (chainStartLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0)) {
-                if (prevLineNum - chainStartLineNum > 1)
-                    builderResult.append("[" + chainStartLineNum + "-" + prevLineNum + "], ");// + curLineString + ", ");
-                else {
-                    builderResult.append(chainStartLineNum + ", ");
-
-                    if (prevLineNum >= 0)
-                        builderResult.append(prevLineNum + ", ");
+                String adjustedIntString;
+                if (cycleOpenIndex >= 0) {
+                    adjustedIntString = curLineString.substring(cycleOpenIndex + 1);
+                    cycleStringNoDigits = curLineString.substring(0, cycleOpenIndex + 1);
+                    startingOrEndingCycle = true;
                 }
+                else if (cycleCloseIndex >= 0) {
+                    adjustedIntString = curLineString.substring(0, cycleCloseIndex);
+                    cycleStringNoDigits = curLineString.substring(cycleCloseIndex);
+                    startingOrEndingCycle = true;
+                }
+                else
+                    adjustedIntString = curLineString;
+                //curLineNumFromCycle = Integer.parseInt(adjustedIntString);
+
+                curLineNum = Integer.parseInt(adjustedIntString);
+            /*} catch (Exception e) {
+                curLineNum = -5;
+            }*/
+
+            if (chainStartLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0 || startingOrEndingCycle)) {
+                if (cycleCloseIndex >= 0 && prevLineNum - chainStartLineNum > 1) {
+                    if (curLineNum == prevLineNum + 1)
+                        builderResult.append(chainStartLineNum + "-");
+                    else
+                        builderResult.append(chainStartLineNum + "-" + prevLineNum + CycleInfo.DELIMITER);
+                }
+                else {
+                    if (prevLineNum - chainStartLineNum > 1)
+                        builderResult.append(/*"[" + */chainStartLineNum + "-" + prevLineNum + CycleInfo.DELIMITER/* + "], "*/);// + curLineString + ", ");
+                    else {
+                        builderResult.append(chainStartLineNum + CycleInfo.DELIMITER/*", "*/);
+
+                        if (prevLineNum >= 0)
+                            builderResult.append(prevLineNum + CycleInfo.DELIMITER/*", "*/);
+                    }
+                }
+
                 chainStartLineNum = -5;
             }
-            else if (prevLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0)) {
-                builderResult.append(prevLineNum + ", ");
+            else if (prevLineNum >= 0 && (curLineNum != prevLineNum + 1 || workingString.length() <= 0 || startingOrEndingCycle)) {
+                builderResult.append(prevLineNum + CycleInfo.DELIMITER/*", "*/);
             }
-            else if (curLineNum == prevLineNum + 1) {
+            else if (curLineNum == prevLineNum + 1 && !startingOrEndingCycle) {
                 if (chainStartLineNum < 0)
                     chainStartLineNum = prevLineNum;
             }
 
             if (workingString.length() <= 0) {
-                builderResult.append(curLineString + ", ");
+                builderResult.append(curLineString /*+ CycleInfo.DELIMITER*//*", "*/);
                 break;
             }
-            else if (curLineNum < 0)
-                builderResult.append(curLineString + ", ");
+            else if (/*curLineNum < 0 ||*/ cycleStringNoDigits.length() > 0 /*startingOrEndingCycle*/) {
+                if (cycleCloseIndex >= 0) {
+                    builderResult.append(curLineString + CycleInfo.DELIMITER);
+                    curLineNum = -5;
+                }
+                else
+                    builderResult.append(cycleStringNoDigits/* + CycleInfo.DELIMITER*//*", "*/);
+            }
 
             prevLineNum = curLineNum;
         }
@@ -1267,10 +1329,12 @@ public class SimulationApp {
 
             try {
                 execTrace = "" + inv.invokeFunction(EXECUTION_TRACKER_FUNC_NAME);
-                //System.out.println("\nExecutedLines: " + executionTrace);
+                //System.out.println("\nExecutedLines: " + execTrace);
                 String rawExecutionTrace = execTrace;
                 execTrace = compressExecutionTraceCycles(execTrace);
+                //System.out.println("CompressedCycles: " + execTrace);
                 execTrace = compressExecutionTraceConsecutive(execTrace);
+                //System.out.println("CompressedConsecutive: " + execTrace);
             } catch (NoSuchMethodException ex) {
                 System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
             }
