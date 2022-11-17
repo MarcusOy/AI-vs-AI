@@ -20,6 +20,40 @@ public class SearchController : Controller
         _dbContext = dbContext;
     }
 
+    [HttpGet, Route("/Interactions/{Page}"), Authorize]
+    public async Task<List<StratResult>> Interactions(int Page) {
+
+        var cQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .Select(s => new StratResult
+            {
+                Id = s.Id,
+                Title = Convert.ToString(s.Name),
+                SourceCode = null,
+                CreatedByGuid = s.CreatedByUserId,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.CreatedOn
+            });
+
+        var sQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Select(s => new StratResult
+            {
+                Id = s.Id,
+                Title = Convert.ToString(s.Name),
+                SourceCode = s.IsPrivate == true ? null : s.SourceCode,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.UpdatedOn
+            });
+
+        var q = cQuery.Union(sQuery)
+            .OrderByDescending(r => r.Time)
+            .Take(10)
+            .Skip(10 * (Page - 1));
+        
+        return await q.ToListAsync();
+    }
+
     [HttpGet, Route("/Search"), Authorize]
     public async Task<List<Result>> Search([FromQuery] SearchQueryParameters p)
     {
@@ -75,6 +109,18 @@ public class SearchController : Controller
     public class SearchQueryParameters
     {
         public string SearchQuery { get; set; }
+    }
+
+    [ExportTsInterface]
+    public class StratResult
+    {
+        public Guid Id { get; set; }
+        [MaxLength(100)]
+        public String Title { get; set; }
+        public String SourceCode { get; set; }
+        public Guid CreatedByGuid { get; set; }
+        public String CreatedByName { get; set; }
+        public DateTime Time { get; set; }
     }
 
     [ExportTsInterface]
