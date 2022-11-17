@@ -21,13 +21,26 @@ public class SearchController : Controller
     }
 
     [HttpGet, Route("/Interactions/{Page}"), Authorize]
-    public async Task<List<StratResult>> Interactions(int Page) {
+    public async Task<List<InteractionResult>> Interactions(int Page) {
+        var uQuery = _dbContext.Users
+            .Where(u => u.Active == true)
+            .Select(u => new InteractionResult
+            {
+                Id = u.Id,
+                Type = InteractionType.User,
+                Title = Convert.ToString(u.FirstName + " " + u.LastName),
+                SourceCode = null,
+                CreatedByGuid = u.Id,
+                CreatedByName = Convert.ToString(u.Username),
+                Time = u.CreatedOn
+            });
 
         var cQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Draft)
-            .Select(s => new StratResult
+            .Select(s => new InteractionResult
             {
                 Id = s.Id,
+                Type = InteractionType.CreatedStrategy,
                 Title = Convert.ToString(s.Name),
                 SourceCode = null,
                 CreatedByGuid = s.CreatedByUserId,
@@ -37,16 +50,18 @@ public class SearchController : Controller
 
         var sQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Active)
-            .Select(s => new StratResult
+            .Select(s => new InteractionResult
             {
                 Id = s.Id,
+                Type = InteractionType.SubmittedStrategy,
                 Title = Convert.ToString(s.Name),
-                SourceCode = s.IsPrivate == true ? null : s.SourceCode,
+                SourceCode = s.IsPrivate == true ? null : Convert.ToString(s.SourceCode),
                 CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
                 Time = s.UpdatedOn
             });
 
-        var q = cQuery.Union(sQuery)
+        var q = uQuery.Union(cQuery)
+            .Union(sQuery)
             .OrderByDescending(r => r.Time)
             .Take(10)
             .Skip(10 * (Page - 1));
@@ -112,9 +127,10 @@ public class SearchController : Controller
     }
 
     [ExportTsInterface]
-    public class StratResult
+    public class InteractionResult
     {
         public Guid Id { get; set; }
+        public InteractionType Type { get; set; }
         [MaxLength(100)]
         public String Title { get; set; }
         public String SourceCode { get; set; }
@@ -140,5 +156,12 @@ public class SearchController : Controller
         User,
         Strategy,
         Battle
+    }
+
+    public enum InteractionType
+    {
+        User,
+        CreatedStrategy,
+        SubmittedStrategy
     }
 }
