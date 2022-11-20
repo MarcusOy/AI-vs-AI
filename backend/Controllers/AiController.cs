@@ -26,6 +26,35 @@ public class AiController : Controller
     public async Task<Strategy> getAi(String id)
       => _strategiesService.Get(new Guid(id));
 
+    [HttpPost, Route("/Strategy/ManualBattle")]
+    public async Task<ActionResult> ManualBattle([FromBody] ManualBattleRequest req)
+    {
+        var attacking = _strategiesService.Get(req.AttackingStrategyId);
+        var defending = _strategiesService.Get(req.DefendingStrategyId);
+
+        var request = new SimulationRequest
+        {
+            PendingBattle = new Battle
+            {
+                Id = Guid.NewGuid(),
+                Name = attacking.CreatedByUser + "'s " + attacking.Name + " manually attacked " + defending.CreatedByUser + "'s " + defending.Name,
+                BattleStatus = BattleStatus.Pending,
+                Iterations = 1,
+                AttackingStrategyId = attacking.Id,
+                AttackingStrategy = attacking,
+                DefendingStrategyId = defending.Id,
+                DefendingStrategy = defending,
+                IsTestSubmission = false
+            },
+            ClientId = attacking.CreatedByUserId.ToString()
+        };
+
+        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
+        await endpoint.Send(request);
+
+        return Ok("Simulation request sent with Battle Id: " + request.PendingBattle.Id);
+    }
+
     // TODO Have frontend send stock to test with in uri
     [HttpPost, Route("/Strategy/TestStrategy")]
     public async Task<ActionResult> TestStrategy([FromBody] TestStrategyRequest req)
@@ -135,5 +164,11 @@ public class AiController : Controller
         public Strategy StrategyToTest { get; set; }
         public int Stock { get; set; }
         public String ClientId { get; set; }
+    }
+
+    public class ManualBattleRequest
+    {
+        public Guid AttackingStrategyId { get; set; }
+        public Guid DefendingStrategyId { get; set; }
     }
 }
