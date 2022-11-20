@@ -20,7 +20,7 @@ public class SearchController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet, Route("/Interactions/{Page}"), Authorize]
+    [HttpGet, Route("/Interactions/{Page}")]
     public async Task<List<InteractionResult>> Interactions(int Page) {
         var uQuery = _dbContext.Users
             .Where(u => u.Active == true)
@@ -56,6 +56,7 @@ public class SearchController : Controller
                 Type = InteractionType.SubmittedStrategy,
                 Title = Convert.ToString(s.Name),
                 SourceCode = s.IsPrivate == true ? null : Convert.ToString(s.SourceCode),
+                CreatedByGuid = s.CreatedByUserId,
                 CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
                 Time = s.UpdatedOn
             });
