@@ -52,7 +52,7 @@ public class AiController : Controller
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         await endpoint.Send(request);
 
-        return Ok("Simulation request sent with Battle Id: " + request.PendingBattle.Id);
+        return Ok("Simulation request sent. Battle Id: " + request.PendingBattle.Id);
     }
 
     // TODO Have frontend send stock to test with in uri
