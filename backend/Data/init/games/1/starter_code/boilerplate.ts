@@ -1,4 +1,4 @@
-function getMove() {
+function getMove(): String {
   /* HINT: check how many (if any) of a certain type of move exists
    */
 

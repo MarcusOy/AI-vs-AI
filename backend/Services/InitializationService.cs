@@ -61,7 +61,7 @@ namespace AVA.API.Services
                 var game = new Game();
 
                 // Get the game id from path
-                var gameIdStr = gameDir.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                var gameIdStr = gameDir.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                     .LastOrDefault();
 
                 // Check if the id is valid
@@ -147,7 +147,7 @@ namespace AVA.API.Services
                         };
 
                         // Get the strategy name from path
-                        var strategyName = strategyDir.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                        var strategyName = strategyDir.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                             .LastOrDefault();
                         strategy.Name = strategyName;
 
