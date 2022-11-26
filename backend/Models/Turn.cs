@@ -26,5 +26,4 @@ public class Turn : BaseEntity
     public int BattleGameNumber { get; set; }
     [JsonIgnore, TsOptional]
     public BattleGame BattleGame { get; set; }
-
 }
