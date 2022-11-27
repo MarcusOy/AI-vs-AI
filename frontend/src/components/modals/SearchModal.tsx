@@ -47,7 +47,7 @@ const SearchModal = (p: IModalProps) => {
         onClose()
 
         if (r.type == ResultType.User) navigate(`/Profile/${r.id}/View`)
-        else if (r.type == ResultType.Strategy) navigate(`/Strategy/${r.id}`)
+        else if (r.type == ResultType.Strategy) navigate(`/Strategy/${r.id}/Stats`)
         else if (r.type == ResultType.Battle) navigate(`/Battle/${r.id}`)
         else navigate('/Invalid')
     }
