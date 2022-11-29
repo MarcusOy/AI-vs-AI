@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
     Code,
     Center,
@@ -7,17 +7,11 @@ import {
     Text,
     Alert,
     AlertDescription,
-    AlertIcon,
     AlertTitle,
-    CloseButton,
 } from '@chakra-ui/react'
-import useAVAFetch from '../../helpers/useAVAFetch'
-import { useParams } from 'react-router-dom'
 import { Strategy } from '../../models/strategy'
-import { AVAStore } from '../../data/DataStore'
 
 import { GoLock } from 'react-icons/go'
-import { LockIcon } from '@chakra-ui/icons'
 interface StrategySourceCodeTab {
     strategy: Strategy
 }

@@ -69,6 +69,7 @@ public class AiController : Controller
                     Status = StrategyStatus.Active,
                     SourceCode = s.SourceCode
                 },
+                AttackingStrategySnapshot = s.SourceCode,
                 DefendingStrategyId = defendingStrategy.Id,
                 DefendingStrategy = defendingStrategy,
                 IsTestSubmission = true

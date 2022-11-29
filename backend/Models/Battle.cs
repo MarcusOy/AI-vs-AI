@@ -19,7 +19,7 @@ public class Battle : BaseEntity
     public int Iterations { get; set; }
     public int AttackerWins { get; set; }
     public int DefenderWins { get; set; }
-    public string AttackerStrategySnapshot { get; set; }
+    public string AttackingStrategySnapshot { get; set; }
     public string DefendingStrategySnapshot { get; set; }
 
     // Strategy Relationship (Battles are fought by *two* strategies)

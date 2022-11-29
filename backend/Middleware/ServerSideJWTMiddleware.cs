@@ -41,7 +41,7 @@ public class ServerSideJWTMiddleware
         }
         catch (AuthenticationException ex)
         {
-            logger.LogError($"Someone failed refreshing their authentication token. {ex.Message}");
+            logger.LogInformation($"Someone failed refreshing their authentication token. {ex.Message}");
         }
     }
 }
