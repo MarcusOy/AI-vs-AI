@@ -573,13 +573,13 @@ public class SimulationApp {
                     defenderStockOverride = false;
                     defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategySnapshot);
                 }
+                else if (JAVASCRIPT_STOCK) {
+                    attackerStockOverride = false;
+                    attackingSandbox = evaluateSourceCode(getRandomAIJS());
+                    defendingSandbox = evaluateSourceCode(getRandomAIJS());
+                }
                 else {
                     defenderStockOverride = true;
-
-                    if (JAVASCRIPT_STOCK) {
-                        attackingSandbox = evaluateSourceCode(getRandomAIJS());
-                        defendingSandbox = evaluateSourceCode(getRandomAIJS());
-                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -819,8 +819,9 @@ public class SimulationApp {
             // ATTACKER is a stock AI
             if (isManualCom || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
-            } else // ATTACKER is sent from backend
+            } else { // ATTACKER is sent from backend
                 moveString = processStrategySource(attackingSandbox, compressedExecutionTraceHolder);// attackingStrategy.getMove(gameState);
+            }
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
             compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
