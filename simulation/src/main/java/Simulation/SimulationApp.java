@@ -1639,7 +1639,7 @@ public class SimulationApp {
         }
 
         if (currentBattleGame.stackTrace.length() <= 0)
-            currentBattleGame.stackTrace = compressedExecutionTraceHolder[1];
+            currentBattleGame.stackTrace += compressedExecutionTraceHolder[1];
         compressedExecutionTraceHolder[1] = "";
         currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
         battle.processGameWinner(currentBattleGame, gameWinner);
