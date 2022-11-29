@@ -172,6 +172,10 @@ public class SimulationApp {
                 // processes message
                 Battle sentBattle = processMessage(message);
                 mostlyCurrentBattle = sentBattle;
+
+                // resets execTrace and stackTrace
+                compressedExecutionTraceHolder = new String[2];
+
                 prepareAndRunBattle(sentBattle);
                 System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
             };
@@ -188,6 +192,10 @@ public class SimulationApp {
                 initializeManualGameState(manRequest);
                 manualPlayStockId = manRequest.chosenStockId;
                 setupStrategies();
+
+                // resets execTrace and stackTrace
+                compressedExecutionTraceHolder = new String[2];
+
                 Color potentialWinner = playTurn(true, null, null);
                 String[][] responseBoard = addPieceIds(manRequest);
                 SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
@@ -601,15 +609,21 @@ public class SimulationApp {
 
     // make a strategy lose if its source code cannot be evaluated properly,
     static void handleEvaluationError(Battle sentBattle, boolean isWhite) {
-        String errorString = "JS EVALUATION ERROR - passed SourceCode has errors\n";
-        System.out.print(errorString);
+        String errorString = "JS EVALUATION ERROR - passed SourceCode has errors:\n";
+        String stackTraceMessage = compressedExecutionTraceHolder[1];
+        System.out.print(errorString + stackTraceMessage + "\n");
+        sentBattle.init();
         sentBattle.addBattleGame();
 
         BattleGame newBattleGame = sentBattle.battleGames.get(0);
-        newBattleGame.stackTrace += errorString;
+        newBattleGame.stackTrace += errorString + stackTraceMessage;
 
         // makes the other color win because this color had an invalid source
         processBattleGameWinner(sentBattle, newBattleGame, isWhite ? Color.BLACK : Color.WHITE);
+        sentBattle.complete();
+
+        // prints out the battle
+        debugPrintln(sentBattle.toString());
     }
 
     // runs a full battle
@@ -824,12 +838,20 @@ public class SimulationApp {
             }
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
-            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
+            appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
             if (DEBUG)
                 e.printStackTrace();
         }
 
         return moveString;
+    }
+
+    // appends to the currect stackTrace string
+    static void appendStackTraceString(String newErrorString) {
+        if (compressedExecutionTraceHolder[1] == null)
+            compressedExecutionTraceHolder[1] = newErrorString;
+        else
+            compressedExecutionTraceHolder[1] += newErrorString;
     }
 
     // You can replace the contents of this function with the Defender AI,
@@ -853,7 +875,7 @@ public class SimulationApp {
                 moveString = processStrategySource(defendingSandbox, compressedExecutionTraceHolder);// defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
-            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
+            appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
             if (DEBUG)
                 e.printStackTrace();
         }
@@ -862,7 +884,7 @@ public class SimulationApp {
     }
 
     // evaluates source code for later fast running
-    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource) throws ScriptException {
+    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource) throws ScriptException, NoSuchMethodException {
         // sets up evaluator
         //ScriptEngineManager factory = new ScriptEngineManager();
         //ScriptEngine engine = factory.getEngineByName("nashorn");
@@ -875,11 +897,17 @@ public class SimulationApp {
         // perform test processing
         if (gameState == null)
             gameState = new GameState();
-        String testProcessingResult = processStrategySource(sandbox, new String[] { "" });
-        boolean erroredOut = testProcessingResult == null;
+        String testProcessingResult = processStrategySource(sandbox, new String[] { "", "" });
 
-        // inject line tracking code
-        if (!erroredOut) {
+        // only injects code if exception wasn't throw in in and by processStrategySource
+
+        /*boolean erroredOut = testProcessingResult == null;
+
+        if (erroredOut) {
+            System.out.println("errored out");
+
+        }
+        else { */   // inject line tracking code
             //System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
             //System.out.println("\n\n\n\noutput: " + strategySource);
@@ -898,7 +926,7 @@ public class SimulationApp {
             /*} catch (Exception e) {
                 e.printStackTrace();
             }*/
-        }
+        //}
 
         return sandbox;
     }
@@ -1405,7 +1433,7 @@ public class SimulationApp {
     }
 
     // gets a moveString from evaluating the strategy's source code
-    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox, String[] compressedExecutionTraceHolder) {
+    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox, String[] compressedExecutionTraceHolder) throws ScriptException, NoSuchMethodException {
         String result;
         String execTrace = "";
 
@@ -1440,9 +1468,11 @@ public class SimulationApp {
                 System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
+            appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
             result = "JS INVOKE ERROR";
+
+            // throws the exception again so the game can be ended immediately
+            throw e;
         }
 
         compressedExecutionTraceHolder[0] = execTrace;
