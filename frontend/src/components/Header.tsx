@@ -15,7 +15,7 @@ const Header = (props: IHeader) => {
     return (
         <Box
             as='header'
-            borderWidth='1px'
+            borderBottomWidth='1px'
             background='chakra-body-bg'
             py='1rem'
             position='sticky'

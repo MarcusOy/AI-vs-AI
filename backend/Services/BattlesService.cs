@@ -48,6 +48,7 @@ namespace AVA.API.Services
                 .Include(b => b.AttackingStrategy)
                 .Include(b => b.DefendingStrategy)
                 .Include(b => b.BattleGames)
+                .Where(b => b.IsTestSubmission == p.ShowTestSubmissionsInstead)
                 .OrderByDescending(b => b.UpdatedOn);
 
             if (p.UserId is not null)
@@ -101,6 +102,7 @@ namespace AVA.API.Services
             public Guid? StrategyId { get; set; }
             public Guid? UserId { get; set; }
             public CombatantType CombatantType { get; set; }
+            public bool ShowTestSubmissionsInstead { get; set; }
         }
         public enum CombatantType
         {
