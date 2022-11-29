@@ -11,6 +11,7 @@ export interface Turn extends BaseEntity {
     turnNumber?: number;
     isAttackTurn?: boolean;
     turnData: string;
+    linesExecuted?: string;
     battleId?: string;
     battle?: Battle;
     battleGameNumber?: number;

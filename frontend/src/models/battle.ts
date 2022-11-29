@@ -16,7 +16,7 @@ export interface Battle extends BaseEntity {
     iterations: number;
     attackerWins: number;
     defenderWins: number;
-    attackerStrategySnapshot: string;
+    attackingStrategySnapshot: string;
     defendingStrategySnapshot: string;
     attackingStrategyId: string;
     attackingStrategy: Strategy;

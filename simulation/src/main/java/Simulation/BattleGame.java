@@ -17,8 +17,11 @@ public class BattleGame {
     public int defenderPawnsLeft;
 
     public ArrayList<Turn> turns;
+    public String stackTrace;
 
     private Color AttackerColor;
+    private int whiteCycleLength;
+    private int blackCycleLength;
 
     public BattleGame(int gameNumber, String battleId, Color attackerColor) {
         this.gameNumber = gameNumber;
@@ -26,11 +29,12 @@ public class BattleGame {
         this.AttackerColor = attackerColor;
         this.isAttackerWhite = this.AttackerColor.equals(Color.WHITE);
         turns = new ArrayList<>();
+        stackTrace = "";
     }
 
-    public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
+    public void addTurn(String battleId, Color currentPlayerColor, String moveString, String compressedLineTrace) {
         turns.add(
-                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
+                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString, compressedLineTrace));
     }
 
     public void setWinner(Color winnerColor, String finalBoard, int aPieces, int aPawns, int dPieces, int dPawns) {
@@ -54,6 +58,22 @@ public class BattleGame {
         return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
 
+    public int getWhiteCycleLength() {
+        return whiteCycleLength;
+    }
+
+    public void setWhiteCycleLength(int cycleLength) {
+        whiteCycleLength = cycleLength;
+    }
+
+    public int getBlackCycleLength() {
+        return blackCycleLength;
+    }
+
+    public void setBlackCycleLength(int cycleLength) {
+        blackCycleLength = cycleLength;
+    }
+
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();
         for (Turn t : turns) {
@@ -70,6 +90,7 @@ public class BattleGame {
                 ", gameNumber=" + gameNumber +
                 ", didAttackerWin=" + didAttackerWin +
                 ", attackerColor=" + AttackerColor +
+                ", stackTrace=" + stackTrace +
                 ", turns=" + getTurnsString() /* turns */ +
                 '}';
     }

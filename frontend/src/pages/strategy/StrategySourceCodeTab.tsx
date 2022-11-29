@@ -3,7 +3,6 @@ import { Center, Box, Stack, Text, Alert, AlertDescription, AlertTitle } from '@
 import { Strategy } from '../../models/strategy'
 import { CodeBlock, vs2015 } from 'react-code-blocks'
 import { GoLock } from 'react-icons/go'
-
 interface StrategySourceCodeTab {
     strategy: Strategy
 }

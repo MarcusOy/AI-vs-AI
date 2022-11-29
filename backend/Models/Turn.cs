@@ -14,6 +14,8 @@ public class Turn : BaseEntity
     public bool IsAttackTurn { get; set; }
     [Required]
     public string TurnData { get; set; }
+    [TsOptional]
+    public string LinesExecuted { get; set; }
 
     // Battle Relationship PK (Turns make up a battle game, which make up a battle.)
     [Required, TsOptional]

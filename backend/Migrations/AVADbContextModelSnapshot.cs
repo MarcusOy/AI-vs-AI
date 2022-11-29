@@ -69,14 +69,14 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("AttackerStrategySnapshot")
-                        .HasColumnType("longtext");
-
                     b.Property<int>("AttackerWins")
                         .HasColumnType("int");
 
                     b.Property<Guid>("AttackingStrategyId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("AttackingStrategySnapshot")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("BattleStatus")
                         .HasColumnType("int");
@@ -396,6 +396,9 @@ namespace AVA.Migrations
 
                     b.Property<bool>("IsAttackTurn")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LinesExecuted")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("TurnData")
                         .IsRequired()
