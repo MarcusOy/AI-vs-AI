@@ -90,6 +90,7 @@ public class BattleGame {
                 ", gameNumber=" + gameNumber +
                 ", didAttackerWin=" + didAttackerWin +
                 ", attackerColor=" + AttackerColor +
+                ", stackTrace=" + stackTrace +
                 ", turns=" + getTurnsString() /* turns */ +
                 '}';
     }

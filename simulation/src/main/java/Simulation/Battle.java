@@ -17,12 +17,12 @@ public class Battle {
     public int iterations;
     public int attackerWins;
     public int defenderWins;
-    public String stackTrace;
+
+    public String attackingStrategySnapshot;
+    public String defendingStrategySnapshot;
 
     public String attackingStrategyId;
-    public Strategy attackingStrategy;
     public String defendingStrategyId;
-    public Strategy defendingStrategy;
 
     public boolean isTestSubmission;
 
@@ -41,10 +41,13 @@ public class Battle {
         init();
     }
 
-    public Battle(int iterations, String attackingStrategyId, String defendingStrategyId) {
+    public Battle(int iterations, String attackingStrategyId, String defendingStrategyId, String attackingStrategySnapshot, String defendingStrategySnapshot) {
         super();
         this.attackingStrategyId = attackingStrategyId;
         this.defendingStrategyId = defendingStrategyId;
+        this.attackingStrategySnapshot = attackingStrategySnapshot;
+        this.defendingStrategySnapshot = defendingStrategySnapshot;
+
         this.iterations = iterations;
     }
 
@@ -52,7 +55,6 @@ public class Battle {
         battleGames = new ArrayList<>();
         willAttackerStartWhite = Math.random() < 0.5; // 50% odds the attacker will start white
         battleStatus = 0;
-        stackTrace = "";
     }
 
     // returns the newly created BattleGame

@@ -110,6 +110,9 @@ public class SimulationApp {
     public static void main(String[] args)
             throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 
+        // makes sandbox recognize where jar is located at beginning of simulation, not beginning of first request
+        NashornSandbox sandbox = NashornSandboxes.create();
+
         /*if (9 * 7 - 2 > 0) {
             String testString = getRandomAIJS()''
             try {
@@ -241,7 +244,9 @@ public class SimulationApp {
                 // processes the Battle
                 String attackerIdString = ATTACKER_MANUAL ? "manual" : "stock";
                 String defenderIdString = DEFENDER_MANUAL ? "manual" : "stock";
-                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString);
+                String attackerSnapshot = null;
+                String defenderSnapshot = null;
+                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot);
                 newBattle.id = UUID.randomUUID().toString();
                 prepareAndRunBattle(newBattle);
             }
@@ -547,27 +552,39 @@ public class SimulationApp {
         if (sentBattle != null) {
             // extracts values
 
+            // tries to evaluate attacking snapshot
             try {
-                if (sentBattle.attackingStrategy != null) {
-                    attackerStockOverride = sentBattle.attackingStrategy.sourceCode == null;
-
-                    if (sentBattle.attackingStrategy.sourceCode != null)
-                        attackingSandbox = evaluateSourceCode(sentBattle.attackingStrategy.sourceCode);
+                if (sentBattle.attackingStrategySnapshot != null) {
+                    attackerStockOverride = false;
+                    attackingSandbox = evaluateSourceCode(sentBattle.attackingStrategySnapshot);
                 }
-                if (sentBattle.defendingStrategy != null) {
-                    defenderStockOverride = sentBattle.defendingStrategy.sourceCode == null;
+                else
+                    attackerStockOverride = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                handleEvaluationError(sentBattle, Color.WHITE.equals(sentBattle.getAttackerColor()));
 
-                    if (sentBattle.defendingStrategy.sourceCode != null)
-                        defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategy.sourceCode);
-                } else if (JAVASCRIPT_STOCK) {
-                    attackingSandbox = evaluateSourceCode(getRandomAIJS());
-                    defendingSandbox = evaluateSourceCode(getRandomAIJS());
+                return;
+            }
+
+            // tries to evaluate defending snapshot
+            try {
+                if (sentBattle.defendingStrategySnapshot != null) {
+                    defenderStockOverride = false;
+                    defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategySnapshot);
+                }
+                else {
+                    defenderStockOverride = true;
+
+                    if (JAVASCRIPT_STOCK) {
+                        attackingSandbox = evaluateSourceCode(getRandomAIJS());
+                        defendingSandbox = evaluateSourceCode(getRandomAIJS());
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                String errorString = "JS EVALUATION ERROR - passed SourceCode has errors\n";
-                System.out.print(errorString);
-                sentBattle.stackTrace += errorString;
+                handleEvaluationError(sentBattle, Color.BLACK.equals(sentBattle.getAttackerColor()));
+
                 return;
             }
 
@@ -580,6 +597,19 @@ public class SimulationApp {
                 System.out.println("numGames must be odd, not: " + numGames);
             }
         }
+    }
+
+    // make a strategy lose if its source code cannot be evaluated properly,
+    static void handleEvaluationError(Battle sentBattle, boolean isWhite) {
+        String errorString = "JS EVALUATION ERROR - passed SourceCode has errors\n";
+        System.out.print(errorString);
+        sentBattle.addBattleGame();
+
+        BattleGame newBattleGame = sentBattle.battleGames.get(0);
+        newBattleGame.stackTrace += errorString;
+
+        // makes the other color win because this color had an invalid source
+        processBattleGameWinner(sentBattle, newBattleGame, isWhite ? Color.BLACK : Color.WHITE);
     }
 
     // runs a full battle
@@ -629,28 +659,7 @@ public class SimulationApp {
             gameState = new GameState();
 
             Color gameWinner = playGame(battle, currentBattleGame);
-            boolean attackerIsWhite = battle.getAttackerColor().equals(Color.WHITE);
-            int aPi = attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
-            int dPi = !attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
-            int aPa = attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
-            int dPa = !attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
-
-            // writes JSON obj
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-            String jsonBoard = null;
-            try {
-                jsonBoard = mapper.writeValueAsString(addPieceIdsUnreliableIds(gameState.board));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                System.out.println("JSON writing of JSON board failed");
-            }
-
-            if (currentBattleGame.stackTrace.length() <= 0)
-                currentBattleGame.stackTrace = compressedExecutionTraceHolder[1];
-            compressedExecutionTraceHolder[1] = "";
-            currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
-            battle.processGameWinner(currentBattleGame, gameWinner);
+            processBattleGameWinner(battle, currentBattleGame, gameWinner);
 
             if (CONSOLE_APP)
                 System.out.println("Game Over ---- Launching next game...");
@@ -745,6 +754,9 @@ public class SimulationApp {
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
     static Color playTurn(boolean isManualCom, Battle battle, BattleGame battleGame) {
+        // resets executionTrace Values
+        compressedExecutionTraceHolder = new String[2];
+
         // fetch player move
         if (CONSOLE_APP)
             System.out.println(playerString(gameState.currentPlayer) + "'s turn");
@@ -870,7 +882,7 @@ public class SimulationApp {
             //System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
             //System.out.println("\n\n\n\noutput: " + strategySource);
-            try {
+            //try {
                 sandbox.eval(strategySource);
                 processStrategySource(sandbox, compressedExecutionTraceHolder);
                 String executionTrace = compressedExecutionTraceHolder[0];//sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
@@ -882,9 +894,9 @@ public class SimulationApp {
                 //System.out.println("Compressed: " + executionTrace);
                 //rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
                 //System.out.println("Minimal: " + rawExecutionTrace);
-            } catch (Exception e) {
+            /*} catch (Exception e) {
                 e.printStackTrace();
-            }
+            }*/
         }
 
         return sandbox;
@@ -920,9 +932,13 @@ public class SimulationApp {
             lineCountingString = lineCountingString.substring(newLineIndex + 1);
         }
 
-        // starts the line counting with the calling of getMove()
+        // starts the line counting with the line after getMove()
         result += workingString.substring(0, indexOfGetMove);
         workingString = workingString.substring(indexOfGetMove);
+        int indexOfLineAfterGetMove = workingString.indexOf("\n") + 1;
+        result += workingString.substring(0, indexOfLineAfterGetMove);
+        workingString = workingString.substring(indexOfLineAfterGetMove);
+        currentLineNum++; // so it starts after getMove() line
         //currentLineNum = lineOfGetMove;
 
         // defines patterns to match intermediate strings against
@@ -1516,10 +1532,8 @@ public class SimulationApp {
             // this is if this player's previous and current moves match this player's 2 moves before that
             // this indicates that a strategy is moving a piece back and forth repeatedly
         if (battleGame != null) {
-            System.out.println("entering");
             ArrayList<Turn> turns = battleGame.turns;
             Color currentColor = getPlayerColor(gameState.currentPlayer);
-            System.out.println("newEqual: " + turns.get(turns.size() - 1).getTurnData().equals(turns.get(turns.size() - 5).getTurnData()) + "    prevEqual: " + turns.get(turns.size() - 3).getTurnData().equals(turns.get(turns.size() - 7).getTurnData()));
             boolean detectedRepeatedTwoMoves = turns.size() >= 7 &&
                     turns.get(turns.size() - 1).getTurnData().equals(turns.get(turns.size() - 5).getTurnData()) &&
                     turns.get(turns.size() - 3).getTurnData().equals(turns.get(turns.size() - 7).getTurnData());
@@ -1603,6 +1617,32 @@ public class SimulationApp {
     // changes whose turn it is in the gameState
     public static void alternatePlayer() {
         gameState.currentPlayer = gameState.getOpponent();
+    }
+
+    // sets the winner of the battleGame
+    public static void processBattleGameWinner(Battle battle, BattleGame currentBattleGame, Color gameWinner) {
+        boolean attackerIsWhite = battle.getAttackerColor().equals(Color.WHITE);
+        int aPi = attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+        int dPi = !attackerIsWhite ? gameState.numWhitePieces : gameState.numBlackPieces;
+        int aPa = attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+        int dPa = !attackerIsWhite ? gameState.numWhitePawns : gameState.numBlackPawns;
+
+        // writes JSON obj
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        String jsonBoard = null;
+        try {
+            jsonBoard = mapper.writeValueAsString(addPieceIdsUnreliableIds(gameState.board));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            System.out.println("JSON writing of JSON board failed");
+        }
+
+        if (currentBattleGame.stackTrace.length() <= 0)
+            currentBattleGame.stackTrace = compressedExecutionTraceHolder[1];
+        compressedExecutionTraceHolder[1] = "";
+        currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
+        battle.processGameWinner(currentBattleGame, gameWinner);
     }
 
     public static void printBoard() {
