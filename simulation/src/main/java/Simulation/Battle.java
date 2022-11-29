@@ -52,6 +52,7 @@ public class Battle {
         battleGames = new ArrayList<>();
         willAttackerStartWhite = Math.random() < 0.5; // 50% odds the attacker will start white
         battleStatus = 0;
+        stackTrace = "";
     }
 
     // returns the newly created BattleGame

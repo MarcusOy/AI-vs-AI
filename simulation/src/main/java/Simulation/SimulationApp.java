@@ -102,6 +102,9 @@ public class SimulationApp {
     // used to select a stock for manual play
     static UUID manualPlayStockId = null;
 
+    // used to track execution trace per turn, and stack trace for a battle or battlegame
+    static String[] compressedExecutionTraceHolder = new String[2];
+
     // Runs a battle with an infinite number of BattleGames, starting a fresh
     // BattleGame when the previous completes
     public static void main(String[] args)
@@ -114,6 +117,25 @@ public class SimulationApp {
             } catch (ScriptException e) {
                 e.printStackTrace();
             }
+
+            gameState = new GameState();
+            BattleGame battleGame = new BattleGame(0, "", Color.WHITE);
+            battleGame.addTurn("", Color.WHITE, "A0, A1", "");
+            battleGame.addTurn("", Color.BLACK, "A0, A1", "");
+            battleGame.addTurn("", Color.WHITE, "A1, A0", "");
+            battleGame.addTurn("", Color.BLACK, "A1, A0", "");
+            battleGame.addTurn("", Color.WHITE, "A0, A1", "");
+            battleGame.addTurn("", Color.BLACK, "A0, A1", "");
+            battleGame.addTurn("", Color.WHITE, "A1, A0", "");
+            battleGame.addTurn("", Color.BLACK, "A1, A0", "");
+
+            gameState.currentPlayer = gameState.BLACK;
+
+            System.out.println(checkIfGameWon(battleGame));
+            int w = battleGame.getWhiteCycleLength();
+            int b = battleGame.getBlackCycleLength();
+            System.out.println("W: " + w + "   B: " + b);
+
             return;
         }*/
 
@@ -204,6 +226,8 @@ public class SimulationApp {
             while (true) {
                 // gets a valid number of games
                 while (true) {
+                    /*System.out.println("longestTrace: " + Turn.longestLineTrace);
+                    Turn.longestLineTrace = "";*/
                     System.out.println("\n\nHow many Games do you want in this Battle?  This must be an odd integer");
                     try {
                         numGames = Integer.parseInt(scan.nextLine());
@@ -541,7 +565,9 @@ public class SimulationApp {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("JS EVALUATION ERROR - passed SourceCode has errors");
+                String errorString = "JS EVALUATION ERROR - passed SourceCode has errors\n";
+                System.out.print(errorString);
+                sentBattle.stackTrace += errorString;
                 return;
             }
 
@@ -620,6 +646,9 @@ public class SimulationApp {
                 System.out.println("JSON writing of JSON board failed");
             }
 
+            if (currentBattleGame.stackTrace.length() <= 0)
+                currentBattleGame.stackTrace = compressedExecutionTraceHolder[1];
+            compressedExecutionTraceHolder[1] = "";
             currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
             battle.processGameWinner(currentBattleGame, gameWinner);
 
@@ -724,20 +753,23 @@ public class SimulationApp {
         boolean isAttackerTurn = isManualCom ? false : currentColor().equals(battleGame.getAttackerColor());
 
         String moveString = isAttackerTurn
-                ? getAttackerMoveString(isManualCom)
-                : getDefenderMoveString(isManualCom);
+                ? getAttackerMoveString(isManualCom, compressedExecutionTraceHolder)
+                : getDefenderMoveString(isManualCom, compressedExecutionTraceHolder);
         lastMoveString = moveString;
 
         if (!isManualCom) {
             // stores moveString in new turn, even if invalid
-            battleGame.addTurn(battle.getId(), currentColor(), moveString);
+            battleGame.addTurn(battle.getId(), currentColor(), moveString, compressedExecutionTraceHolder[0]);
         }
+        compressedExecutionTraceHolder[0] = "";
 
         // validates move string
         boolean isValid = isMoveValid(moveString, gameState.board);
         if (!isValid) {
             if (DEBUG) {
-                System.out.printf("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
+                String errorString = String.format("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
+                battleGame.stackTrace += errorString;
+                System.out.print(errorString);
                 System.out.println("Move String must be in the form \"<fromCell>, \"<toCell>\"");
             }
             return getPlayerColor(gameState.getOpponent());
@@ -750,7 +782,7 @@ public class SimulationApp {
             printBoard();
 
         // determines if game has been won
-        Color potentialWinner = checkIfGameWon();
+        Color potentialWinner = checkIfGameWon(battleGame);
         if (potentialWinner != null) {
             return potentialWinner;
         }
@@ -764,7 +796,7 @@ public class SimulationApp {
     // Return string must be in the form "<fromCell>, <toCell>".
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
-    static String getAttackerMoveString(boolean isManualCom) {
+    static String getAttackerMoveString(boolean isManualCom, String[] compressedExecutionTraceHolder) {
         debugPrintln("Fetching attacker's move");
         if (ATTACKER_MANUAL)
             return scan.nextLine();
@@ -776,9 +808,10 @@ public class SimulationApp {
             if (isManualCom || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
             } else // ATTACKER is sent from backend
-                moveString = processStrategySource(attackingSandbox);// attackingStrategy.getMove(gameState);
+                moveString = processStrategySource(attackingSandbox, compressedExecutionTraceHolder);// attackingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Attacker Exception\n%s\n", e);
+            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
             if (DEBUG)
                 e.printStackTrace();
         }
@@ -792,7 +825,7 @@ public class SimulationApp {
     // Return string must be in the form "<fromCell>, <toCell>".
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
-    static String getDefenderMoveString(boolean isManualCom) {
+    static String getDefenderMoveString(boolean isManualCom, String[] compressedExecutionTraceHolder) {
         debugPrintln("Fetching defender's move");
         if (DEFENDER_MANUAL)
             return scan.nextLine();
@@ -804,9 +837,10 @@ public class SimulationApp {
             if (isManualCom || defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
             } else // DEFENDER is sent from backend
-                moveString = processStrategySource(defendingSandbox);// defendingStrategy.getMove(gameState);
+                moveString = processStrategySource(defendingSandbox, compressedExecutionTraceHolder);// defendingStrategy.getMove(gameState);
         } catch (Exception e) {
             debugPrintf("Defender Exception\n%s\n", e);
+            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
             if (DEBUG)
                 e.printStackTrace();
         }
@@ -828,27 +862,27 @@ public class SimulationApp {
         // perform test processing
         if (gameState == null)
             gameState = new GameState();
-        String testProcessingResult = processStrategySource(sandbox);
+        String testProcessingResult = processStrategySource(sandbox, new String[] { "" });
         boolean erroredOut = testProcessingResult == null;
 
         // inject line tracking code
         if (!erroredOut) {
-            System.out.println("input: " + strategySource);
+            //System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
-            System.out.println("\n\n\n\noutput: " + strategySource);
+            //System.out.println("\n\n\n\noutput: " + strategySource);
             try {
                 sandbox.eval(strategySource);
-                processStrategySource(sandbox);
-                String executionTrace = sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
-                String rawExecutionTrace = executionTrace;
-                System.out.println("Executed Lines: " + executionTrace);
-                executionTrace = compressExecutionTraceCycles(executionTrace);
-                System.out.println("CompressedCycles: " + executionTrace);
-                executionTrace = compressExecutionTraceConsecutive(executionTrace);
-                System.out.println("CompressedConsecutive: " + executionTrace);
-                rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
-                System.out.println("Minimal: " + rawExecutionTrace);
-            } catch (NoSuchMethodException e) {
+                processStrategySource(sandbox, compressedExecutionTraceHolder);
+                String executionTrace = compressedExecutionTraceHolder[0];//sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
+                //String rawExecutionTrace = executionTrace;
+                //System.out.println("Executed Lines: " + executionTrace);
+                //executionTrace = compressExecutionTraceCycles(executionTrace);
+                //System.out.println("CompressedCycles: " + executionTrace);
+                //executionTrace = compressExecutionTraceConsecutive(executionTrace);
+                //System.out.println("Compressed: " + executionTrace);
+                //rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
+                //System.out.println("Minimal: " + rawExecutionTrace);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -1074,7 +1108,6 @@ public class SimulationApp {
                     int numCycleRepititions = 1;
                     for (int k = leftIndex + spacing; k < lineStringSplit.length; k += spacing) {
                         boolean foundCycle = doesWindowHoldExpectedCycle(lineStringSplit, leftIndex, k, spacing);
-                        //System.out.printf("doesWindowHold(left: %d, right: %d, spacing: %d    -    %s\n", leftIndex, k, spacing, foundCycle + "");
 
                         if (!foundCycle)
                             break;
@@ -1083,23 +1116,13 @@ public class SimulationApp {
                     }
 
                     if (numCycleRepititions > 1) {
-                        /*String cycleInfoString = "(";
-
-                        for (int k = 0; k < spacing; k++)
-                            cycleInfoString += lineStringSplit[leftIndex + k] + ", ";
-
-                        cycleInfoString += ")x" + numCycleRepititions + " -- indeces[" + leftIndex + "-" + (leftIndex + spacing - 1) + "]";*/
                         CycleInfo newCycleInfo = new CycleInfo(lineStringSplit, numCycleRepititions, leftIndex, spacing);
-                        //System.out.println(cycleInfoString + "     " + newCycleInfo.getCompressedCycleString());
                         cycleInfoHeap.add(newCycleInfo);
 
                         leftIndex = newCycleInfo.lastCycleEndIndex + 1;
-                        //System.out.println("newLeftIndex: " + leftIndex);
                     }
                     else
                         leftIndex += spacing;
-
-                    //System.out.println("newLeftIndex: " + leftIndex);
                 }
             }
         }
@@ -1110,39 +1133,70 @@ public class SimulationApp {
         while (!cycleInfoHeap.isEmpty()) {
             CycleInfo curInfo = cycleInfoHeap.remove();
             String curLineString = cycledStringArray[curInfo.firstCycleStartIndex];
-            //System.out.println("examined cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex);
-
-            // continue if already compressed into another index
-            if (curLineString.equals(""))
-                continue;
-
-            // coninue if this index holds compressed info
-            if (curLineString.contains(/*"("*/CycleInfo.REPETITION_START_CHAR))
-                continue;
-            int curLineNum;
-            try {
-                curLineNum = Integer.parseInt(curLineString);
-            } catch (Exception e) {
-                continue;
-            }
+            //System.out.println("examined cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex + "    " + curInfo.getCompressedCycleString());
 
             // continue if compressing at least 2 iterations would overlap with an edge of another compression
             boolean containsCompressedInfo = false;
+            boolean cycleStartsMatch = false;
+            boolean cycleEndsMatch = false;
             for (int i = curInfo.firstCycleStartIndex; i <= curInfo.lastCycleEndIndex; i++) {
-                if (cycledStringArray[i].equals("") || cycledStringArray[i].contains("(")) {
+                String curString = cycledStringArray[i];
+
+                if (curString.contains(CycleInfo.REPETITION_START_CHAR) || curString.contains(CycleInfo.REPETITION_END_CHAR) || curString.equals("")) {
+                    boolean cycleStartsMatchJustOccurred = (i == curInfo.firstCycleStartIndex && curString.contains(CycleInfo.REPETITION_START_CHAR));
+                    cycleStartsMatch = cycleStartsMatch || cycleStartsMatchJustOccurred;
+                    cycleEndsMatch = (i == curInfo.lastCycleEndIndex && curString.contains(CycleInfo.REPETITION_END_CHAR));
+
+                    // if this cycle is touching, but not overlapping with an end of another, larger, encompassing cycle, allow this cycle
+                    if (cycleEndsMatch) {
+                        //System.out.println("cycleEndsMatch");
+                        break;
+                    } else if (cycleStartsMatchJustOccurred) {
+                        //System.out.println("cycleStartsMatch");
+                        continue;
+                    }
+
+                    // retry this cycle later with a size that won't overlap, if possible
+                    int numRepetitionsTested = (i - curInfo.firstCycleStartIndex) / curInfo.cycleLength;
+                    int numRepetitionsRemaining = (curInfo.lastCycleEndIndex - i) / curInfo.cycleLength;
+                    if (i > curInfo.secondCycleEndIndex) {
+                        //int numActualFullReps = (i - curInfo.firstCycleStartIndex) / curInfo.cycleLength;
+                        cycleInfoHeap.add(new CycleInfo(curInfo.cycleStringArr, numRepetitionsTested, curInfo.firstCycleStartIndex, curInfo.cycleLength));
+                        //System.out.print("examined cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex + "    " + curInfo.getCompressedCycleString() + "          ");
+                        //System.out.println("retrying w/ left reps: x" + numRepetitionsTested);
+                    }
+                    if (numRepetitionsRemaining > 1) {
+                        int newStartIndex = curInfo.firstCycleStartIndex + curInfo.cycleLength * (numRepetitionsTested + 1);
+                        cycleInfoHeap.add(new CycleInfo(curInfo.cycleStringArr, numRepetitionsRemaining, newStartIndex, curInfo.cycleLength));
+                        //System.out.print("examined cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex + "    " + curInfo.getCompressedCycleString() + "          ");
+                        //System.out.println("retrying w/ right reps: x" + numRepetitionsRemaining);
+                    }
+
+                    //System.out.println("cycle overlapped");
                     containsCompressedInfo = true;
                     break;
                 }
             }
             if (containsCompressedInfo)
-                continue;;
+                continue;
 
             //System.out.println("using cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex);
 
-            cycledStringArray[curInfo.firstCycleStartIndex] = curInfo.getCompressedCycleString();
-            //System.out.println(curInfo.getNumCompressedLineNumsBeforeIndex(curInfo.lastCycleEndIndex));
+            String curStart = lineStringSplit[curInfo.firstCycleStartIndex];
+            String curEnd = lineStringSplit[curInfo.lastCycleEndIndex];
+            int firstCycleEndIndex = curInfo.firstCycleStartIndex + curInfo.cycleLength - 1;
+            if (cycleStartsMatch) {
+                cycledStringArray[curInfo.firstCycleStartIndex] = curInfo.getStartString(cycledStringArray[curInfo.firstCycleStartIndex]);
+                //System.out.println("cycleStartsMatching");
+            } else
+                cycledStringArray[curInfo.firstCycleStartIndex] = curInfo.getStartString(curStart); //curInfo.getCompressedCycleString();
+            cycledStringArray[firstCycleEndIndex] = curInfo.getEndString(curEnd);
+            if (cycleEndsMatch) {
+                cycledStringArray[curInfo.lastCycleEndIndex] = curInfo.getEndStringLineNumDeletion(cycledStringArray[curInfo.lastCycleEndIndex]);
+            } else
+                cycledStringArray[curInfo.lastCycleEndIndex] = "";
 
-            for (int i = curInfo.firstCycleStartIndex + 1; i <= curInfo.lastCycleEndIndex; i++) {
+            for (int i = firstCycleEndIndex + 1; i < curInfo.lastCycleEndIndex; i++) {
                 cycledStringArray[i] = "";
             }
 
@@ -1150,18 +1204,31 @@ public class SimulationApp {
         }
 
         // prints out the compressed cycle strings
-        //System.out.print("CompressedCycles: ");
+        String prevString = null;
         for (int i = 0; i < cycledStringArray.length; i++) {
             String curString = cycledStringArray[i];
 
-            if (curString.equals(""))
+            // ignores this string for printing
+            if (curString.equals("") || curString.equals(CycleInfo.REPETITION_END_CHAR))
                 continue;
 
-            //System.out.print(curString + ", ");
-            //result += curString + ", ";
-            builderResult.append(curString + CycleInfo.DELIMITER);
+            // prints the previous string
+            if (prevString != null)
+                builderResult.append(prevString);
+
+            // don't print delimiter if this is a consecutive cycle start or consecutive cycle end
+            if (prevString != null && !((prevString.equals(CycleInfo.REPETITION_START_CHAR) && curString.contains(CycleInfo.REPETITION_START_CHAR))
+                    || (prevString.contains(CycleInfo.REPETITION_END_CHAR) && curString.contains(CycleInfo.REPETITION_END_CHAR) && curString.indexOf(CycleInfo.REPETITION_END_CHAR) == 0)))
+                builderResult.append(CycleInfo.DELIMITER);
+
+            // prints the end of the resulting string
+            if (i == cycledStringArray.length - 1) {
+                builderResult.append(curString + CycleInfo.DELIMITER);
+                break;
+            }
+
+            prevString = curString;
         }
-        //System.out.println("");
 
         result = builderResult.toString();
         //System.out.println("CompressedCycles: " + result);
@@ -1199,22 +1266,25 @@ public class SimulationApp {
             boolean startingOrEndingCycle = false;
             String cycleStringNoDigits = "";
             //try {
-                int cycleOpenIndex = curLineString.indexOf(CycleInfo.REPETITION_START_CHAR);
+            // removes {<splitArrIndex>} if there
+                int cycleOpenIndex = -1;
                 int cycleCloseIndex = curLineString.indexOf(CycleInfo.REPETITION_END_CHAR);
 
-                String adjustedIntString;
-                if (cycleOpenIndex >= 0) {
-                    adjustedIntString = curLineString.substring(cycleOpenIndex + 1);
-                    cycleStringNoDigits = curLineString.substring(0, cycleOpenIndex + 1);
+                String adjustedIntString = curLineString;
+                int curCycleOpenIndex;
+                String curCycleStartString = curLineString;
+                while ((curCycleOpenIndex = curCycleStartString.indexOf(CycleInfo.REPETITION_START_CHAR)) >= 0) {
+                    adjustedIntString = curCycleStartString.substring(curCycleOpenIndex + 1);
+                    cycleStringNoDigits += curCycleStartString.substring(0, curCycleOpenIndex + 1);
+                    curCycleStartString = adjustedIntString;
                     startingOrEndingCycle = true;
+                    cycleOpenIndex = curCycleOpenIndex;
                 }
-                else if (cycleCloseIndex >= 0) {
+                if (cycleCloseIndex >= 0) {
                     adjustedIntString = curLineString.substring(0, cycleCloseIndex);
                     cycleStringNoDigits = curLineString.substring(cycleCloseIndex);
                     startingOrEndingCycle = true;
                 }
-                else
-                    adjustedIntString = curLineString;
                 //curLineNumFromCycle = Integer.parseInt(adjustedIntString);
 
                 curLineNum = Integer.parseInt(adjustedIntString);
@@ -1232,6 +1302,11 @@ public class SimulationApp {
                 else {
                     if (prevLineNum - chainStartLineNum > 1)
                         builderResult.append(/*"[" + */chainStartLineNum + "-" + prevLineNum + CycleInfo.DELIMITER/* + "], "*/);// + curLineString + ", ");
+                    else if (cycleCloseIndex > 0 && curLineNum - chainStartLineNum > 1 && curLineNum - prevLineNum == 1) {
+                        String stringToInsert = chainStartLineNum + "-";
+                        builderResult.append(stringToInsert);
+                        //System.out.println("ofInterest: " + stringToInsert);
+                    }
                     else {
                         builderResult.append(chainStartLineNum + CycleInfo.DELIMITER/*", "*/);
 
@@ -1286,18 +1361,25 @@ public class SimulationApp {
         String result = "";
         StringBuilder builderResult = new StringBuilder("");
         String[] splitArr = executionTrace.split(", ");
-        Arrays.sort(splitArr);
-
-        String prevLineString = "";
+        int[] splitIntArr = new int[splitArr.length];
         for (int i = 0; i < splitArr.length; i++) {
-            String curLineString = splitArr[i];
-            if (curLineString.equals("") || curLineString.equals(" "))
+            try {
+                splitIntArr[i] = Integer.parseInt(splitArr[i]);
+            } catch (Exception e) { }
+        }
+
+        Arrays.sort(splitIntArr);
+
+        int prevLineNum = -1;
+        for (int i = 0; i < splitIntArr.length; i++) {
+            int curLineNum = splitIntArr[i];
+            if (curLineNum < 0)
                 break;
 
-            if (!curLineString.equals(prevLineString))
-                builderResult.append(curLineString + ", ");//result += curLineString + ", ";
+            if (curLineNum != prevLineNum)
+                builderResult.append(curLineNum + ", ");//result += curLineString + ", ";
 
-            prevLineString = curLineString;
+            prevLineNum = curLineNum;
         }
 
         result = builderResult.toString();
@@ -1306,7 +1388,7 @@ public class SimulationApp {
     }
 
     // gets a moveString from evaluating the strategy's source code
-    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox) {
+    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox, String[] compressedExecutionTraceHolder) {
         String result;
         String execTrace = "";
 
@@ -1334,14 +1416,19 @@ public class SimulationApp {
                 execTrace = compressExecutionTraceCycles(execTrace);
                 //System.out.println("CompressedCycles: " + execTrace);
                 execTrace = compressExecutionTraceConsecutive(execTrace);
-                //System.out.println("CompressedConsecutive: " + execTrace);
+                //System.out.println("Compressed: " + execTrace);
+                rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
+                //System.out.println("Minimal: " + rawExecutionTrace);
             } catch (NoSuchMethodException ex) {
                 System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            compressedExecutionTraceHolder[1] = e.toString() + "\n" + e.getStackTrace();
             result = "JS INVOKE ERROR";
         }
+
+        compressedExecutionTraceHolder[0] = execTrace;
 
         return result;
     }
@@ -1400,7 +1487,7 @@ public class SimulationApp {
 
     // determines if the last player has just won the game
     // returns the color of the winner, if there was one
-    public static Color checkIfGameWon() {
+    public static Color checkIfGameWon(BattleGame battleGame) {
         // end game if all of a player's pawns are captured
         if (gameState.numWhitePawns == 0) { // if white has lost all their pawns
             // white can only win in this situation if they initiated a move that captured
@@ -1425,7 +1512,92 @@ public class SimulationApp {
             return getPlayerColor(gameState.getOpponent());
         }
 
+        // detects a repeated move (cycle)
+            // this is if this player's previous and current moves match this player's 2 moves before that
+            // this indicates that a strategy is moving a piece back and forth repeatedly
+        if (battleGame != null) {
+            System.out.println("entering");
+            ArrayList<Turn> turns = battleGame.turns;
+            Color currentColor = getPlayerColor(gameState.currentPlayer);
+            System.out.println("newEqual: " + turns.get(turns.size() - 1).getTurnData().equals(turns.get(turns.size() - 5).getTurnData()) + "    prevEqual: " + turns.get(turns.size() - 3).getTurnData().equals(turns.get(turns.size() - 7).getTurnData()));
+            boolean detectedRepeatedTwoMoves = turns.size() >= 7 &&
+                    turns.get(turns.size() - 1).getTurnData().equals(turns.get(turns.size() - 5).getTurnData()) &&
+                    turns.get(turns.size() - 3).getTurnData().equals(turns.get(turns.size() - 7).getTurnData());
+
+            // increment's the current cycle length if repeat moves detected, otherwise resets the cycle length count
+            if (currentColor.equals(Color.WHITE))
+                battleGame.setWhiteCycleLength(detectedRepeatedTwoMoves ? (battleGame.getWhiteCycleLength() + 1) : 0);
+            else //if (currentColor.equals(Color.BLACK))
+                battleGame.setBlackCycleLength(detectedRepeatedTwoMoves ? (battleGame.getBlackCycleLength() + 1) : 0);
+
+            // end game if a strategy has repeated two moves enough times to reach the MOVE_CYCLE_CAP
+            // the strategy that violated this MOVE_CYCLE_CAP loses the game
+            final int MOVE_CYCLE_CAP = 5;
+            if (battleGame.getWhiteCycleLength() >= MOVE_CYCLE_CAP)
+                return getPlayerColor(gameState.WHITE);
+            else if (battleGame.getBlackCycleLength() >= MOVE_CYCLE_CAP)
+                return getPlayerColor(gameState.BLACK);
+        }
+
+        // end game if reached turn cap
+        final int TURN_CAP = 2000;
+        if (gameState.numMovesMade >= TURN_CAP) {
+            // determine ambiguous winner
+            Color winnerColor;
+
+            // If no tie, give win to side w/ most pawns remaining
+            winnerColor = runTieBreaker(gameState.numWhitePawns, gameState.numBlackPawns);
+            if (!winnerColor.equals(Color.ERROR_PLAYER))
+                return winnerColor;
+
+            // If no tie, give win to side w/ most pieces remaining
+            winnerColor = runTieBreaker(gameState.numWhitePieces, gameState.numBlackPieces);
+            if (!winnerColor.equals(Color.ERROR_PLAYER))
+                return winnerColor;
+
+
+            // If no tie, give win to side w/ the furthest advanced pawn
+            winnerColor = runTieBreaker(getFurthestAdvancedPawnDistance(Color.WHITE), getFurthestAdvancedPawnDistance(Color.BLACK));
+            if (!winnerColor.equals(Color.ERROR_PLAYER))
+                return winnerColor;
+
+            // As a final tiebreaker, give win to black because white always takes the first turn of the game
+            return Color.BLACK;
+        }
+
         return null;
+    }
+
+    // Compares two values and returns the color with the greater value
+    // Returns Color.ERROR_PLAYER if a tie occurs;
+    public static Color runTieBreaker(int whiteVal, int blackVal) {
+        if (whiteVal == blackVal) // on tie, return ERROR_PLAYER
+            return Color.ERROR_PLAYER;
+        else // return the color of the side with the greater value
+            return (whiteVal > blackVal) ? Color.WHITE : Color.BLACK;
+    }
+
+    // get distance that furthest pawn has traveled (this is number of rows from that sides back rank)
+    public static int getFurthestAdvancedPawnDistance(Color colorToCheck) {
+        API api = new API();
+        boolean isWhite = colorToCheck.equals(Color.WHITE);
+        int backRankRow = isWhite ? BOARD_LENGTH - 1 : 0;
+
+        for (int distAdvanced = BOARD_LENGTH - 1; distAdvanced >= 0; distAdvanced--) {
+            int row = isWhite ? (backRankRow - distAdvanced) : (backRankRow + distAdvanced);
+
+            for (int col = 0; col < BOARD_LENGTH; col++) {
+                String curPiece = api.getCellValue(col, row, gameState.board);
+
+                // if the current piece is a pawn of the color that we are checking
+                if (api.getPieceMoveDistance(col, row, gameState.board) == 1 && getPlayerColor(api.getPieceColor(col, row, gameState.board)).equals(colorToCheck)) {;
+                    return distAdvanced;
+                }
+            }
+        }
+
+        // this case should only be reached if this color has no pawns left
+        return 0;
     }
 
     // changes whose turn it is in the gameState

@@ -60,6 +60,23 @@ public class CycleInfo implements Comparable {
         return getCompressedCycleString(lastCycleEndIndex);
     }
 
+    public String getStartString(String prevVal) {
+        return REPETITION_START_CHAR + prevVal;
+    }
+
+    public String getEndString(String prevVal) {
+        return prevVal + REPETITION_END_CHAR + "x" + numRepetitions;
+    }
+
+    public String getEndStringLineNumDeletion(String prevVal) {
+        int endCharIndex = prevVal.indexOf(REPETITION_END_CHAR);
+        if (endCharIndex < 0)
+            return getEndString(prevVal);
+
+        String result = prevVal.substring(endCharIndex);
+        return result;
+    }
+
     @Override
     public int compareTo(@NotNull Object o) {
         CycleInfo otherInfo = (CycleInfo)o;
