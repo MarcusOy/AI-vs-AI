@@ -28,6 +28,17 @@ import {
     Tooltip,
     Badge,
     useDisclosure,
+    ModalFooter,
+    ModalContent,
+    Modal,
+    ModalOverlay,
+    ModalHeader,
+    ModalBody,
+    FormLabel,
+    FormControl,
+    ModalCloseButton,
+    Input,
+    Highlight,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
@@ -36,8 +47,10 @@ import useAVAFetch from '../../helpers/useAVAFetch'
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
-import { TbBook2 } from 'react-icons/tb'
+import { Result } from '../../models/result'
+import { TbBook2, TbSwords } from 'react-icons/tb'
 import { GoGlobe, GoLock } from 'react-icons/go'
+import { ResultType } from '../../models/result-type'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
 import DuplicateModal from '../../components/modals/DuplicateModal'
@@ -48,22 +61,28 @@ const StrategyPage = () => {
     const navigate = useNavigate()
     const { isOpen, onOpen, onClose } = useDisclosure()
     const deleteModal = useDisclosure()
+    const attackModal = useDisclosure()
     const { id, tab } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
     const toast = useToast()
-
+    const whoAmIFetch = useAVAFetch('/Account/WhoAmI')
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
     const handleTabsChange = (index) => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
         navigate(`/Strategy/${id}/${tab}`)
     }
+    const initialRef = React.useRef(null)
+    const finalRef = React.useRef(null)
     const visibilityRequest = useAVAFetch(
         '/Strategy/Update',
         { method: 'PUT' },
         { manual: true }, // makes sure this request fires on user action
     )
+
+    // console.log(whoAmIFetch)
+    const strategies: Strategy[] = whoAmIFetch.data.strategies
 
     const onSubmit = async () => {
         const newStrategy: Strategy = {
@@ -170,7 +189,71 @@ const StrategyPage = () => {
                             Actions
                         </MenuButton>
                         <MenuList>
-                            <MenuItem>Attack</MenuItem>
+                            <MenuItem onClick={attackModal.onOpen}>Attack</MenuItem>
+                            <Modal
+                                initialFocusRef={initialRef}
+                                finalFocusRef={finalRef}
+                                isOpen={attackModal.isOpen}
+                                onClose={attackModal.onClose}
+                            >
+                                <ModalOverlay />
+                                <ModalContent>
+                                    <ModalHeader>How many times do you want to attack</ModalHeader>
+                                    <ModalCloseButton />
+                                    <ModalBody pb={6}>
+                                        <FormControl>
+                                            <FormLabel>Attacking Number</FormLabel>
+                                            <Input ref={initialRef} placeholder='Enter a number' />
+                                        </FormControl>
+                                    </ModalBody>
+                                    <Stack>
+                                        {error == undefined &&
+                                            strategies.map((s, i) => {
+                                                return (
+                                                    <Button
+                                                        key={s.id}
+                                                        py='8'
+                                                        textAlign='left'
+                                                        justifyContent='start'
+                                                        color='chakra-body-text'
+                                                        variant='ghost'
+                                                        // onClick={() => onNavigate(r)}
+                                                    >
+                                                        <HStack flexGrow={1}>
+                                                            <Avatar
+                                                                bg={randomColor({
+                                                                    string: s.name,
+                                                                })}
+                                                                icon={<TbBook2 size='30' />}
+                                                            />
+
+                                                            <Box flexGrow={1}>
+                                                                <Text
+                                                                    fontSize='xs'
+                                                                    color='CaptionText'
+                                                                >
+                                                                    {/* {number s.version} */}
+                                                                </Text>
+                                                                {/* <Text>{r.title}</Text> */}
+                                                            </Box>
+                                                        </HStack>
+                                                    </Button>
+                                                )
+                                            })}
+                                    </Stack>
+                                    <ModalFooter>
+                                        <Button
+                                            onSubmit={onSubmit}
+                                            onClick={attackModal.onClose}
+                                            colorScheme='blue'
+                                            mr={3}
+                                        >
+                                            Attack
+                                        </Button>
+                                        <Button onClick={attackModal.onClose}>Cancel</Button>
+                                    </ModalFooter>
+                                </ModalContent>
+                            </Modal>
                             <MenuItem>Manually Attack</MenuItem>
                             {isSelf && (
                                 <MenuItem onClick={() => navigate(`/Programming/${strategy.id}`)}>
