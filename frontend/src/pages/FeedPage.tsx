@@ -29,6 +29,18 @@ const FeedPage = () => {
         else if (r.type == ResultType.Strategy || r.type == ResultType.Battle) navigate(`/Strategy/${r.id}/Stats`)
         else navigate('/Invalid')
     }
+    console.log(data);
+    let numberNewUser = 0;
+    if (data != null) {
+        for (let i = 0; i < data.length; i++) {
+            const time = new Date().getTime() - new Date(data[i].time).getTime()
+            const days = Math.floor(time / (24 * 60 * 60 * 1000));
+            if (days == 0) {
+                numberNewUser = numberNewUser + 1;
+            }
+        }    
+    }
+    
     return (
         <Box>
             <Box>
@@ -38,7 +50,8 @@ const FeedPage = () => {
             </Box>
             <Box>
                 <Text>Feed page</Text>
-                <Link to='/ManualPlay'> Manual Play </Link>
+                        <Link to='/ManualPlay'> Manual Play </Link>
+                        <Box><>Number new User: {numberNewUser}</>   </Box>      
             </Box>
                 </HStack>
             </Box>
