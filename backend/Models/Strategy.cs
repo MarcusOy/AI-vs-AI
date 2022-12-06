@@ -19,6 +19,9 @@ public class Strategy : BaseEntity
     public int Version { get; set; }
     [TsOptional]
     public bool IsPrivate { get; set; }
+    [TsOptional]
+    public bool IsJava { get; set; }
+    
 
     // User Relationship (Strategy is created by user)
     [TsOptional]
