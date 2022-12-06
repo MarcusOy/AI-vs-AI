@@ -27,8 +27,17 @@ public class StrategyController : Controller
     }
 
     [HttpPut, Route("/Strategy/Update"), Authorize]
-    public async Task<Strategy> Update([FromBody] Strategy s)
-        => await _strategyService.UpdateAsync(s);
+    public async Task<Strategy> Update([FromBody] Strategy s) {
+        Strategy old = _strategyService.Get(s.Id);
+
+        if (old.Status == StrategyStatus.Draft && s.Status == StrategyStatus.Active) {
+            s.Elo = 0;
+        }
+
+        Strategy ret = await _strategyService.UpdateAsync(s);
+
+        return ret;
+    }
 
     [HttpPut, Route("/Strategy/Duplicate/{id}"), Authorize]
     public async Task<Strategy> Duplicate([FromBody] Strategy s, String id)
