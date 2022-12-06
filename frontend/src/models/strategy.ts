@@ -16,6 +16,7 @@ export interface Strategy extends BaseEntity {
     status?: StrategyStatus;
     version?: number;
     isPrivate?: boolean;
+    isJava?: boolean;
     createdByUserId?: string;
     createdByUser?: User;
     gameId?: number;
