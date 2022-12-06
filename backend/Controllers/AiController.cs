@@ -2,8 +2,10 @@
 using AVA.API.Data;
 using AVA.API.Models;
 using AVA.API.Services;
+using AVA.API.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AVA.API.Controllers;
 
@@ -12,14 +14,17 @@ public class AiController : Controller
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
     private readonly AVADbContext _dbContext;
+    private readonly IHubContext<SimulationHub> _hubContext;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
-                        AVADbContext dbContext)
+                        AVADbContext dbContext,
+                        IHubContext<SimulationHub> hubContext)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
         _dbContext = dbContext;
+        _hubContext = hubContext;
     }
 
     [HttpGet, Route("/getAi/{id}")]
@@ -127,10 +132,29 @@ public class AiController : Controller
 
         return strat;
     }
+
+    [HttpPost, Route("/Strategy/StepRun/{ClientId}/{StockId}")]
+    public async void SimulationStep(String ClientId, Guid StockId, [FromBody] String[][] board) {
+        SimulationHub.SimulationStepRequest newStep = new SimulationHub.SimulationStepRequest();
+        newStep.SentBoard = board;
+        newStep.IsWhiteAI = true;
+        newStep.ClientId = ClientId;
+        newStep.ChosenStockId = StockId;
+
+        await _hubContext.Clients.Client(ClientId).SendAsync("StepRequest", newStep);
+    }
     public class TestStrategyRequest
     {
         public Strategy StrategyToTest { get; set; }
         public int Stock { get; set; }
         public String ClientId { get; set; }
     }
+
+    // public class SimulationStepRequest
+    //     {
+    //         public String[][] SentBoard { get; set; }
+    //         public bool IsWhiteAI { get; set; }
+    //         public String ClientId { get; set; }
+    //         public Guid ChosenStockId { get; set; }
+    //     }
 }
