@@ -246,11 +246,20 @@ public class Battle {
             if (lineNumStartIndex >= 0) {
                 int prevLineNum = Integer.parseInt(lineNumString);
                 String prevStackTrace = battleGame.stackTrace;
-                String a = prevStackTrace.substring(0, indexOfLineNumber);//prevStackTrace.substring(0, lineNumStartIndex);
-                //System.out.println(prevLineNum + " - " + lineOfGetMoveCommented);
-                //int b = lineConversionList.get(prevLineNum - lineOfGetMoveCommented);
+                String a = /*prevStackTrace.substring(0, indexOfLineNumber);*/prevStackTrace.substring(0, lineNumStartIndex);
+                int injectedIndex = prevLineNum - lineOfGetMoveCommented + 3;
+                // subtract 1 for every single read structure in getMove()
+                System.out.println(prevLineNum + " - " + lineOfGetMoveCommented + " + 3 = " + injectedIndex);
+
+                // clamps injectedIndex to be in bounds
+                if (injectedIndex < 0)
+                    injectedIndex = 0;
+                else if (injectedIndex >= lineConversionList.size())
+                    injectedIndex = lineConversionList.size() - 1;
+
+                int b = lineConversionList.get(injectedIndex);
                 String c = prevStackTrace.substring(lineNumEndIndex);
-                battleGame.stackTrace = a /*+ b*/ + c;
+                battleGame.stackTrace = a + b + c;
             }
         }
     }

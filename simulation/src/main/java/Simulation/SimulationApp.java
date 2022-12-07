@@ -857,7 +857,8 @@ public class SimulationApp {
         System.out.println(lineCountingString);
         while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
             // counts the read newline character to determine what line getMove() starts on
-            lineOfGetMove++;
+            if (newLineIndex > 0 && !(newLineIndex == 1 && lineCountingString.charAt(0) == '}')) // skips blank lines or just closing braces
+                lineOfGetMove++;
 
             //System.out.print((lineOfGetMove - 1) + ":  " + lineCountingString.substring(0, newLineIndex + 1));
             lineCountingString = lineCountingString.substring(newLineIndex + 1);
@@ -882,11 +883,14 @@ public class SimulationApp {
         // injects code so that "console.log()" is recognized and functions
         strategySource = injectPrintingCode(strategySource);
 
+        // injects lineTrackingCode so each turn's executionTrace field can be properly set
+        battle.setInjectedSource(injectLineTrackingCode(strategySource), isAttacker);
+        strategySource = battle.getInjectedSource(isAttacker);
+        System.out.println("postInjection: " + strategySource);
+
         // evaluates the script
         //engine.eval(strategySource);
         sandbox.eval(strategySource);
-
-        battle.setInjectedSource(injectLineTrackingCode(strategySource), isAttacker);
 
         // perform test processing
         if (gameState == null)
@@ -904,7 +908,6 @@ public class SimulationApp {
         }
         else { */   // inject line tracking code
             //System.out.println("input: " + strategySource);
-            strategySource = battle.getInjectedSource(isAttacker);
             //System.out.println("TEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\n");
             battle.setupLineNumConversionList(isAttacker, strategySource);
             //System.out.println("\n\n\n\noutput: " + strategySource);
@@ -2615,13 +2618,13 @@ public class SimulationApp {
                 "    if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated\n" +
                 "        return \"CHECKMATED\";\n" +
                 "    }\n" +
-                "    var ja = /*1;*/2;\n" +
-                "    ja = 3//;\n" +
-                "    ;\n" +
+                //"    var ja = /*1;*/2;\n" +
+                //"    ja = 3//;\n" +
+                //"    ;\n" +
                 //"    var /*jasd*/sss = \"/*jadska//jkl*///sadjk\";\n" +
                 //"    //var sssa = \"\";\n"+
                 //"    /*var ss//s = \"\";*/\n"+
-                "    █return moves[Math.floor((Math.random() * numMovesFound))];\n" +
+                "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
         return  s;/*"function whichColumnIsPlayerInCheck(color) {\n" +
@@ -2651,7 +2654,8 @@ public class SimulationApp {
                 "    }\n" +
                 "    print(\"JS print\");\n" +
                 "    console.log(\"JS print\");\n" +
-                "    if (true) return \"A8, A7\";\n" +
+                "    if (true)\n" +
+                "       return ajajb;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
                 "}";*/
     }
