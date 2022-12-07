@@ -58,6 +58,7 @@ public class SimulationApp {
     final static String REQ_QUEUE_NAME_MANUAL = "SimulationStepRequests";
     final static String RESP_QUEUE_NAME_MANUAL = "SimulationStepResponses";
     public final static String MESSAGE_DELIMITER = " ;;;;; ";
+    final static String PRINT_DELIMITER = "█";
 
     public static String ENV_HOST = "AVA__RABBITMQ__HOST";
     public static String ENV_USER = "AVA__RABBITMQ__USER";
@@ -102,8 +103,8 @@ public class SimulationApp {
     // used to select a stock for manual play
     static UUID manualPlayStockId = null;
 
-    // used to track execution trace per turn, and stack trace for a battle or battlegame
-    static String[] compressedExecutionTraceHolder = new String[2];
+    // used to track executionTrace per turn, stackTrace, and printInfo for a battle or battlegame
+    static String[] compressedExecutionTraceHolder = new String[3];
 
     // Runs a battle with an infinite number of BattleGames, starting a fresh
     // BattleGame when the previous completes
@@ -189,7 +190,7 @@ public class SimulationApp {
                 mostlyCurrentBattle = sentBattle;
 
                 // resets execTrace and stackTrace
-                compressedExecutionTraceHolder = new String[2];
+                compressedExecutionTraceHolder = new String[3];
 
                 prepareAndRunBattle(sentBattle);
                 //System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
@@ -222,7 +223,7 @@ public class SimulationApp {
                 }
 
                 // resets execTrace and stackTrace
-                compressedExecutionTraceHolder = new String[2];
+                compressedExecutionTraceHolder = new String[3];
 
                 Color potentialWinner = null;
                 if (!errorInSource) // only runs the turn if there isn't invalid source to run
@@ -721,7 +722,7 @@ public class SimulationApp {
     // test play window
     static Color playTurn(boolean isManualCom, boolean isManualStock, Battle battle, BattleGame battleGame) {
         // resets executionTrace Values
-        compressedExecutionTraceHolder = new String[2];
+        compressedExecutionTraceHolder = new String[3];
 
         // fetch player move
         if (CONSOLE_APP)
@@ -738,9 +739,10 @@ public class SimulationApp {
 
         if (!isManualCom) {
             // stores moveString in new turn, even if invalid
-            battleGame.addTurn(battle.getId(), currentColor(), moveString, compressedExecutionTraceHolder[0]);
+            battleGame.addTurn(battle.getId(), currentColor(), moveString, compressedExecutionTraceHolder[0], compressedExecutionTraceHolder[2]);
         }
         compressedExecutionTraceHolder[0] = "";
+        compressedExecutionTraceHolder[2] = "";
 
         // validates move string
         boolean isValid = isMoveValid(moveString, gameState.board);
@@ -843,6 +845,9 @@ public class SimulationApp {
         //ScriptEngine engine = factory.getEngineByName("nashorn");
         NashornSandbox sandbox = NashornSandboxes.create();
 
+        // scrubs out the PRINT_DELIMITER
+        strategySource = strategySource.replace(PRINT_DELIMITER, "");
+
         // determines and sets the line num of getMove() within the battle object (ignoring comments)
         // ASSUMES that all user code will be below the getMove() declaration
         int indexOfGetMove = strategySource.indexOf("getMove()");
@@ -873,6 +878,9 @@ public class SimulationApp {
 
         // sends the line numbers of getMove() to the battle object
         battle.setGetMoveLineNum(lineOfGetMove, isAttacker, lineOfGetMoveNoComments);
+
+        // injects code so that "console.log()" is recognized and functions
+        strategySource = injectPrintingCode(strategySource);
 
         // evaluates the script
         //engine.eval(strategySource);
@@ -1024,6 +1032,17 @@ public class SimulationApp {
         }
 
         return nextChar;
+    }
+
+    // inject printing code (accessed through console.log())
+    static String injectPrintingCode(String strategySource) {
+        return  "function Console () {\n" +
+                "    this.log = function(printString) {\n" +
+                "        " + EXECUTION_TRACKER_VAR_NAME + " += printString" + "+ \"" + PRINT_DELIMITER + "\"" + ";\n" +
+                "    };\n" +
+                "};\n" +
+                "var console = new Console();\n\n" +
+                strategySource;
     }
 
     // injects a line of code after every possible line of user code to track the lines that have been executed in a given turn
@@ -1186,10 +1205,37 @@ public class SimulationApp {
         // compresses cycles of code ranges
         ArrayList<ArrayList<String>> lineStringsToCheck = new ArrayList<>();
         String[] lineStringSplit = executionTrace.split(", ");
+        String[] lineStringSplitNoPrint = new String[lineStringSplit.length];
 
+        // printInfo is in the form <optionalLineCapWarning>█<indexInUncompressedExecutionTrace>█<printedString>█<indexInUncompressedExecutionTrace>█<printedString>█ ...
+        String printInfo = "";
+        final int PRINT_LINE_CAP = 1000;
+        int numPrintLines = 0;
         // populates lineStringsToCheck
         for (int i = 0; i < lineStringSplit.length; i++) {
             String curLineString = lineStringSplit[i];
+
+            // parses out print info
+            String[] printInfoSplit = curLineString.split(PRINT_DELIMITER);
+            //System.out.println("curLineString: " + curLineString);
+            for (int j = 0; j < printInfoSplit.length; j++) {
+                String curSplit = printInfoSplit[j];
+                if (j == printInfoSplit.length - 1) {
+                    curLineString = curSplit;
+                    //System.out.println("convertedTo: " + curLineString);
+                } else {
+                    // don't print if the cap has been reached
+                    if (numPrintLines >= PRINT_LINE_CAP)
+                        continue;
+
+                    if (j == 0)
+                        printInfo += (i - 1) + PRINT_DELIMITER;
+
+                    printInfo += curSplit + PRINT_DELIMITER + "\n";
+                    numPrintLines++;
+                }
+            }
+
             int curLineNum = Integer.parseInt(curLineString);
 
             int lineStringIndex = getlineStringIndexInLineStringsList(curLineString, lineStringsToCheck);
@@ -1200,7 +1246,12 @@ public class SimulationApp {
             }
 
             lineStringsToCheck.get(lineStringIndex).add(i + "");
+
+            lineStringSplitNoPrint[i] = curLineString;
         }
+
+        String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" : "";
+        compressedExecutionTraceHolder[2] = optionalLineCapWarning + PRINT_DELIMITER + printInfo;
 
         // prints lineStringsList
         /*String printString = "";
@@ -1235,8 +1286,8 @@ public class SimulationApp {
 
                     // see how many cycle repetitions there are
                     int numCycleRepititions = 1;
-                    for (int k = leftIndex + spacing; k < lineStringSplit.length; k += spacing) {
-                        boolean foundCycle = doesWindowHoldExpectedCycle(lineStringSplit, leftIndex, k, spacing);
+                    for (int k = leftIndex + spacing; k < lineStringSplitNoPrint/*lineStringSplit*/.length; k += spacing) {
+                        boolean foundCycle = doesWindowHoldExpectedCycle(lineStringSplitNoPrint/*lineStringSplit*/, leftIndex, k, spacing);
 
                         if (!foundCycle)
                             break;
@@ -1245,7 +1296,7 @@ public class SimulationApp {
                     }
 
                     if (numCycleRepititions > 1) {
-                        CycleInfo newCycleInfo = new CycleInfo(lineStringSplit, numCycleRepititions, leftIndex, spacing);
+                        CycleInfo newCycleInfo = new CycleInfo(lineStringSplitNoPrint/*lineStringSplit*/, numCycleRepititions, leftIndex, spacing);
                         cycleInfoHeap.add(newCycleInfo);
 
                         leftIndex = newCycleInfo.lastCycleEndIndex + 1;
@@ -1256,7 +1307,7 @@ public class SimulationApp {
             }
         }
 
-        String[] cycledStringArray = lineStringSplit.clone();
+        String[] cycledStringArray = lineStringSplitNoPrint/*lineStringSplit*/.clone();
         // replaces lineStrings in the array with the
         ArrayList<CycleInfo> usedCycleInfos = new ArrayList<>();
         while (!cycleInfoHeap.isEmpty()) {
@@ -1311,8 +1362,8 @@ public class SimulationApp {
 
             //System.out.println("using cycleCompressed " + curInfo.firstCycleStartIndex + ":" + curInfo.lastCycleEndIndex);
 
-            String curStart = lineStringSplit[curInfo.firstCycleStartIndex];
-            String curEnd = lineStringSplit[curInfo.lastCycleEndIndex];
+            String curStart = lineStringSplitNoPrint/*lineStringSplit*/[curInfo.firstCycleStartIndex];
+            String curEnd = lineStringSplitNoPrint/*lineStringSplit*/[curInfo.lastCycleEndIndex];
             int firstCycleEndIndex = curInfo.firstCycleStartIndex + curInfo.cycleLength - 1;
             if (cycleStartsMatch) {
                 cycledStringArray[curInfo.firstCycleStartIndex] = curInfo.getStartString(cycledStringArray[curInfo.firstCycleStartIndex]);
@@ -2540,11 +2591,12 @@ public class SimulationApp {
                 "    return TRUE;\n" +
                 "}\n" +
                 "function getMove() {\n" +
-                "    return jasdjkal;\n" +
+                "    console.log(\"starting getMove()\");\n" +
                 "    var board = gameState.board;\n" +
                 "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
                 "    var numMovesFound = 0;\n" +
                 "    var moves = new Array(NUM_PIECES_PER_SIDE);\n" +
+                "    console.log(\"about to iterate for move\");\n" +
                 "    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {\n" +
                 "        var piece = pieceLocations[i];\n" +
                 "        if (piece === \"\")\n" +
@@ -2555,6 +2607,7 @@ public class SimulationApp {
                 "            if (move === \"\")\n" +
                 "                break;\n" +
                 "            moves[numMovesFound] = piece + \", \" + move;\n" +
+                "            console.log(piece);\n" +
                 "            numMovesFound++;\n" +
                 "        }\n" +
                 "    }\n" +
@@ -2568,29 +2621,26 @@ public class SimulationApp {
                 //"    var /*jasd*/sss = \"/*jadska//jkl*///sadjk\";\n" +
                 //"    //var sssa = \"\";\n"+
                 //"    /*var ss//s = \"\";*/\n"+
-                "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
+                "    █return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
-        return  "/**\n" +
-                " * @param {number} color  An integer representing the color of\n" +
-                " */\n" +
-                "function whichColumnIsPlayerInCheck(color) {\n" +
+        return  s;/*"function whichColumnIsPlayerInCheck(color) {\n" +
                 "    var rowToCheck;\n" +
-                /*"    if (color === WHITE) rowToCheck = 9;\n" +
+                "    if (color === WHITE) rowToCheck = 9;\n" +
                 "    else if (color === BLACK)\n" +
                 "        rowToCheck = 0;\n" +
-                "    else return ERR_INVALID_COLOR;\n" +*/
+                "    else return ERR_INVALID_COLOR;\n" +
                 "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
-                /*"        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
                 "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
-                "            return i;\n" +*/
+                "            return i;\n" +
                 "    }\n" +
-                //"    return NO_PIECE;\n" +
+                "    return NO_PIECE;\n" +
                 "}\n //this is random text\n" +
                 "//some more random text\n" +
                 "//some more random text\n" +
                 "function getMove() {\n" +
-                /*"    if (!(true))\n" +
+                "    if (!(true))\n" +
                 "       print(\"JS notIfPrint\");\n" +
                 "    if (true)     // this is a comment {\n" +
                 "       print(\"JS ifPrintComment\");\n" +
@@ -2599,9 +2649,10 @@ public class SimulationApp {
                 "    if (true && true && true) {\n" +
                 "       print(\"JS enclosed ifPrint\");\n" +
                 "    }\n" +
-                "    print(\"JS print\");\n" +*/
-                "    if (true) return jkdsaljsd;\n\"A8, A7\";\n" +
+                "    print(\"JS print\");\n" +
+                "    console.log(\"JS print\");\n" +
+                "    if (true) return \"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
-                "}";
+                "}";*/
     }
 }
