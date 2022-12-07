@@ -35,6 +35,8 @@ public class Battle {
     private int defendingSnapshotGetMoveLineNum;
     private int attackingSnapshotGetMoveLineNumCommented;
     private int defendingSnapshotGetMoveLineNumCommented;
+    private String attackingSourceInjected;
+    private String defendingSourceInjected;
     private ArrayList<Integer> attackerLineNumConversionList; // these are used to convert source w/ injected code -> original source
     private ArrayList<Integer> defenderLineNumConversionList;
 
@@ -101,6 +103,8 @@ public class Battle {
         if (source == null || sourceWithInjectedCode == null)
             return;
 
+        System.out.println("originalSource: " + source + "\ninjectedSource: " + sourceWithInjectedCode);
+
         // setup originalSource
         int indexOfGetMove = source.indexOf("getMove()");
         int newLineIndex;
@@ -140,14 +144,16 @@ public class Battle {
                 final int SHRUNK_LINE_SIZE = 4;
                 String shrunkLine = curOriginalLine.length() <= SHRUNK_LINE_SIZE ? curOriginalLine : curOriginalLine.substring(0, SHRUNK_LINE_SIZE);
                 if (curInjectedLine.matches("\\A.*" + Pattern.quote(shrunkLine) + ".*")) {
+                    System.out.println("originalLine: " + curOriginalLine + " matches w/ injectedLine: " + curInjectedLine);
                     break;
                 }
+                System.out.println("skipping line: " + curInjectedLine);
             }
         }
 
         for (int i = 0; i < lineConversionList.size(); i++) {
             int line = lineConversionList.get(i);
-            System.out.println(line);
+            System.out.println("line " + i + " maps to " + line);
         }
 
         if (isAttacker)
@@ -189,11 +195,11 @@ public class Battle {
 
         if (lineConversionList == null) {
             if (didAttackerWin) {
-                setupLineNumConversionList(false, defendingStrategySnapshot);
+                setupLineNumConversionList(false, defendingSourceInjected);
                 lineConversionList = defenderLineNumConversionList;
             }
             else {
-                setupLineNumConversionList(true, attackingStrategySnapshot);
+                setupLineNumConversionList(true, attackingSourceInjected);
                 lineConversionList = attackerLineNumConversionList;
             }
         }
@@ -203,9 +209,10 @@ public class Battle {
             return;
 
         // finds all instances of "line number <#>, replacing them with the converted line number"
-        String matchString = "line number ";
+        String matchString = "at line number ";
         int indexOfLineNumber;
         int offsetInStackTraceString = 0;
+        String lineNumberScrubbedStackTrace = "";
         while (workingStackTrace.length() > 0 && (indexOfLineNumber = workingStackTrace.indexOf(matchString)) >= 0) {
             // moves "cursor" to first char after match
             int newIndex = indexOfLineNumber + matchString.length();
@@ -234,14 +241,16 @@ public class Battle {
                 offsetInStackTraceString++;
             }
 
+            // replaces line number with original source line number
+                // now just removes the line number
             if (lineNumStartIndex >= 0) {
                 int prevLineNum = Integer.parseInt(lineNumString);
                 String prevStackTrace = battleGame.stackTrace;
-                String a = prevStackTrace.substring(0, lineNumStartIndex);
-                System.out.println(prevLineNum + " - " + lineOfGetMoveCommented);
-                int b = lineConversionList.get(prevLineNum - lineOfGetMoveCommented);
+                String a = prevStackTrace.substring(0, indexOfLineNumber);//prevStackTrace.substring(0, lineNumStartIndex);
+                //System.out.println(prevLineNum + " - " + lineOfGetMoveCommented);
+                //int b = lineConversionList.get(prevLineNum - lineOfGetMoveCommented);
                 String c = prevStackTrace.substring(lineNumEndIndex);
-                battleGame.stackTrace = a + b + c;
+                battleGame.stackTrace = a /*+ b*/ + c;
             }
         }
     }
@@ -304,6 +313,18 @@ public class Battle {
         int startOffset = willAttackerStartWhite ? 0 : 1;
 
         return (gamesCompleted + startOffset) % 2 == 0 ? Color.WHITE : Color.BLACK;
+    }
+
+    public String getInjectedSource(boolean isAttacker) {
+        return isAttacker ? attackingSourceInjected : defendingSourceInjected;
+    }
+
+    // sets the stored Injected source values
+    public void setInjectedSource(String injectedSource, boolean isAttacker) {
+        if (isAttacker)
+            attackingSourceInjected = injectedSource;
+        else
+            defendingSourceInjected = injectedSource;
     }
 
     @Override

@@ -848,7 +848,7 @@ public class SimulationApp {
         int indexOfGetMove = strategySource.indexOf("getMove()");
         int newLineIndex;
         int lineOfGetMove = 1;
-        String lineCountingString = parseOutComments(strategySource.substring(0, indexOfGetMove));
+        String lineCountingString = /*parseOutComments(*/strategySource.substring(0, indexOfGetMove)/*)*/;
         System.out.println(lineCountingString);
         while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
             // counts the read newline character to determine what line getMove() starts on
@@ -872,15 +872,18 @@ public class SimulationApp {
         }
 
         // sends the line numbers of getMove() to the battle object
-        battle.setGetMoveLineNum(lineOfGetMoveNoComments, isAttacker, lineOfGetMove);
+        battle.setGetMoveLineNum(lineOfGetMove, isAttacker, lineOfGetMoveNoComments);
 
         // evaluates the script
         //engine.eval(strategySource);
         sandbox.eval(strategySource);
 
+        battle.setInjectedSource(injectLineTrackingCode(strategySource), isAttacker);
+
         // perform test processing
         if (gameState == null)
             gameState = new GameState();
+        System.out.println("about to testProcess");
         String testProcessingResult = processStrategySource(sandbox, new String[] { "", "" });
 
         // only injects code if exception wasn't throw in in and by processStrategySource
@@ -893,7 +896,8 @@ public class SimulationApp {
         }
         else { */   // inject line tracking code
             //System.out.println("input: " + strategySource);
-            strategySource = injectLineTrackingCode(strategySource);
+            strategySource = battle.getInjectedSource(isAttacker);
+            //System.out.println("TEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\n");
             battle.setupLineNumConversionList(isAttacker, strategySource);
             //System.out.println("\n\n\n\noutput: " + strategySource);
             //try {
@@ -2561,17 +2565,32 @@ public class SimulationApp {
                 "    var ja = /*1;*/2;\n" +
                 "    ja = 3//;\n" +
                 "    ;\n" +
-                "    var /*jasd*/sss = \"/*jadska//jkl*///sadjk\";\n" +
-                "    //var sss = \"\";\n"+
-                "    /*var ss//s = \"\";*/\n"+
+                //"    var /*jasd*/sss = \"/*jadska//jkl*///sadjk\";\n" +
+                //"    //var sssa = \"\";\n"+
+                //"    /*var ss//s = \"\";*/\n"+
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
-        return s;/*"//this is random text\n" +
+        return  "/**\n" +
+                " * @param {number} color  An integer representing the color of\n" +
+                " */\n" +
+                "function whichColumnIsPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                /*"    if (color === WHITE) rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else return ERR_INVALID_COLOR;\n" +*/
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                /*"        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return i;\n" +*/
+                "    }\n" +
+                //"    return NO_PIECE;\n" +
+                "}\n //this is random text\n" +
+                "//some more random text\n" +
                 "//some more random text\n" +
                 "function getMove() {\n" +
-                //"var File = Java.type('java.io.File'); File;\n" +
-                "    if (!(true))\n" +
+                /*"    if (!(true))\n" +
                 "       print(\"JS notIfPrint\");\n" +
                 "    if (true)     // this is a comment {\n" +
                 "       print(\"JS ifPrintComment\");\n" +
@@ -2580,10 +2599,9 @@ public class SimulationApp {
                 "    if (true && true && true) {\n" +
                 "       print(\"JS enclosed ifPrint\");\n" +
                 "    }\n" +
-                "    print(\"JS print\");\n" +
-                "    if (true)\n" +
-                "       return jkdsaljsd;\n\"A8, A7\";\n" +
+                "    print(\"JS print\");\n" +*/
+                "    if (true) return jkdsaljsd;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
-                "}";*/
+                "}";
     }
 }
