@@ -82,7 +82,7 @@ function App() {
                             <Route path='/Programming/' element={<InvalidStrategyPage />} />
                             <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
-                            <Route path='/LeaderBoard' element={<LeaderBoardPage />} />
+                            <Route path='/LeaderBoard/:id' element={<LeaderBoardPage />} />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>

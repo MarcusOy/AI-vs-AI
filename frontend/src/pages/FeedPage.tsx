@@ -18,7 +18,7 @@ const FeedPage = () => {
 
             <Spacer />
             <HStack>
-                <Button onClick={() => navigate('/LeaderBoard')}>
+                <Button onClick={() => navigate('/LeaderBoard/1')}>
                     {' '}
                     Temporary LeaderBoard Button
                 </Button>
