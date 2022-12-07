@@ -39,6 +39,7 @@ import {
     ModalCloseButton,
     Input,
     Highlight,
+    Select,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
@@ -81,8 +82,15 @@ const StrategyPage = () => {
         { manual: true }, // makes sure this request fires on user action
     )
 
-    // console.log(whoAmIFetch)
-    const strategies: Strategy[] = whoAmIFetch.data.strategies
+    const onNavigate = (r: Strategy) => {
+        onClose()
+
+        navigate(`/Strategy/${r.id}`)
+    }
+
+    console.log(whoAmIFetch)
+    if (whoAmIFetch.isLoading || whoAmIFetch.error) return <Spinner />
+    const StratList = whoAmIFetch.data.strategies as Strategy[]
 
     const onSubmit = async () => {
         const newStrategy: Strategy = {
@@ -201,57 +209,37 @@ const StrategyPage = () => {
                                     <ModalHeader>How many times do you want to attack</ModalHeader>
                                     <ModalCloseButton />
                                     <ModalBody pb={6}>
-                                        <FormControl>
-                                            <FormLabel>Attacking Number</FormLabel>
-                                            <Input ref={initialRef} placeholder='Enter a number' />
-                                        </FormControl>
-                                    </ModalBody>
-                                    <Stack>
-                                        {error == undefined &&
-                                            strategies.map((s, i) => {
-                                                return (
-                                                    <Button
-                                                        key={s.id}
-                                                        py='8'
-                                                        textAlign='left'
-                                                        justifyContent='start'
-                                                        color='chakra-body-text'
-                                                        variant='ghost'
-                                                        // onClick={() => onNavigate(r)}
-                                                    >
-                                                        <HStack flexGrow={1}>
-                                                            <Avatar
-                                                                bg={randomColor({
-                                                                    string: s.name,
-                                                                })}
-                                                                icon={<TbBook2 size='30' />}
-                                                            />
+                                        <Stack>
+                                            <FormControl>
+                                                <FormLabel>Attacking Number</FormLabel>
+                                                <Input
+                                                    ref={initialRef}
+                                                    placeholder='Enter a number'
+                                                />
+                                            </FormControl>
+                                            <Select
+                                                placeholder='Choose Which Strategy To Use'
+                                                size='md'
+                                            >
+                                                {error == undefined &&
+                                                    StratList.map((s, i) => {
+                                                        return <option key={s.id}>{s.name}</option>
+                                                    })}
+                                            </Select>
+                                        </Stack>
 
-                                                            <Box flexGrow={1}>
-                                                                <Text
-                                                                    fontSize='xs'
-                                                                    color='CaptionText'
-                                                                >
-                                                                    {/* {number s.version} */}
-                                                                </Text>
-                                                                {/* <Text>{r.title}</Text> */}
-                                                            </Box>
-                                                        </HStack>
-                                                    </Button>
-                                                )
-                                            })}
-                                    </Stack>
-                                    <ModalFooter>
-                                        <Button
-                                            onSubmit={onSubmit}
-                                            onClick={attackModal.onClose}
-                                            colorScheme='blue'
-                                            mr={3}
-                                        >
-                                            Attack
-                                        </Button>
-                                        <Button onClick={attackModal.onClose}>Cancel</Button>
-                                    </ModalFooter>
+                                        <ModalFooter>
+                                            <Button
+                                                onSubmit={onSubmit}
+                                                onClick={attackModal.onClose}
+                                                colorScheme='blue'
+                                                mr={3}
+                                            >
+                                                Attack
+                                            </Button>
+                                            <Button onClick={attackModal.onClose}>Cancel</Button>
+                                        </ModalFooter>
+                                    </ModalBody>
                                 </ModalContent>
                             </Modal>
                             <MenuItem>Manually Attack</MenuItem>
