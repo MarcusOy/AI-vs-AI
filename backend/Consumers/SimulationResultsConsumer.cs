@@ -15,14 +15,17 @@ namespace AVA.API.Consumers
         private readonly ILogger<SimulationResponsesConsumer> _logger;
         private readonly IBattlesService _battleService;
         private readonly IHubContext<SimulationHub> _hubContext;
+        private readonly IStrategiesService _strategyService;
 
         public SimulationResponsesConsumer(ILogger<SimulationResponsesConsumer> logger,
                                          IBattlesService battleService,
-                                         IHubContext<SimulationHub> hubContext)
+                                         IHubContext<SimulationHub> hubContext,
+                                         IStrategiesService strategiesService)
         {
             _logger = logger;
             _battleService = battleService;
             _hubContext = hubContext;
+            _strategyService = strategiesService;
         }
 
         public async Task Consume(ConsumeContext<SimulationResponse> context)
@@ -59,7 +62,8 @@ namespace AVA.API.Consumers
                     await _hubContext.Clients.Client(context.Message.ClientId).SendAsync("TestSubmissionResult", context.Message);
                     _logger.LogInformation($"Sent test submission battle to client successfully.");
                 }
-                else {
+                else
+                {
                     Strategy attacker = context.Message.ResultingBattle.AttackingStrategy;
                     Strategy defender = context.Message.ResultingBattle.DefendingStrategy;
 
@@ -71,24 +75,47 @@ namespace AVA.API.Consumers
                     int TotAttackerWins = 0;
                     int TotDefenderWins = 0;
 
-                    foreach (Battle b1 in attacker.AttackerBattles) {
+                    foreach (Battle b1 in attacker.AttackerBattles)
+                    {
                         TotAttackerWins += b1.AttackerWins;
                     }
 
-                    foreach (Battle b2 in attacker.DefenderBattles) {
+                    foreach (Battle b2 in attacker.DefenderBattles)
+                    {
                         TotAttackerWins += b2.DefenderWins;
                     }
 
-                    foreach (Battle b3 in defender.AttackerBattles) {
+                    foreach (Battle b3 in defender.AttackerBattles)
+                    {
                         TotDefenderWins += b3.AttackerWins;
                     }
 
-                    foreach (Battle b4 in defender.DefenderBattles) {
+                    foreach (Battle b4 in defender.DefenderBattles)
+                    {
                         TotDefenderWins += b4.DefenderWins;
                     }
 
-                    int attackerEloGen2 = (TotAttackerWins * TotDefenderWins);
+                    if (TotAttackerWins == 0)
+                    {
+                        TotAttackerWins = 1;
+                    }
+
+                    if (TotDefenderWins == 0)
+                    {
+                        TotDefenderWins = 1;
+                    }
+
+                    int AttackerEloGen2 = (TotAttackerWins * TotDefenderWins);
                     int DefenderEloGen2 = (TotDefenderWins * TotAttackerWins);
+
+                    int FinalAttackerElo = AttackerEloGen1 + AttackerEloGen2;
+                    int FinalDefenderElo = DefenderEloGen1 + DefenderEloGen2;
+
+                    attacker.Elo = FinalAttackerElo;
+                    defender.Elo = FinalDefenderElo;
+
+                    await _strategyService.UpdateAsync(attacker);
+                    await _strategyService.UpdateAsync(defender);
                 }
             }
             catch (Exception ex)
