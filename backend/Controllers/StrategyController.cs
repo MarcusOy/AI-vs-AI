@@ -61,6 +61,11 @@ public class StrategyController : Controller
             RunBattles(s.GameId);
             ret = _strategyService.Get(s.Id);
         }
+        else if (old.Status == StrategyStatus.Active && s.Status == StrategyStatus.Draft)
+        {
+            s.Elo = 0;
+            ret = await _strategyService.UpdateAsync(s);
+        }
         else
         {
             ret = await _strategyService.UpdateAsync(s);
