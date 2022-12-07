@@ -11,7 +11,7 @@ namespace AVA.API.Services
         Strategy GetStockStrategy(int stockToChoose);
         Task<Strategy> CreateAsync(Strategy strategy);
         Task<Strategy> UpdateAsync(Strategy strategy);
-        Task<Strategy> SubmitAsync(Strategy strategy);
+        Task<Strategy> SubmitAsync(Guid id);
         Task<Strategy> DeleteAsync(Guid id);
 
         String getStockName(int StockCodeInt);
@@ -116,29 +116,26 @@ namespace AVA.API.Services
 
             // trust these fields
             originalStrategy.Name = strategy.Name;
+            originalStrategy.Language = strategy.Language;
             originalStrategy.SourceCode = strategy.SourceCode;
             originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
             originalStrategy.IsPrivate = strategy.IsPrivate;
 
             _dbContext.Strategies.Update(originalStrategy);
-            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;
         }
-        public async Task<Strategy> SubmitAsync(Strategy strategy)
+        public async Task<Strategy> SubmitAsync(Guid strategyId)
         {
             var originalStrategy = await _dbContext.Strategies
                 .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
-                .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+                .FirstOrDefaultAsync(s => s.Id == strategyId);
 
-            // trust these fields
-            originalStrategy.Name = strategy.Name;
-            originalStrategy.SourceCode = strategy.SourceCode;
+            // set strategy to active
             originalStrategy.Status = AVA.API.Models.StrategyStatus.Active;
 
             _dbContext.Strategies.Update(originalStrategy);
-            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;

@@ -40,11 +40,10 @@ public class StrategyController : Controller
         return await _strategyService.CreateAsync(s);
     }
 
-    [HttpPut, Route("/Strategy/Submit"), Authorize]
-    public async Task<Strategy> Submit([FromBody] Strategy s)
-    {
-        return await _strategyService.SubmitAsync(s);
-    }
+    [HttpPost, Route("/Strategy/Submit/{id}"), Authorize]
+    public async Task<Strategy> Submit(Guid id)
+        => await _strategyService.SubmitAsync(id);
+
 
     [HttpPut, Route("/Strategy/Delete/{id}"), Authorize]
     public async Task<Strategy> Delete(String id)

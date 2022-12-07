@@ -4,6 +4,7 @@ using AVA.API.Services;
 using DocParser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TypeGen.Core.TypeAnnotations;
 
 namespace AVA.API.Controllers;
 
@@ -50,17 +51,26 @@ public class StarterCodeController : Controller
             Boilerplate = boilerplate is not null ? boilerplate.Code : null,
         };
     }
-
+    [ExportTsInterface]
     public class GameStarterCode
     {
+        [TsOptional]
         public string HelperCode { get; set; }
+
+        [TsOptional]
         public string Boilerplate { get; set; }
+
+        [TsOptional]
         public List<FunctionDocumentation> Documentation { get; set; }
     }
 
+    [ExportTsInterface]
     public class FunctionDocumentation
     {
+        [TsOptional]
         public string FunctionName { get; set; }
+
+        [TsOptional]
         public string FunctionDescription { get; set; }
     }
 }
