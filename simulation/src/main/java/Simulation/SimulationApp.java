@@ -1264,6 +1264,12 @@ public class SimulationApp {
             lineStringSplitNoPrint[i] = curLineString;
         }
 
+        System.out.print("ExecutedLines: ");
+        System.out.print(lineStringSplitNoPrint[0]);
+        for (int i = 1; i < lineStringSplitNoPrint.length; i++)
+            System.out.print("|" + lineStringSplitNoPrint[i]);
+        System.out.println("");
+
         String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" : "";
         compressedExecutionTraceHolder[2] = optionalLineCapWarning + PRINT_DELIMITER + printInfo;
 
@@ -1605,12 +1611,12 @@ public class SimulationApp {
 
             try {
                 execTrace = "" + inv.invokeFunction(EXECUTION_TRACKER_FUNC_NAME);
-                //System.out.println("\nExecutedLines: " + execTrace);
+                System.out.println("\nExecutedLines: " + execTrace);
                 String rawExecutionTrace = execTrace;
                 execTrace = compressExecutionTraceCycles(execTrace);
                 //System.out.println("CompressedCycles: " + execTrace);
                 execTrace = compressExecutionTraceConsecutive(execTrace);
-                //System.out.println("Compressed: " + execTrace);
+                System.out.println("Compressed: " + execTrace);
                 rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
                 //System.out.println("Minimal: " + rawExecutionTrace);
             } catch (NoSuchMethodException ex) {
@@ -2644,7 +2650,7 @@ public class SimulationApp {
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
-        return  "function whichColumnIsPlayerInCheck(color) {\n" +
+        return  s;/*"function whichColumnIsPlayerInCheck(color) {\n" +
                 "    var rowToCheck;\n" +
                 "    if (color === WHITE) rowToCheck = 9;\n" +
                 "    else if (color === BLACK)\n" +
@@ -2659,7 +2665,7 @@ public class SimulationApp {
                 "}\n //this is random text\n" +
                 "//some more random text\n" +
                 "//some more random text\n" +
-                "function getMover() {\n" +
+                "function getMove() {\n" +
                 "    if (!(true))\n" +
                 "       print(\"JS notIfPrint\");\n" +
                 "    if (true)     // this is a comment {\n" +
@@ -2674,6 +2680,6 @@ public class SimulationApp {
                 "    if (true)\n" +
                 "       return ajajb;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
-                "}";
+                "}";*/
     }
 }
