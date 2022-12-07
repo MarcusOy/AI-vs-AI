@@ -114,30 +114,45 @@ public class SimulationApp {
         NashornSandbox sandbox = NashornSandboxes.create();
 
         /*if (9 * 7 - 2 > 0) {
-            String testString = getRandomAIJS()''
-            try {
-                evaluateSourceCode(testString);
-            } catch (ScriptException e) {
-                e.printStackTrace();
+            String[][] testBoardWithIds = {
+                    { "00b1", "01b1", "", "", "", "19w4", "", "", "02w1", "03w3"},
+                    { "04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
+                    { "08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
+                    { "12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
+                    { "16b4", "17b1", "", "", "", "", "", "", "18w1", ""},
+                    { "20b4", "21b1", "", "", "", "26w1", "", "", "22w1", "23w4"},
+                    { "24b1", "25b1", "", "", "", "", "", "", "", "27w1"},
+                    { "28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
+                    { "", "33b2", "", "32b3", "", "", "", "", "34w2", "35w3"},
+                    { "36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
+            };
+            SimulationStepRequest manRequest = new SimulationStepRequest(testBoardWithIds, true, "testUser", UUID.randomUUID(), getRandomAIJS());
+            initializeManualGameState(manRequest);
+            String[][] reqIdlessBoard = deepCopyBoard(gameState.board);
+            printBoardGeneric(testBoardWithIds);
+            printBoardGeneric(reqIdlessBoard);
+
+            boolean isManualStock = isIdStockId(manRequest.strategyId);
+            if (isManualStock) {
+                manualPlayStockId = manRequest.strategyId;
+                setupStrategies();
+            }
+            else {
+                // this battle
+                Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot);
+                tempBattle.id = UUID.randomUUID().toString();
+
+                // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
+                processBattleStrategies(tempBattle);
             }
 
-            gameState = new GameState();
-            BattleGame battleGame = new BattleGame(0, "", Color.WHITE);
-            battleGame.addTurn("", Color.WHITE, "A0, A1", "");
-            battleGame.addTurn("", Color.BLACK, "A0, A1", "");
-            battleGame.addTurn("", Color.WHITE, "A1, A0", "");
-            battleGame.addTurn("", Color.BLACK, "A1, A0", "");
-            battleGame.addTurn("", Color.WHITE, "A0, A1", "");
-            battleGame.addTurn("", Color.BLACK, "A0, A1", "");
-            battleGame.addTurn("", Color.WHITE, "A1, A0", "");
-            battleGame.addTurn("", Color.BLACK, "A1, A0", "");
+            // resets execTrace and stackTrace
+            compressedExecutionTraceHolder = new String[2];
 
-            gameState.currentPlayer = gameState.BLACK;
-
-            System.out.println(checkIfGameWon(battleGame));
-            int w = battleGame.getWhiteCycleLength();
-            int b = battleGame.getBlackCycleLength();
-            System.out.println("W: " + w + "   B: " + b);
+            Color potentialWinner = playTurn(true, isManualStock, null, null);
+            String[][] responseBoard = addPieceIds(manRequest, reqIdlessBoard);
+            System.out.println(lastMoveString);
+            printBoardGeneric(responseBoard);
 
             return;
         }*/
@@ -177,10 +192,10 @@ public class SimulationApp {
                 compressedExecutionTraceHolder = new String[2];
 
                 prepareAndRunBattle(sentBattle);
-                System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
+                //System.out.println("\n\nEnter number of games to simulate.  [must be odd!]");
             };
 
-            // Sends callback to sender (1 manual player vs stock AI)
+            // Sends callback to sender (1 manual player vs stock AI) or more generally (anything vs sent AI)
             DeliverCallback deliverCallbackManual = (consumerTag, delivery) -> {
                 mostlyCurrentBattle = null;
                 manualPlayStockId = null;
@@ -190,16 +205,32 @@ public class SimulationApp {
                 // also initializes gameState upon success
                 SimulationStepRequest manRequest = processMessageManual(message);
                 initializeManualGameState(manRequest);
-                manualPlayStockId = manRequest.chosenStockId;
-                setupStrategies();
+                String[][] reqIdlessBoard = deepCopyBoard(gameState.board);
+
+                boolean isManualStock = isIdStockId(manRequest.strategyId);
+                boolean errorInSource = false;
+                if (isManualStock) {
+                    manualPlayStockId = manRequest.strategyId;
+                    setupStrategies();
+                }
+                else {
+                    // temp battle so processBattleStrategies can be used
+                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot);
+
+                    // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
+                    errorInSource = !processBattleStrategies(tempBattle);
+                }
 
                 // resets execTrace and stackTrace
                 compressedExecutionTraceHolder = new String[2];
 
-                Color potentialWinner = playTurn(true, null, null);
-                String[][] responseBoard = addPieceIds(manRequest);
+                Color potentialWinner = null;
+                if (!errorInSource) // only runs the turn if there isn't invalid source to run
+                    potentialWinner = playTurn(true, isManualStock, null, null);
+
+                String[][] responseBoard = addPieceIds(manRequest, reqIdlessBoard);
                 SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
-                        potentialWinner != null, Color.WHITE.equals(potentialWinner) != manRequest.isWhiteAI,
+                        potentialWinner != null, Color.WHITE.equals(potentialWinner) != manRequest.isWhiteTurn,
                         manRequest.clientId);
                 sendRabbitMQMessage(resp, RESP_QUEUE_NAME_MANUAL);
             };
@@ -255,7 +286,6 @@ public class SimulationApp {
                 String attackerSnapshot = null;
                 String defenderSnapshot = null;
                 Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot);
-                newBattle.id = UUID.randomUUID().toString();
                 prepareAndRunBattle(newBattle);
             }
         }
@@ -365,7 +395,7 @@ public class SimulationApp {
         gameState.numWhitePawns = 0;
         gameState.numWhitePieces = 0;
 
-        gameState.currentPlayer = req.isWhiteAI ? 0 : 1;
+        gameState.currentPlayer = req.isWhiteTurn ? 0 : 1;
         API api = new API();
 
         for (int i = 0; i < board.length; i++) {
@@ -396,10 +426,10 @@ public class SimulationApp {
 
     // add the pieceIds back to the gameState board for sending back to a manual
     // play window
-    static String[][] addPieceIds(SimulationStepRequest req) {
+    static String[][] addPieceIds(SimulationStepRequest req, String[][] reqIdlessBoard) {
         String[][] requestBoard = req.sentBoard;
         String[][] responseBoard = gameState.board;
-        Color AIColor = req.isWhiteAI ? Color.WHITE : Color.BLACK;
+        Color AIColor = req.isWhiteTurn ? Color.WHITE : Color.BLACK;
         String preMovePieceString = null; // with ID
         String postMovePieceString = null; // without ID
         int postMovePieceCol = -1;
@@ -419,7 +449,7 @@ public class SimulationApp {
                 if (inReq && !changed) // if unchanged piece, copy id over
                     responseBoard[i][j] = requestVal;
                 else if (inReq && !inResp
-                        && getPieceColor((new API()).colAndRowToCell(i, j), requestBoard).equals(AIColor)) { // if moved
+                        && getPieceColor((new API()).colAndRowToCell(i, j), reqIdlessBoard).equals(AIColor)) { // if moved
                                                                                                              // from
                     preMovePieceString = requestVal;
                 } else if (inResp && changed) { // if moved to
@@ -448,7 +478,6 @@ public class SimulationApp {
         // parses JSON
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        String[][] board;
         try {
             MassTransitMessage<SimulationStepRequest> sentMessage = mapper.readValue(message,
                     new TypeReference<MassTransitMessage<SimulationStepRequest>>() {
@@ -481,138 +510,97 @@ public class SimulationApp {
             return null;
         }
 
-        // expects message in format "<attackerStrategyID>,
-        // <attackerStrategySourceCode>, <defenderStrategyID>,
-        // <defenderStrategySourceCode>, <numberOfGames>"
-        /*
-         * String usage = "Message must be in format "
-         * +
-         * "\"<attackerStrategyID>, <attackerStrategySourceCode>, <defenderStrategyID>, <defenderStrategySourceCode>, <numberOfGames>\""
-         * + "  -- EXAMPLE -- \"81703, { code; }, 92105, { code; }, 7\"\n";
-         * String[] split = message.split(MESSAGE_DELIMITER);
-         * if (split.length != 5) {
-         * System.out.
-         * printf("ERROR: message \"%s\" does not have the correct number of arguments.\n"
-         * + usage, message);
-         * return false;
-         * }
-         * if (split[0] == null) {
-         * System.out.println("attackingStrategyId is null");
-         * return false;
-         * }
-         * attackingStrategyId = split[0];
-         */
-        /*
-         * ObjectMapper mapper = new ObjectMapper();
-         * try {
-         * attackingStrategyId = mapper.readValue(split[0], UUID.class);
-         * } catch (JsonProcessingException e) {
-         * e.printStackTrace();
-         * System.out.println("JSON parsing of attackingStrategyId failed: " +
-         * split[0]);
-         * return false;
-         * }
-         */
-
-        /*
-         * if (split[1] == null) {
-         * System.out.println("attackingSourceCode is null");
-         * return false;
-         * }
-         * attackingStrategySource = split[1];
-         * if (split[2] == null) {
-         * System.out.println("defendingStrategyId is null");
-         * return false;
-         * }
-         * defendingStrategyId = split[2];
-         */
-        /*
-         * try {
-         * defendingStrategyId = mapper.readValue(split[2], UUID.class);
-         * } catch (JsonProcessingException e) {
-         * e.printStackTrace();
-         * System.out.println("JSON parsing of defendingStrategyId failed: " +
-         * split[2]);
-         * return false;
-         * }
-         */
-
-        /*
-         * if (split[3] == null) {
-         * System.out.println("defendingSourceCode is null");
-         * return false;
-         * }
-         * defendingStrategySource = split[3];
-         * try {
-         * numGames = Integer.parseInt(split[4]);
-         * } catch (Exception e) {
-         * e.printStackTrace();
-         * System.out.printf("parsing of numGames from \"%s\" failed\n", split[2]);
-         * return false;
-         * }
-         */
-
         return sentBattle;
     }
 
     // prepares for a battle and runs it if sentBattle is valid
     static void prepareAndRunBattle(Battle sentBattle) {
         if (sentBattle != null) {
-            // extracts values
+            // sets up battle
+            sentBattle.init();
 
-            // tries to evaluate attacking snapshot
-            try {
-                if (sentBattle.attackingStrategySnapshot != null) {
-                    attackerStockOverride = false;
-                    attackingSandbox = evaluateSourceCode(sentBattle.attackingStrategySnapshot);
+            // uses sentBattle's snapshot fields to set up fields for the attacking and defending strategies
+            boolean wasSourceEvalError = !processBattleStrategies(sentBattle); // if source code had no evaluation errors
+            if (!wasSourceEvalError) { // doesn't run battle if there was a source evaluation error
+                numGames = sentBattle.getIterations();
+
+                if (numGames % 2 == 1) {
+                    // runs battle if message was properly parsed
+                    runBattle(sentBattle);
+                } else {
+                    System.out.println("numGames must be odd, not: " + numGames);
                 }
-                else
-                    attackerStockOverride = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                handleEvaluationError(sentBattle, Color.WHITE.equals(sentBattle.getAttackerColor()));
-
-                return;
             }
 
-            // tries to evaluate defending snapshot
-            try {
-                if (sentBattle.defendingStrategySnapshot != null) {
-                    defenderStockOverride = false;
-                    defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategySnapshot);
-                }
-                else if (JAVASCRIPT_STOCK) {
-                    attackerStockOverride = false;
-                    attackingSandbox = evaluateSourceCode(getRandomAIJS());
-                    defendingSandbox = evaluateSourceCode(getRandomAIJS());
-                }
-                else {
-                    defenderStockOverride = true;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                handleEvaluationError(sentBattle, Color.BLACK.equals(sentBattle.getAttackerColor()));
-
-                return;
-            }
-
-            numGames = sentBattle.getIterations();
-
-            if (numGames % 2 == 1) {
-                // runs battle if message was properly parsed
-                runBattle(sentBattle);
-            } else {
-                System.out.println("numGames must be odd, not: " + numGames);
-            }
+            sentBattle.complete(wasSourceEvalError);
         }
+
+        debugPrintln("Finished Battle:\n" + sentBattle == null ? "null" : sentBattle.toString());
+
+        // sends the resulting battle to the backend if there is RabbitMQ connection
+        // allowed
+        if (!NO_COMMUNICATION) {
+            // sends message back to backend
+            sendRabbitMQMessage(new SimulationResponse(sentBattle, sentBattle == null ? null : sentBattle.getClientId()), RESP_QUEUE_NAME);
+        }
+    }
+
+    // uses sentBattle's snapshot fields to setup fields related to the attacker and defender strategy
+    // Returns
+    //      false if there was a source code evaluation error
+    static boolean processBattleStrategies(Battle sentBattle) {
+        // tries to evaluate attacking snapshot
+        try {
+            if (sentBattle.attackingStrategySnapshot != null) {
+                attackerStockOverride = false;
+                attackingSandbox = evaluateSourceCode(sentBattle.attackingStrategySnapshot, true, sentBattle);
+            }
+            else
+                attackerStockOverride = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            handleEvaluationError(sentBattle, Color.WHITE.equals(sentBattle.getAttackerColor()));
+
+            return false;
+        }
+
+        // tries to evaluate defending snapshot
+        boolean evaluatingAttacker = false; // used so that catching an error sends the correct isWhite value to handleEvaluationError()
+        try {
+            if (sentBattle.defendingStrategySnapshot != null) {
+                defenderStockOverride = false;
+                defendingSandbox = evaluateSourceCode(sentBattle.defendingStrategySnapshot, false, sentBattle);
+            }
+            else if (JAVASCRIPT_STOCK) {
+                attackerStockOverride = false;
+                evaluatingAttacker = true;
+                sentBattle.attackingStrategySnapshot = getRandomAIJS();
+                attackingSandbox = evaluateSourceCode(getRandomAIJS(), true, sentBattle);
+                evaluatingAttacker = false;
+                sentBattle.defendingStrategySnapshot = getRandomAIJS();
+                defendingSandbox = evaluateSourceCode(getRandomAIJS(), false, sentBattle);
+            }
+            else {
+                defenderStockOverride = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // uses white to see if attacker is white, and black to see if attacker is black (and thus defender is white)
+            Color colorToTest = evaluatingAttacker ? Color.WHITE : Color.BLACK;
+            handleEvaluationError(sentBattle, colorToTest.equals(sentBattle.getAttackerColor()));
+
+            return false;
+        }
+
+        return true;
     }
 
     // make a strategy lose if its source code cannot be evaluated properly,
     static void handleEvaluationError(Battle sentBattle, boolean isWhite) {
+        System.out.println("evalError, isWhite: " + isWhite);
         String errorString = "JS EVALUATION ERROR - passed SourceCode has errors:\n";
         String stackTraceMessage = compressedExecutionTraceHolder[1];
         System.out.print(errorString + stackTraceMessage + "\n");
-        sentBattle.init();
         sentBattle.addBattleGame();
 
         BattleGame newBattleGame = sentBattle.battleGames.get(0);
@@ -620,52 +608,14 @@ public class SimulationApp {
 
         // makes the other color win because this color had an invalid source
         processBattleGameWinner(sentBattle, newBattleGame, isWhite ? Color.BLACK : Color.WHITE);
-        sentBattle.complete();
-
-        // prints out the battle
-        debugPrintln(sentBattle.toString());
+        sentBattle.complete(false);
     }
 
     // runs a full battle
     static void runBattle(Battle sentBattle) {
-        // ask for console setup info
-        // scan = new Scanner(System.in);
-        /*
-         * System.out.println("\nDo you want to run in CONSOLE mode? (y, n)\n" +
-         * "This mode prints out important information and prompts for input.\n" +
-         * "This mode is the only way to play manually.");
-         * CONSOLE_APP = false;//scan.nextLine().equals("y");
-         * if (CONSOLE_APP) {
-         * System.out.println("Do you want the ATTACKER to be MANUAL? (y, n)");
-         * ATTACKER_MANUAL = scan.nextLine().equals("y");
-         * System.out.println("ATTACKER set to " + (ATTACKER_MANUAL ? "MANUAL" : "AI"));
-         * System.out.println("Do you want the DEFENDER to be MANUAL? (y, n)");
-         * DEFENDER_MANUAL = scan.nextLine().equals("y");
-         * System.out.println("DEFENDER set to " + (DEFENDER_MANUAL ? "MANUAL" : "AI"));
-         * }
-         */
         setupStrategies();
 
-        /*
-         * System.out.println("\nDo you want to run in DEBUG mode? (y, n)\n" +
-         * "This mode prints out more detailed status and error information.");
-         * DEBUG = true;//scan.nextLine().equals("y");
-         * int numGames;
-         * while (true) {
-         * System.out.
-         * println("How many Games do you want in this Battle?  This must be an odd integer"
-         * );
-         * try {
-         * numGames = Integer.parseInt(scan.nextLine());
-         * if (numGames % 2 == 1)
-         * break;
-         * } catch (Exception e) { }
-         * }
-         */
-
-        // setup Battle
         Battle battle = sentBattle;
-        battle.init();
 
         while (numGames > 0) {
             // setup BattleGame
@@ -683,16 +633,6 @@ public class SimulationApp {
         int aWins = battle.getAttackerWins();
         int dWins = battle.getDefenderWins();
         System.out.printf("%s wins the Battle!  A-%d vs D-%d\n", aWins > dWins ? "ATTACKER" : "DEFENDER", aWins, dWins);
-        battle.complete();
-
-        debugPrintln(battle.toString());
-
-        // sends the resulting battle to the backend if there is RabbitMQ connection
-        // allowed
-        if (!NO_COMMUNICATION) {
-            // sends message back to backend
-            sendRabbitMQMessage(new SimulationResponse(battle, battle.getClientId()), RESP_QUEUE_NAME);
-        }
 
         // scan.close();
     }
@@ -721,6 +661,18 @@ public class SimulationApp {
 
     }
 
+    static boolean isIdStockId(UUID sentID) {
+        IStrategy stockConversion = getStockAI(sentID);
+
+        try {
+            stockConversion = (TrueRandomAI)stockConversion;
+        } catch (Exception e) {
+            return true;
+        }
+
+        return false;
+    }
+
     // gets a Java StockAI from a UUID
     static IStrategy getStockAI(UUID sentId) {
         if (sentId.equals(UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c")))
@@ -746,7 +698,7 @@ public class SimulationApp {
         }
 
         while (true) {
-            Color potentialWinner = playTurn(false, battle, battleGame);
+            Color potentialWinner = playTurn(false, false, battle, battleGame);
             if (potentialWinner != null) {
                 winner = potentialWinner;
                 break;
@@ -767,7 +719,7 @@ public class SimulationApp {
     // returns the color of the winner, if there was one
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
-    static Color playTurn(boolean isManualCom, Battle battle, BattleGame battleGame) {
+    static Color playTurn(boolean isManualCom, boolean isManualStock, Battle battle, BattleGame battleGame) {
         // resets executionTrace Values
         compressedExecutionTraceHolder = new String[2];
 
@@ -775,12 +727,13 @@ public class SimulationApp {
         if (CONSOLE_APP)
             System.out.println(playerString(gameState.currentPlayer) + "'s turn");
 
-        // for manualCom play, the player is the attacker
+        // for manual play, the player is the attacker,
+        //     and for other stepped play (1 turn at a time), we treat the current sent strategy as the defender
         boolean isAttackerTurn = isManualCom ? false : currentColor().equals(battleGame.getAttackerColor());
 
         String moveString = isAttackerTurn
-                ? getAttackerMoveString(isManualCom, compressedExecutionTraceHolder)
-                : getDefenderMoveString(isManualCom, compressedExecutionTraceHolder);
+                ? getAttackerMoveString(isManualStock, compressedExecutionTraceHolder)
+                : getDefenderMoveString(isManualStock, compressedExecutionTraceHolder);
         lastMoveString = moveString;
 
         if (!isManualCom) {
@@ -792,9 +745,9 @@ public class SimulationApp {
         // validates move string
         boolean isValid = isMoveValid(moveString, gameState.board);
         if (!isValid) {
+            String errorString = String.format("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
+            battleGame.stackTrace += errorString + compressedExecutionTraceHolder[1];
             if (DEBUG) {
-                String errorString = String.format("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
-                battleGame.stackTrace += errorString;
                 System.out.print(errorString);
                 System.out.println("Move String must be in the form \"<fromCell>, \"<toCell>\"");
             }
@@ -822,7 +775,7 @@ public class SimulationApp {
     // Return string must be in the form "<fromCell>, <toCell>".
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
-    static String getAttackerMoveString(boolean isManualCom, String[] compressedExecutionTraceHolder) {
+    static String getAttackerMoveString(boolean isManualStock, String[] compressedExecutionTraceHolder) {
         debugPrintln("Fetching attacker's move");
         if (ATTACKER_MANUAL)
             return scan.nextLine();
@@ -831,7 +784,7 @@ public class SimulationApp {
         String moveString = "";
         try {
             // ATTACKER is a stock AI
-            if (isManualCom || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
+            if (isManualStock || attackerStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockAttacker.getMove(gameState);// return processStrategySource(attackingEngine);
             } else { // ATTACKER is sent from backend
                 moveString = processStrategySource(attackingSandbox, compressedExecutionTraceHolder);// attackingStrategy.getMove(gameState);
@@ -860,7 +813,7 @@ public class SimulationApp {
     // Return string must be in the form "<fromCell>, <toCell>".
     // isManualCom is whether or not this moveString is being acquired from a manual
     // test play window
-    static String getDefenderMoveString(boolean isManualCom, String[] compressedExecutionTraceHolder) {
+    static String getDefenderMoveString(boolean isManualStock, String[] compressedExecutionTraceHolder) {
         debugPrintln("Fetching defender's move");
         if (DEFENDER_MANUAL)
             return scan.nextLine();
@@ -869,7 +822,7 @@ public class SimulationApp {
         String moveString = "";
         try {
             // DEFENDER is a stock AI
-            if (isManualCom || defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
+            if (isManualStock || defenderStockOverride || (NO_COMMUNICATION && !JAVASCRIPT_STOCK)) {
                 moveString = stockDefender.getMove(gameState);// return processStrategySource(defendingEngine);
             } else // DEFENDER is sent from backend
                 moveString = processStrategySource(defendingSandbox, compressedExecutionTraceHolder);// defendingStrategy.getMove(gameState);
@@ -884,11 +837,42 @@ public class SimulationApp {
     }
 
     // evaluates source code for later fast running
-    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource) throws ScriptException, NoSuchMethodException {
+    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource, boolean isAttacker, Battle battle) throws ScriptException, NoSuchMethodException {
         // sets up evaluator
         //ScriptEngineManager factory = new ScriptEngineManager();
         //ScriptEngine engine = factory.getEngineByName("nashorn");
         NashornSandbox sandbox = NashornSandboxes.create();
+
+        // determines and sets the line num of getMove() within the battle object (ignoring comments)
+        // ASSUMES that all user code will be below the getMove() declaration
+        int indexOfGetMove = strategySource.indexOf("getMove()");
+        int newLineIndex;
+        int lineOfGetMove = 1;
+        String lineCountingString = parseOutComments(strategySource.substring(0, indexOfGetMove));
+        System.out.println(lineCountingString);
+        while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
+            // counts the read newline character to determine what line getMove() starts on
+            lineOfGetMove++;
+
+            //System.out.print((lineOfGetMove - 1) + ":  " + lineCountingString.substring(0, newLineIndex + 1));
+            lineCountingString = lineCountingString.substring(newLineIndex + 1);
+        }
+        int lineOfGetMoveNoComments = lineOfGetMove;
+
+        // determines and sets the line num of getMove() within the battle object (including comments)
+        // ASSUMES that all user code will be below the getMove() declaration
+        lineOfGetMove = 1;
+        lineCountingString = strategySource.substring(0, indexOfGetMove);
+        while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
+            // counts the read newline character to determine what line getMove() starts on
+            lineOfGetMove++;
+
+            //System.out.print((lineOfGetMove - 1) + ":  " + lineCountingString.substring(0, newLineIndex + 1));
+            lineCountingString = lineCountingString.substring(newLineIndex + 1);
+        }
+
+        // sends the line numbers of getMove() to the battle object
+        battle.setGetMoveLineNum(lineOfGetMoveNoComments, isAttacker, lineOfGetMove);
 
         // evaluates the script
         //engine.eval(strategySource);
@@ -910,6 +894,7 @@ public class SimulationApp {
         else { */   // inject line tracking code
             //System.out.println("input: " + strategySource);
             strategySource = injectLineTrackingCode(strategySource);
+            battle.setupLineNumConversionList(isAttacker, strategySource);
             //System.out.println("\n\n\n\noutput: " + strategySource);
             //try {
                 sandbox.eval(strategySource);
@@ -931,6 +916,112 @@ public class SimulationApp {
         return sandbox;
     }
 
+    // states for comment parsing
+    enum CommentParseState { outsideComment, insideLineComment, insideblockComment, insideblockComment_noNewLineYet, insideString };
+    enum CommentParseFunctionState { outsideFunction, insideFunction };
+
+    // removes // and /* */ comments from a string
+    static String parseOutComments(String code) {
+        // TODO parse to remove comments from lineCountingString
+        CommentParseState state = CommentParseState.outsideComment;
+
+        StringBuilder result = new StringBuilder();
+        Scanner s = new Scanner(code);
+        s.useDelimiter("");
+
+        CommentParseFunctionState[] functionStateHolder = { CommentParseFunctionState.outsideFunction };
+        int[] numNestedBracesHolder = { 0 };
+
+        while (s.hasNext()) {
+            String c = getNextScannerChar(s, numNestedBracesHolder, functionStateHolder);
+            switch (state) {
+                case outsideComment:
+                    if (c.equals("/") && s.hasNext()) {
+                        String c2 = getNextScannerChar(s, numNestedBracesHolder, functionStateHolder);
+                        if (c2.equals("/")) {
+                            state = CommentParseState.insideLineComment;
+                            appendCharIfNecessary(result, c, false, functionStateHolder[0]);
+                            appendCharIfNecessary(result, c2, false, functionStateHolder[0]);
+                        } else if (c2.equals("*")) {
+                            state = CommentParseState.insideblockComment_noNewLineYet;
+                            appendCharIfNecessary(result, c, false, functionStateHolder[0]);
+                            appendCharIfNecessary(result, c2, false, functionStateHolder[0]);
+                        } else {
+                            appendCharIfNecessary(result, c, true, functionStateHolder[0]);
+                            appendCharIfNecessary(result, c2, true, functionStateHolder[0]);
+                        }
+                    } else {
+                        appendCharIfNecessary(result, c, true, functionStateHolder[0]);
+                        if (c.equals("\"")) {
+                            state = CommentParseState.insideString;
+                        }
+                    }
+                    break;
+                case insideString:
+                    appendCharIfNecessary(result, c, true, functionStateHolder[0]);
+                    if (c.equals("\"")) {
+                        state = CommentParseState.outsideComment;
+                    } else if (c.equals("\\") && s.hasNext()) {
+                        appendCharIfNecessary(result, getNextScannerChar(s, numNestedBracesHolder, functionStateHolder), true, functionStateHolder[0]);
+                    }
+                    break;
+                case insideLineComment:
+                    if (c.equals("\n")) {
+                        state = CommentParseState.outsideComment;
+                        appendCharIfNecessary(result, c, true, functionStateHolder[0]);
+                    }
+                    else
+                        appendCharIfNecessary(result, c, false, functionStateHolder[0]);
+                    break;
+                case insideblockComment_noNewLineYet:
+                    if (c.equals("\n")) {
+                        appendCharIfNecessary(result, c, true, functionStateHolder[0]);
+                        state = CommentParseState.insideblockComment;
+                    }
+                    else
+                        appendCharIfNecessary(result, c, false, functionStateHolder[0]);
+                case insideblockComment:
+                    appendCharIfNecessary(result, c, false, functionStateHolder[0]);
+                    while (c.equals("*") && s.hasNext()) {
+                        String c2 = getNextScannerChar(s, numNestedBracesHolder, functionStateHolder);
+                        appendCharIfNecessary(result, c2, false, functionStateHolder[0]);
+                        if (c2.equals("/")) {
+                            state = CommentParseState.outsideComment;
+                            break;
+                        }
+                    }
+            }
+        }
+        s.close();
+        return result.toString();
+    }
+
+    // used for parseOutComments() to only not remove comments if outside of curly braces
+    static void appendCharIfNecessary(StringBuilder result, String scannerChar, boolean notPartOfComment, CommentParseFunctionState functionState) {
+        if (notPartOfComment || functionState.equals(CommentParseFunctionState.insideFunction))
+            result.append(scannerChar);
+    }
+
+    // used for parseOutComments() to get the next char in the stream, tracking the number of nested curly braces
+    static String getNextScannerChar(Scanner s, int[] numNestedBracesHolder, CommentParseFunctionState[] functionStateHolder) {
+        String nextChar = s.next();
+        // TODO make function detection only work after "function" is read
+        if (nextChar.equals("{")) {
+            numNestedBracesHolder[0]++;
+
+            if (functionStateHolder[0].equals(CommentParseFunctionState.outsideFunction))
+                functionStateHolder[0] = CommentParseFunctionState.insideFunction;
+        }
+        else if (nextChar.equals("}")) {
+            numNestedBracesHolder[0]--;
+
+            if (numNestedBracesHolder[0] <= 0 && functionStateHolder[0].equals(CommentParseFunctionState.insideFunction))
+                functionStateHolder[0] = CommentParseFunctionState.outsideFunction;
+        }
+
+        return nextChar;
+    }
+
     // injects a line of code after every possible line of user code to track the lines that have been executed in a given turn
     static String injectLineTrackingCode(String strategySource) {
         // the resulting string with injected code
@@ -946,20 +1037,9 @@ public class SimulationApp {
 
         // determines the starting line number so the proper execution tracking line can be injected
         // ASSUMES that all user code will be below the getMove() declaration
-        int lineOfGetMove = 1;
         int indexOfGetMove = workingString.indexOf("getMove()");
-        String lineCountingString = workingString.substring(0, indexOfGetMove);
         int currentLineNum = 1; // starts at 1 because this is how line numbering is
         int newLineIndex;
-        while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
-            // counts the read newline character to determine what line getMove() starts on
-            lineOfGetMove++;
-
-            if (newLineIndex >= lineCountingString.length())
-                break;
-
-            lineCountingString = lineCountingString.substring(newLineIndex + 1);
-        }
 
         // starts the line counting with the line after getMove()
         result += workingString.substring(0, indexOfGetMove);
@@ -1066,10 +1146,10 @@ public class SimulationApp {
                 else
                     result += currentLine;
             }
-            else if (hasFlowJump || hasReturnStatement.matcher(prevWorkingString).matches())
+            else if (hasFlowJump || hasReturnStatement.matcher(prevWorkingString).matches() || hasContentInThisLine)
                 result += codeToInject + currentLine;
-            else if (hasContentInThisLine)// injects code after current line
-                result += currentLine + codeToInject;
+            /*else if (hasContentInThisLine)// injects code after current line
+                result += currentLine + codeToInject;*/
             else
                 result += currentLine;
 
@@ -1914,6 +1994,20 @@ public class SimulationApp {
         return newBoard;
     }
 
+    // deep copies a 2D array (board)
+    static String[][] deepCopyBoard(String[][] board) {
+        int numCols = gameState.board.length;
+        int numRows = gameState.board[0].length;
+        String[][] result = new String[numCols][numRows];
+
+        for (int col = 0; col < numCols; col++) {
+            for (int row = 0; row < numRows; row++)
+                result[col][row] = board[col][row];
+        }
+
+        return result;
+    }
+
     // performs a println if the application is in DEBUG mode
     static void debugPrintln(String s) {
         if (DEBUG)
@@ -2442,6 +2536,7 @@ public class SimulationApp {
                 "    return TRUE;\n" +
                 "}\n" +
                 "function getMove() {\n" +
+                "    return jasdjkal;\n" +
                 "    var board = gameState.board;\n" +
                 "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
                 "    var numMovesFound = 0;\n" +
@@ -2463,6 +2558,12 @@ public class SimulationApp {
                 "    if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated\n" +
                 "        return \"CHECKMATED\";\n" +
                 "    }\n" +
+                "    var ja = /*1;*/2;\n" +
+                "    ja = 3//;\n" +
+                "    ;\n" +
+                "    var /*jasd*/sss = \"/*jadska//jkl*///sadjk\";\n" +
+                "    //var sss = \"\";\n"+
+                "    /*var ss//s = \"\";*/\n"+
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
@@ -2481,7 +2582,7 @@ public class SimulationApp {
                 "    }\n" +
                 "    print(\"JS print\");\n" +
                 "    if (true)\n" +
-                "       return \"A8, A7\";\n" +
+                "       return jkdsaljsd;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
                 "}";*/
     }
