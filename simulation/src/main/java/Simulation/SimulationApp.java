@@ -1729,10 +1729,13 @@ public class SimulationApp {
             // end game if a strategy has repeated two moves enough times to reach the MOVE_CYCLE_CAP
             // the strategy that violated this MOVE_CYCLE_CAP loses the game
             final int MOVE_CYCLE_CAP = 5;
-            if (battleGame.getWhiteCycleLength() >= MOVE_CYCLE_CAP)
-                return getPlayerColor(gameState.WHITE);
-            else if (battleGame.getBlackCycleLength() >= MOVE_CYCLE_CAP)
+            if (battleGame.getWhiteCycleLength() >= MOVE_CYCLE_CAP) {
+                appendStackTraceString("Malicious behavior detected from White");
                 return getPlayerColor(gameState.BLACK);
+            } else if (battleGame.getBlackCycleLength() >= MOVE_CYCLE_CAP) {
+                appendStackTraceString("Malicious behavior detected from Black");
+                return getPlayerColor(gameState.WHITE);
+            }
         }
 
         // end game if reached turn cap
@@ -1740,6 +1743,7 @@ public class SimulationApp {
         if (gameState.numMovesMade >= TURN_CAP) {
             // determine ambiguous winner
             Color winnerColor;
+            appendStackTraceString("Turn cap reached");
 
             // If no tie, give win to side w/ most pawns remaining
             winnerColor = runTieBreaker(gameState.numWhitePawns, gameState.numBlackPawns);
