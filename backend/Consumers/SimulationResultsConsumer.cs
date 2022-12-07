@@ -105,14 +105,14 @@ namespace AVA.API.Consumers
                         TotDefenderWins = 1;
                     }
 
-                    int AttackerEloGen2 = (TotAttackerWins * TotDefenderWins);
-                    int DefenderEloGen2 = (TotDefenderWins * TotAttackerWins);
+                    int AttackerEloGen2 = (ResultBattle.AttackerWins * TotDefenderWins);
+                    int DefenderEloGen2 = (ResultBattle.DefenderWins * TotAttackerWins);
 
                     int FinalAttackerElo = AttackerEloGen1 + AttackerEloGen2;
                     int FinalDefenderElo = DefenderEloGen1 + DefenderEloGen2;
 
-                    attacker.Elo = FinalAttackerElo;
-                    defender.Elo = FinalDefenderElo;
+                    attacker.Elo = attacker.Elo + FinalAttackerElo;
+                    defender.Elo = defender.Elo + FinalDefenderElo;
 
                     await _strategyService.UpdateAsync(attacker);
                     await _strategyService.UpdateAsync(defender);

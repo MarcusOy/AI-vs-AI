@@ -109,6 +109,12 @@ public class StrategyController : Controller
 
         List<Strategy> AllStrats = await stratQuery.ToListAsync();
 
+        foreach (Strategy st in AllStrats)
+        {
+            st.Elo = 0;
+            await _strategyService.UpdateAsync(st);
+        }
+
         var Rand = new Random();
         Strategy attacking = new Strategy();
         Strategy defending = new Strategy();
