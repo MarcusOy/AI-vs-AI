@@ -851,9 +851,20 @@ public class SimulationApp {
         // determines and sets the line num of getMove() within the battle object (ignoring comments)
         // ASSUMES that all user code will be below the getMove() declaration
         int indexOfGetMove = strategySource.indexOf("getMove()");
+
+        // ends simulation if getMove() not found
+        if (indexOfGetMove < 0) {
+            String errorString = "getMove() does not exist";
+            compressedExecutionTraceHolder[1] += errorString;
+            if (gameState == null)
+                gameState = new GameState();
+            throw new NoSuchMethodException(errorString);
+        }
+
         int newLineIndex;
         int lineOfGetMove = 1;
         String lineCountingString = /*parseOutComments(*/strategySource.substring(0, indexOfGetMove)/*)*/;
+
         System.out.println(lineCountingString);
         while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
             // counts the read newline character to determine what line getMove() starts on
@@ -1607,7 +1618,9 @@ public class SimulationApp {
             }
         } catch (Exception e) {
             appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
-            result = "JS INVOKE ERROR";
+            String errorString = "Cannot find getMove() function";
+            result = errorString;
+            compressedExecutionTraceHolder[1] += errorString;
 
             // throws the exception again so the game can be ended immediately
             throw e;
@@ -2627,7 +2640,7 @@ public class SimulationApp {
                 "    return moves[Math.floor((Math.random() * numMovesFound))];\n" +
                 "}";
 
-        return  s;/*"function whichColumnIsPlayerInCheck(color) {\n" +
+        return  "function whichColumnIsPlayerInCheck(color) {\n" +
                 "    var rowToCheck;\n" +
                 "    if (color === WHITE) rowToCheck = 9;\n" +
                 "    else if (color === BLACK)\n" +
@@ -2642,7 +2655,7 @@ public class SimulationApp {
                 "}\n //this is random text\n" +
                 "//some more random text\n" +
                 "//some more random text\n" +
-                "function getMove() {\n" +
+                "function getMover() {\n" +
                 "    if (!(true))\n" +
                 "       print(\"JS notIfPrint\");\n" +
                 "    if (true)     // this is a comment {\n" +
@@ -2657,6 +2670,6 @@ public class SimulationApp {
                 "    if (true)\n" +
                 "       return ajajb;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
-                "}";*/
+                "}";
     }
 }
