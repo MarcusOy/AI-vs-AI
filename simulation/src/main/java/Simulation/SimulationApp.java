@@ -855,7 +855,7 @@ public class SimulationApp {
         // ends simulation if getMove() not found
         if (indexOfGetMove < 0) {
             String errorString = "getMove() does not exist";
-            compressedExecutionTraceHolder[1] += errorString;
+            appendStackTraceString(errorString);
             if (gameState == null)
                 gameState = new GameState();
             throw new NoSuchMethodException(errorString);
@@ -1620,7 +1620,7 @@ public class SimulationApp {
             appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
             String errorString = "Cannot find getMove() function";
             result = errorString;
-            compressedExecutionTraceHolder[1] += errorString;
+            appendStackTraceString(errorString);
 
             // throws the exception again so the game can be ended immediately
             throw e;
@@ -1822,7 +1822,7 @@ public class SimulationApp {
 
         if (currentBattleGame.stackTrace.length() <= 0)
             currentBattleGame.stackTrace += compressedExecutionTraceHolder[1];
-        compressedExecutionTraceHolder[1] = "";
+        appendStackTraceString("");
         currentBattleGame.setWinner(gameWinner, jsonBoard, aPi, aPa, dPi, dPa);
         battle.processGameWinner(currentBattleGame, gameWinner);
     }
