@@ -59,6 +59,37 @@ namespace AVA.API.Consumers
                     await _hubContext.Clients.Client(context.Message.ClientId).SendAsync("TestSubmissionResult", context.Message);
                     _logger.LogInformation($"Sent test submission battle to client successfully.");
                 }
+                else {
+                    Strategy attacker = context.Message.ResultingBattle.AttackingStrategy;
+                    Strategy defender = context.Message.ResultingBattle.DefendingStrategy;
+
+                    Battle ResultBattle = context.Message.ResultingBattle;
+
+                    int AttackerEloGen1 = ResultBattle.AttackerWins;
+                    int DefenderEloGen1 = ResultBattle.DefenderWins;
+
+                    int TotAttackerWins = 0;
+                    int TotDefenderWins = 0;
+
+                    foreach (Battle b1 in attacker.AttackerBattles) {
+                        TotAttackerWins += b1.AttackerWins;
+                    }
+
+                    foreach (Battle b2 in attacker.DefenderBattles) {
+                        TotAttackerWins += b2.DefenderWins;
+                    }
+
+                    foreach (Battle b3 in defender.AttackerBattles) {
+                        TotDefenderWins += b3.AttackerWins;
+                    }
+
+                    foreach (Battle b4 in defender.DefenderBattles) {
+                        TotDefenderWins += b4.DefenderWins;
+                    }
+
+                    int attackerEloGen2 = (TotAttackerWins * TotDefenderWins);
+                    int DefenderEloGen2 = (TotDefenderWins * TotAttackerWins);
+                }
             }
             catch (Exception ex)
             {
