@@ -805,8 +805,10 @@ public class SimulationApp {
     static void appendStackTraceString(String newErrorString) {
         if (compressedExecutionTraceHolder[1] == null)
             compressedExecutionTraceHolder[1] = newErrorString;
-        else
+        else if (("").equals(newErrorString))
             compressedExecutionTraceHolder[1] += newErrorString;
+        else
+            compressedExecutionTraceHolder[1] += "\n" + newErrorString;
     }
 
     // You can replace the contents of this function with the Defender AI,
