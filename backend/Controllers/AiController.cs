@@ -134,14 +134,18 @@ public class AiController : Controller
     }
 
     [HttpPost, Route("/Strategy/StepRun/{ClientId}/{StockId}")]
-    public async void SimulationStep(String ClientId, Guid StockId, [FromBody] String[][] board) {
-        SimulationHub.SimulationStepRequest newStep = new SimulationHub.SimulationStepRequest();
-        newStep.SentBoard = board;
-        newStep.IsWhiteAI = true;
-        newStep.ClientId = ClientId;
-        newStep.ChosenStockId = StockId;
+    public async void SimulationStep(String ClientId, Guid StockId, [FromBody] String[][] board)
+    {
+        var request = new SimulationStepRequest
+        {
+            SentBoard = board,
+            IsWhiteAI = true,
+            ClientId = ClientId,
+            ChosenStockId = StockId
+        };
 
-        await _hubContext.Clients.Client(ClientId).SendAsync("StepRequest", newStep);
+        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationStepRequests"));
+        await endpoint.Send(request);
     }
     public class TestStrategyRequest
     {
@@ -150,11 +154,11 @@ public class AiController : Controller
         public String ClientId { get; set; }
     }
 
-    // public class SimulationStepRequest
-    //     {
-    //         public String[][] SentBoard { get; set; }
-    //         public bool IsWhiteAI { get; set; }
-    //         public String ClientId { get; set; }
-    //         public Guid ChosenStockId { get; set; }
-    //     }
+    public class SimulationStepRequest
+    {
+        public String[][] SentBoard { get; set; }
+        public bool IsWhiteAI { get; set; }
+        public String ClientId { get; set; }
+        public Guid ChosenStockId { get; set; }
+    }
 }
