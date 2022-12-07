@@ -22,7 +22,7 @@ public class LeaderboardController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet, Route("/Leaderboard/Get/{game}")]
+    [HttpGet, Route("/Leaderboard/Get/{gameId}")]
     public async Task<List<Strategy>> Get(int gameId)
     {
         var leaderboardQuery = _dbContext.Strategies
