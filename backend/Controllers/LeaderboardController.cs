@@ -16,13 +16,15 @@ public class LeaderboardController : Controller
 
     private readonly AVADbContext _dbContext;
 
-    public LeaderboardController(IStrategiesService strategiesService, AVADbContext dbContext) {
+    public LeaderboardController(IStrategiesService strategiesService, AVADbContext dbContext)
+    {
         _strategyService = strategiesService;
         _dbContext = dbContext;
     }
 
     [HttpGet, Route("/Leaderboard/Get/{game}")]
-    public async Task<List<Strategy>> Get(int gameId) {
+    public async Task<List<Strategy>> Get(int gameId)
+    {
         var leaderboardQuery = _dbContext.Strategies
             .Where(s => s.GameId == gameId)
             .OrderByDescending(s => s.Elo)
