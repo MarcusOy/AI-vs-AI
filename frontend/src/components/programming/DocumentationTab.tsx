@@ -48,8 +48,6 @@ const DocumentationTab = (p: IDocumentationTabProps) => {
     const filteredDocs =
         debounced != '' ? docs.filter((d) => d.name?.indexOf(debounced) != -1) : docs
 
-    console.log({ filteredDocs })
-
     return (
         <Stack spacing={7}>
             <Heading fontSize='lg'>Documentation</Heading>

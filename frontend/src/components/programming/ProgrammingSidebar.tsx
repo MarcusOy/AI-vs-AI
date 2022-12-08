@@ -70,12 +70,14 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
 
     const [tabIndex, setTabIndex] = useState(0)
     const [submissions, setSubmissions] = useState<Battle[]>([])
+    const [isWaitingOnSubmission, setIsWaitingOnSubmission] = useState(false)
 
     const onTestSubmissionResult = (response) => {
         const battle = response.resultingBattle as Battle
         console.log('TestSubmissionResult Response:', battle)
         // @ts-ignore
         setSubmissions((past) => [battle, ...past])
+        setIsWaitingOnSubmission(false)
     }
 
     const onSubmitStrategy = async () => {
@@ -83,7 +85,9 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         IdentityService.refreshIdentity()
     }
 
-    const _ = useAVASocket([{ key: 'TestSubmissionResult', execute: onTestSubmissionResult }])
+    const submissionWebSocket = useAVASocket([
+        { key: 'TestSubmissionResult', execute: onTestSubmissionResult },
+    ])
     const gameFetch = useAVAFetch('/Games/1') // TODO: dynamically change on strategy gameid
     const strategySubmit = useAVAFetch(
         `/Strategy/Submit/${p.strategy.id}`,
@@ -92,7 +96,22 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
     )
     const strategyRun = useAVAFetch('/Strategy/TestStrategy/', { method: 'POST' }, { manual: true })
     const game = gameFetch.data as Game
-    const isLoading = gameFetch.isLoading || strategySubmit.isLoading || strategyRun.isLoading
+    const runStrategy = (stock: number) => {
+        const testStrategyRequest = {
+            strategyIdToTest: p.strategy.id,
+            stock,
+            clientId: submissionWebSocket.connection?.connectionId,
+        }
+        strategyRun.execute({ data: testStrategyRequest })
+        setIsWaitingOnSubmission(true)
+        setTabIndex(3)
+    }
+
+    const isLoading =
+        gameFetch.isLoading ||
+        strategySubmit.isLoading ||
+        strategyRun.isLoading ||
+        isWaitingOnSubmission
 
     return (
         <Flex flexDir='column'>
@@ -125,22 +144,34 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                                 aria-label='Test strategy'
                                 icon={<IoFlask />}
                                 variant='outline'
+                                disabled={isWaitingOnSubmission}
                             />
                             <MenuList>
-                                <MenuItem icon={<BsThermometerLow size={20} />}>
+                                <MenuItem
+                                    icon={<BsThermometerLow size={20} />}
+                                    onClick={() => runStrategy(-1)}
+                                >
                                     Test against EasyAI
                                 </MenuItem>
-                                <MenuItem icon={<BsThermometerHalf size={20} />}>
+                                <MenuItem
+                                    icon={<BsThermometerHalf size={20} />}
+                                    onClick={() => runStrategy(-2)}
+                                >
                                     Test against MediumAI
                                 </MenuItem>
-                                <MenuItem icon={<BsThermometerHigh size={20} />}>
+                                <MenuItem
+                                    icon={<BsThermometerHigh size={20} />}
+                                    onClick={() => runStrategy(-3)}
+                                >
                                     Test against HardAI
                                 </MenuItem>
                             </MenuList>
                         </Menu>
                         <Button
                             rightIcon={<ArrowForwardIcon />}
-                            disabled={p.strategy.status == StrategyStatus.Active}
+                            disabled={
+                                p.strategy.status == StrategyStatus.Active || isWaitingOnSubmission
+                            }
                             onClick={submitModal.onOpen}
                         >
                             Submit

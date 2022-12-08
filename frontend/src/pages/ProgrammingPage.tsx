@@ -24,34 +24,6 @@ function ProgrammingPage() {
 
     const strategy = data as Strategy
 
-    // const runStrategy = async () => {
-    //     let chosen
-    //     if (select) {
-    //         chosen = -1
-    //     } else if (medium) {
-    //         chosen = -2
-    //     } else {
-    //         chosen = -3
-    //     }
-    //     const data = {
-    //         strategyToTest: {
-    //             name: name,
-    //             sourceCode: code,
-    //             createdByUserId: strategy.createdByUserId,
-    //             id: strategy.id,
-    //             strategy: StrategyStatus.Draft,
-    //         },
-    //         stock: chosen,
-    //         clientId: submissionWebSocket.connection?.connectionId,
-    //     }
-    //     strategy = await strategyRun.execute({ data: data.strategyToTest })
-    //     strategy.status = 0
-    //     if (select || hard || medium) {
-    //         console.log(await strategyRun.execute({ data }))
-    //     }
-    //     toggleStock(0)
-    // }
-
     if (isLoading || strategy == undefined)
         return (
             <Center mt='10'>

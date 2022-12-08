@@ -11,15 +11,18 @@ public class AiController : Controller
 {
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
+    private readonly IIdentityService _identityService;
     private readonly AVADbContext _dbContext;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
-                        AVADbContext dbContext)
+                        AVADbContext dbContext,
+                        IIdentityService identityService)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
         _dbContext = dbContext;
+        _identityService = identityService;
     }
 
     [HttpGet, Route("/getAi/{id}")]
@@ -28,9 +31,16 @@ public class AiController : Controller
 
     // TODO Have frontend send stock to test with in uri
     [HttpPost, Route("/Strategy/TestStrategy")]
-    public async Task<ActionResult> TestStrategy([FromBody] TestStrategyRequest req)
+    public async Task<Battle> TestStrategy([FromBody] TestStrategyRequest req)
     {
-        var s = req.StrategyToTest;
+        var s = _dbContext.Strategies
+            .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .FirstOrDefault(s => s.Id == req.StrategyIdToTest);
+
+        if (s is null)
+            throw new InvalidOperationException("Strategy id to test is not valid.");
+
         var attackGuid = s.Id;
         var defenderGuid = new Guid();
         int selectedStock = req.Stock;
@@ -62,6 +72,7 @@ public class AiController : Controller
                 BattleStatus = BattleStatus.Pending,
                 Iterations = 1,
                 AttackingStrategyId = attackGuid,
+                AttackingStrategySnapshot = s.SourceCode,
                 AttackingStrategy = new Strategy
                 {
                     Id = attackGuid,
@@ -69,9 +80,7 @@ public class AiController : Controller
                     Status = StrategyStatus.Active,
                     SourceCode = s.SourceCode
                 },
-                AttackingStrategySnapshot = s.SourceCode,
                 DefendingStrategyId = defendingStrategy.Id,
-                DefendingStrategy = defendingStrategy,
                 IsTestSubmission = true
             },
             ClientId = req.ClientId
@@ -80,7 +89,7 @@ public class AiController : Controller
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         await endpoint.Send(request);
 
-        return Ok("Simulation request sent.");
+        return request.PendingBattle;
     }
 
     [HttpGet, Route("/Strategy/TestPublish")]
@@ -133,7 +142,7 @@ public class AiController : Controller
     }
     public class TestStrategyRequest
     {
-        public Strategy StrategyToTest { get; set; }
+        public Guid StrategyIdToTest { get; set; }
         public int Stock { get; set; }
         public String ClientId { get; set; }
     }
