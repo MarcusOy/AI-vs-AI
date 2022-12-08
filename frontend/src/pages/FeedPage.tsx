@@ -1,8 +1,10 @@
 import React from 'react'
-import { Center, Box, Text, Flex, Spacer, Heading, Button } from '@chakra-ui/react'
+import { Center, Box, Text, Flex, Spacer, Heading, Button, HStack } from '@chakra-ui/react'
 import ModalAi from './ModalAi'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
 const FeedPage = () => {
+    const navigate = useNavigate()
     return (
         <Flex>
             <Box>
@@ -13,7 +15,14 @@ const FeedPage = () => {
                 <Text>🚧 Feed page 🚧</Text>
                 <Link to='/ManualPlay'> Manual Play </Link>
             </Box>
+
             <Spacer />
+            <HStack>
+                <Button onClick={() => navigate('/LeaderBoard/1')}>
+                    {' '}
+                    Temporary LeaderBoard Button
+                </Button>
+            </HStack>
         </Flex>
     )
 }

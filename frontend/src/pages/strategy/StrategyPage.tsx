@@ -28,6 +28,18 @@ import {
     Tooltip,
     Badge,
     useDisclosure,
+    ModalFooter,
+    ModalContent,
+    Modal,
+    ModalOverlay,
+    ModalHeader,
+    ModalBody,
+    FormLabel,
+    FormControl,
+    ModalCloseButton,
+    Input,
+    Highlight,
+    Select,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import StrategyStatTab from './StrategyStatTab'
@@ -36,8 +48,10 @@ import useAVAFetch from '../../helpers/useAVAFetch'
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons'
 import { Strategy } from '../../models/strategy'
 import { AVAStore } from '../../data/DataStore'
-import { TbBook2 } from 'react-icons/tb'
+import { Result } from '../../models/result'
+import { TbBook2, TbSwords } from 'react-icons/tb'
 import { GoGlobe, GoLock } from 'react-icons/go'
+import { ResultType } from '../../models/result-type'
 import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
 import DuplicateModal from '../../components/modals/DuplicateModal'
@@ -48,22 +62,36 @@ const StrategyPage = () => {
     const navigate = useNavigate()
     const { isOpen, onOpen, onClose } = useDisclosure()
     const deleteModal = useDisclosure()
+    const attackModal = useDisclosure()
+    const matchMakingModal = useDisclosure()
     const { id, tab } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
     const toast = useToast()
-
+    const whoAmIFetch = useAVAFetch('/Account/WhoAmI')
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
 
     const handleTabsChange = (index) => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
         navigate(`/Strategy/${id}/${tab}`)
     }
+    const initialRef = React.useRef(null)
+    const finalRef = React.useRef(null)
     const visibilityRequest = useAVAFetch(
         '/Strategy/Update',
         { method: 'PUT' },
         { manual: true }, // makes sure this request fires on user action
     )
+
+    const onNavigate = (r: Strategy) => {
+        onClose()
+
+        navigate(`/Strategy/${r.id}`)
+    }
+
+    console.log(whoAmIFetch)
+    if (whoAmIFetch.isLoading || whoAmIFetch.error) return <Spinner />
+    const StratList = whoAmIFetch.data.strategies as Strategy[]
 
     const onSubmit = async () => {
         const newStrategy: Strategy = {
@@ -165,12 +193,102 @@ const StrategyPage = () => {
                         </Text>
                     </Stack>
                     <Box flexGrow={1} />
+                    <HStack>
+                        <Button colorScheme='orange' onClick={matchMakingModal.onOpen}>
+                            Match Making
+                        </Button>
+                        <Modal
+                            initialFocusRef={initialRef}
+                            finalFocusRef={finalRef}
+                            isOpen={matchMakingModal.isOpen}
+                            onClose={matchMakingModal.onClose}
+                        >
+                            <ModalOverlay />
+                            <ModalContent>
+                                <ModalHeader>This is the place to make a match</ModalHeader>
+                                <ModalCloseButton />
+                                <ModalBody pb={6}>
+                                    <Stack>
+                                        <Select
+                                            placeholder='Choose Which Strategy To Use'
+                                            size='md'
+                                        >
+                                            {error == undefined &&
+                                                StratList.map((s, i) => {
+                                                    return <option key={s.id}>{s.name}</option>
+                                                })}
+                                        </Select>
+                                    </Stack>
+                                    <Center>
+                                        <ModalFooter>
+                                            <Button
+                                                onSubmit={onSubmit}
+                                                /* onClick={() => navigate('/Jiahao page')} */
+                                                colorScheme='orange'
+                                                mr={3}
+                                            >
+                                                Queue Up
+                                            </Button>
+                                            <Button onClick={matchMakingModal.onClose}>
+                                                Cancel
+                                            </Button>
+                                        </ModalFooter>
+                                    </Center>
+                                </ModalBody>
+                            </ModalContent>
+                        </Modal>
+                    </HStack>
+
                     <Menu>
                         <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
                             Actions
                         </MenuButton>
                         <MenuList>
-                            <MenuItem>Attack</MenuItem>
+                            <MenuItem onClick={attackModal.onOpen}>Attack</MenuItem>
+                            <Modal
+                                initialFocusRef={initialRef}
+                                finalFocusRef={finalRef}
+                                isOpen={attackModal.isOpen}
+                                onClose={attackModal.onClose}
+                            >
+                                <ModalOverlay />
+                                <ModalContent>
+                                    <ModalHeader>How many times do you want to attack</ModalHeader>
+                                    <ModalCloseButton />
+                                    <ModalBody pb={6}>
+                                        <Stack>
+                                            <FormControl>
+                                                <FormLabel>Attacking Number</FormLabel>
+                                                <Input
+                                                    ref={initialRef}
+                                                    placeholder='Enter a number'
+                                                />
+                                            </FormControl>
+                                            <Select
+                                                placeholder='Choose Which Strategy To Use'
+                                                size='md'
+                                            >
+                                                {error == undefined &&
+                                                    StratList.map((s, i) => {
+                                                        return <option key={s.id}>{s.name}</option>
+                                                    })}
+                                            </Select>
+                                        </Stack>
+
+                                        <ModalFooter>
+                                            <Button
+                                                onSubmit={onSubmit}
+                                                onClick={attackModal.onClose}
+                                                colorScheme='blue'
+                                                mr={3}
+                                            >
+                                                Attack
+                                            </Button>
+                                            <Button onClick={attackModal.onClose}>Cancel</Button>
+                                        </ModalFooter>
+                                    </ModalBody>
+                                </ModalContent>
+                            </Modal>
                             <MenuItem>Manually Attack</MenuItem>
                             {isSelf && (
                                 <MenuItem onClick={() => navigate(`/Programming/${strategy.id}`)}>
