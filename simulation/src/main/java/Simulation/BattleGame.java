@@ -32,9 +32,9 @@ public class BattleGame {
         stackTrace = "";
     }
 
-    public void addTurn(String battleId, Color currentPlayerColor, String moveString, String compressedLineTrace) {
+    public void addTurn(String battleId, Color currentPlayerColor, String moveString, String compressedLineTrace, String printInfo) {
         turns.add(
-                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString, compressedLineTrace));
+                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString, compressedLineTrace, printInfo));
     }
 
     public void setWinner(Color winnerColor, String finalBoard, int aPieces, int aPawns, int dPieces, int dPawns) {

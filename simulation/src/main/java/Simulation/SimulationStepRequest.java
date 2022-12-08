@@ -4,18 +4,20 @@ import java.util.UUID;
 
 public class SimulationStepRequest {
     public String[][] sentBoard;
-    public boolean isWhiteAI;
+    public boolean isWhiteTurn;
     public String clientId;
-    public UUID chosenStockId;
+    public UUID strategyId;
+    public String strategySnapshot;
 
     public SimulationStepRequest() {
 
     }
 
-    public SimulationStepRequest(String[][] sentBoard, boolean isWhiteAI, String clientId, UUID chosenStockId) {
+    public SimulationStepRequest(String[][] sentBoard, boolean isWhiteTurn, String clientId, UUID strategyId, String strategySnapshot) {
         this.sentBoard = sentBoard;
-        this.isWhiteAI = isWhiteAI;
+        this.isWhiteTurn = isWhiteTurn;
         this.clientId = clientId;
-        this.chosenStockId = chosenStockId;
+        this.strategyId = strategyId;
+        this.strategySnapshot = strategySnapshot;
     }
 }

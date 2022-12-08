@@ -10,15 +10,18 @@ public class Turn {
                      // A valid moveString follows the form, "<fromCell>, <toCell>",
                      // but whatever was sent is stored, even if invalid.
     private String linesExecuted = "";
+    private String printInfo = "";
 
     public Turn(String battleId, int battleGameNumber, int turnNumber,
-                boolean isAttackTurn, String moveString, String compressedLineTrace) {
+                boolean isAttackTurn, String moveString, String compressedLineTrace,
+                String printInfo) {
         this.battleId = battleId;
         this.battleGameNumber = battleGameNumber;
         this.turnNumber = turnNumber;
         this.isAttackTurn = isAttackTurn;
         turnData = moveString;
         linesExecuted = compressedLineTrace;
+        this.printInfo = printInfo;
         /*System.out.println(compressedLineTrace);
 
         int diff = linesExecuted.length() - longestLineTrace.length();
@@ -39,6 +42,7 @@ public class Turn {
                 ", isAttackerTurn=" + isAttackTurn +
                 ", turnData='" + turnData + '\'' +
                 ", linesExecuted='" + linesExecuted + '\'' +
+                ", \nprintInfo='" + printInfo + '\'' +
                 '}';
     }
 }
