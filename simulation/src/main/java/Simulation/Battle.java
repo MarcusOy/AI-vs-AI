@@ -68,13 +68,13 @@ public class Battle {
         defendingSnapshotGetMoveLineNum = -1;
         attackingSnapshotGetMoveLineNumCommented = -1;
         defendingSnapshotGetMoveLineNumCommented = -1;
-        System.out.println("initting " + id);
+        //System.out.println("initting " + id);
         battleStatus = 0;
     }
 
     // sets stored snapshot getMove() lineNum values
     public void setGetMoveLineNum(int lineNum, boolean isAttacker, int lineNumCommented) {
-        System.out.println("lineNum: " + lineNum + "    isAttacker: " + isAttacker + "    " + id);
+        //System.out.println("lineNum: " + lineNum + "    isAttacker: " + isAttacker + "    " + id);
         if (isAttacker) {
             attackingSnapshotGetMoveLineNum = lineNum;
             attackingSnapshotGetMoveLineNumCommented = lineNumCommented;
@@ -86,7 +86,7 @@ public class Battle {
 
     // sets up lists for lineNum conversion from source w/ injected code -> original source
     public void setupLineNumConversionList(boolean isAttacker, String sourceWithInjectedCode) {
-        System.out.println("setup");
+        //System.out.println("setup");
         String source;
         ArrayList<Integer> lineConversionList;
 
@@ -103,7 +103,7 @@ public class Battle {
         if (source == null || sourceWithInjectedCode == null)
             return;
 
-        System.out.println("originalSource: " + source + "\ninjectedSource: " + sourceWithInjectedCode);
+        //System.out.println("originalSource: " + source + "\ninjectedSource: " + sourceWithInjectedCode);
 
         // setup originalSource
         int indexOfGetMove = source.indexOf("getMove()");
@@ -144,16 +144,16 @@ public class Battle {
                 final int SHRUNK_LINE_SIZE = 4;
                 String shrunkLine = curOriginalLine.length() <= SHRUNK_LINE_SIZE ? curOriginalLine : curOriginalLine.substring(0, SHRUNK_LINE_SIZE);
                 if (curInjectedLine.matches("\\A.*" + Pattern.quote(shrunkLine) + ".*")) {
-                    System.out.println("originalLine: " + curOriginalLine + " matches w/ injectedLine: " + curInjectedLine);
+                    //System.out.println("originalLine: " + curOriginalLine + " matches w/ injectedLine: " + curInjectedLine);
                     break;
                 }
-                System.out.println("skipping line: " + curInjectedLine);
+                //System.out.println("skipping line: " + curInjectedLine);
             }
         }
 
         for (int i = 0; i < lineConversionList.size(); i++) {
             int line = lineConversionList.get(i);
-            System.out.println("line " + i + " maps to " + line);
+            //System.out.println("line " + i + " maps to " + line);
         }
 
         if (isAttacker)
@@ -187,7 +187,7 @@ public class Battle {
     }
 
     private void convertStackTraceLineNumbers(BattleGame battleGame, boolean didAttackerWin) {
-        System.out.println("convert");
+        //System.out.println("convert");
         String workingStackTrace = battleGame.stackTrace;
         int lineOfGetMove = didAttackerWin ? defendingSnapshotGetMoveLineNum : attackingSnapshotGetMoveLineNum;
         int lineOfGetMoveCommented = didAttackerWin ? defendingSnapshotGetMoveLineNumCommented : attackingSnapshotGetMoveLineNumCommented;
@@ -249,7 +249,7 @@ public class Battle {
                 String a = /*prevStackTrace.substring(0, indexOfLineNumber);*/prevStackTrace.substring(0, lineNumStartIndex);
                 int injectedIndex = prevLineNum - lineOfGetMoveCommented + 3;
                 // subtract 1 for every single read structure in getMove()
-                System.out.println(prevLineNum + " - " + lineOfGetMoveCommented + " + 3 = " + injectedIndex);
+                //System.out.println(prevLineNum + " - " + lineOfGetMoveCommented + " + 3 = " + injectedIndex);
 
                 // clamps injectedIndex to be in bounds
                 if (injectedIndex < 0)

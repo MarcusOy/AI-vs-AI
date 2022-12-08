@@ -461,8 +461,8 @@ public class SimulationApp {
             }
         }
 
-        System.out.println("preMoveString: " + preMovePieceString + "  postMoveString: " + postMovePieceString
-                + "  [c,r]: [" + postMovePieceCol + ", " + postMovePieceRow + "]");
+        /*System.out.println("preMoveString: " + preMovePieceString + "  postMoveString: " + postMovePieceString
+                + "  [c,r]: [" + postMovePieceCol + ", " + postMovePieceRow + "]");*/
 
         if (postMovePieceString != null)
             responseBoard[postMovePieceCol][postMovePieceRow] = preMovePieceString;
@@ -867,7 +867,7 @@ public class SimulationApp {
         int lineOfGetMove = 1;
         String lineCountingString = /*parseOutComments(*/strategySource.substring(0, indexOfGetMove)/*)*/;
 
-        System.out.println(lineCountingString);
+        //System.out.println(lineCountingString);
         while ((newLineIndex = lineCountingString.indexOf("\n")) >= 0) {
             // counts the read newline character to determine what line getMove() starts on
             if (newLineIndex > 0 && !(newLineIndex == 1 && lineCountingString.charAt(0) == '}')) // skips blank lines or just closing braces
@@ -899,7 +899,7 @@ public class SimulationApp {
         // injects lineTrackingCode so each turn's executionTrace field can be properly set
         battle.setInjectedSource(injectLineTrackingCode(strategySource), isAttacker);
         strategySource = battle.getInjectedSource(isAttacker);
-        System.out.println("postInjection: " + strategySource);
+        //System.out.println("postInjection: " + strategySource);
 
         // evaluates the script
         //engine.eval(strategySource);
@@ -908,7 +908,7 @@ public class SimulationApp {
         // perform test processing
         if (gameState == null)
             gameState = new GameState();
-        System.out.println("about to testProcess");
+        //System.out.println("about to testProcess");
         String testProcessingResult = processStrategySource(sandbox, new String[] { "", "" });
 
         // only injects code if exception wasn't throw in in and by processStrategySource
@@ -1266,11 +1266,11 @@ public class SimulationApp {
             lineStringSplitNoPrint[i] = curLineString;
         }
 
-        System.out.print("ExecutedLines: ");
+        /*System.out.print("ExecutedLines: ");
         System.out.print(lineStringSplitNoPrint[0]);
         for (int i = 1; i < lineStringSplitNoPrint.length; i++)
             System.out.print("|" + lineStringSplitNoPrint[i]);
-        System.out.println("");
+        System.out.println("");*/
 
         String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" : "";
         compressedExecutionTraceHolder[2] = optionalLineCapWarning + PRINT_DELIMITER + printInfo;
@@ -1613,12 +1613,12 @@ public class SimulationApp {
 
             try {
                 execTrace = "" + inv.invokeFunction(EXECUTION_TRACKER_FUNC_NAME);
-                System.out.println("\nExecutedLines: " + execTrace);
+                //System.out.println("\nExecutedLines: " + execTrace);
                 String rawExecutionTrace = execTrace;
                 execTrace = compressExecutionTraceCycles(execTrace);
                 //System.out.println("CompressedCycles: " + execTrace);
                 execTrace = compressExecutionTraceConsecutive(execTrace);
-                System.out.println("Compressed: " + execTrace);
+                //System.out.println("Compressed: " + execTrace);
                 rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
                 //System.out.println("Minimal: " + rawExecutionTrace);
             } catch (NoSuchMethodException ex) {
