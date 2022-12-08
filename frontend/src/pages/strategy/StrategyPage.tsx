@@ -292,7 +292,7 @@ const StrategyPage = () => {
 
                                         <ModalFooter>
                                             <Button
-                                                /* onClick={() => navigate('/unrank result page?')} */
+                                                // onClick={() => navigate(`/UnrankedGameResult/${attacker strategy id}/${strategy.id}`)
 
                                                 colorScheme='blue'
                                                 mr={3}

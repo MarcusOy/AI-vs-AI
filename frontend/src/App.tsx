@@ -21,6 +21,7 @@ import ModalProvider from './components/modals/ModalProvider'
 import ReplayPage from './pages/ReplayPage'
 import ManualPlayPage from './pages/ManualPlayPage'
 import LeaderBoardPage from './pages/LeaderBoardPage'
+import UnrankedResult from './pages/UnrankedResult'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -83,6 +84,10 @@ function App() {
                             <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
                             <Route path='/LeaderBoard/:id' element={<LeaderBoardPage />} />
+                            <Route
+                                path='/UnrankedGameResult/:id1/:id2'
+                                element={<UnrankedResult />}
+                            />
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>
