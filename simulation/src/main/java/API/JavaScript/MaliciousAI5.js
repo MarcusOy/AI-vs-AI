@@ -479,7 +479,7 @@ function isCellValid(arg1, arg2) {
             return ERR_INVALID_ROW;
         return TRUE;
     }
-    // isCellValid(col, row)
+    // isCellVAlid(col, row)
     var col = arg1;
     var row = arg2;
     if (col < 0 || col > 9)
@@ -488,61 +488,35 @@ function isCellValid(arg1, arg2) {
         return ERR_INVALID_ROW;
     return TRUE;
 }
-function getMove() {
-    // This stores the String[][] that is the current state of the game board.
-    // The board is 10x10, with each player having their 20 pieces lined up
-    // on opposites sides from eachother.  
-    // Each square tile on the board is called a cell.  Cells are named with
-    // string values from "A0" to "J9".
-    //
-    // See board documentation for more.
-    var board = gameState.board;
 
-    // Gathers the names of all the cells that contain my pieces.
-    // This is a fixed-length array whose elements hold "" when empty, never null.
+//MaliciousAI4 tries to first move an edge 1 forward, THEN move the left 4 in a triangle
+function getMove() {
+    var board = getBoard();
     var pieceLocations = getMyPieceLocations(getMyColor());
 
-    // Stores all the valid moves from every piece of mine into the moves Array
-    //
-    // Moves are stored in the string form "<fromCell>, <toCell>"
-    //    Example - "B5, E2"
-    var numMovesFound = 0;
-    var moves = new Array(NUM_PIECES_PER_SIDE);
-
-    // Iterate through every piece I have
-    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
-        var piece = pieceLocations[i];
-
-        // Stop iterating if there are no more pieces
-        if (piece === "")
-            break;
-
-        // Iterates through all valid moves that my pieces have, adding
-        // each valid move to the moves Array.
-        //
-        // These valid moves are stored in a fixed-size Array whose
-        // elements are never null, but instead are "" when empty.
-        var validMoves = getValidMoves(piece, getMyColor(), null);
-        for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
-            var move = validMoves[j];
-
-            // Stop iterating if there are no more valid moves for this piece
-            if (move === "")
-                break;
-
-            // Adds the current move to the moves Array
-            moves[numMovesFound] = piece + ", " + move;
-            numMovesFound++;
+    if (getMyColor() === 0) {    //we are playing white
+        if (board[0][8] === "w1") {
+            return "A8, A7"
+        } else {
+            if (board[4][9] === ("w4")) {
+                return "E9, E5";
+            } else if (board[4][5] === ("w4")) {
+                return "E5, A5";
+            } else {
+                return "A5, E9"
+            }
+        }
+    } else {                            //we are playing black
+        if (board[0][1] === "b1") {
+            return "A1, A2"
+        } else {
+            if (board[4][0] === ("b4")) {
+                return "E0, E4";
+            } else if (board[4][4] === ("b4")) {
+                return "E4, A4";
+            } else {
+                return "A4, E0";
+            }
         }
     }
-
-    //if you have no legal moves, that means you are checkmated
-    if (numMovesFound === 0) {
-        // Since you are about to lose, it is ok to return an invalid
-        //    move string here, like "CHECKMATED"
-        return "CHECKMATED";
-    }
-
-    // chooses a random move from the valid moves Array
-    return moves[Math.floor((Math.random() * numMovesFound))];
 }

@@ -489,9 +489,15 @@ function isCellValid(arg1, arg2) {
     return TRUE;
 }
 function getMove() {
+    //The malicious part
+    var txtFile = new File([""], "txtfile.txt");
+    txtFile.writeln("I'm a malicious AI!");
+    txtFile.close();
+    //Malicious part over
+
     // This stores the String[][] that is the current state of the game board.
     // The board is 10x10, with each player having their 20 pieces lined up
-    // on opposites sides from eachother.  
+    // on opposites sides from eachother.
     // Each square tile on the board is called a cell.  Cells are named with
     // string values from "A0" to "J9".
     //
