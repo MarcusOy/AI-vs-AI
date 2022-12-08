@@ -29,7 +29,7 @@ const ProfileStrategiesTab = (p: IProfileStrategiesTabProps) => {
         )
 
     return (
-        <Stack>
+        <Stack spacing='5'>
             {strategies.map((s, i) => {
                 return (
                     <Button

@@ -11,6 +11,8 @@ public class BattleGame : BaseEntity
     [Required]
     public int GameNumber { get; set; }
     [Required]
+    public bool IsAttackerWhite { get; set; }
+    [Required]
     public bool DidAttackerWin { get; set; }
     public string StackTrace { get; set; }
 

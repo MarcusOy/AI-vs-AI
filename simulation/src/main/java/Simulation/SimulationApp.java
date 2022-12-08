@@ -627,29 +627,38 @@ public class SimulationApp {
 
     // creates the AI Strategy objects for the game to be played with
     static void setupStrategies() {
-        stockAttacker = DEMO_STOCK ? new TrueRandomAI() : new RandomAI();
-        if (DEMO_STOCK)
+        if (DEMO_STOCK) {
+            stockAttacker = new TrueRandomAI();
             stockDefender = new TrueRandomAI();
-        else if (mostlyCurrentBattle != null && defenderStockOverride)
-            stockDefender = getStockAI((mostlyCurrentBattle.defendingStrategy.id));
+            return;
+        }
+
+        // sets up attacker
+        if (mostlyCurrentBattle != null && attackerStockOverride)
+            stockAttacker = getStockAI((UUID.fromString(mostlyCurrentBattle.attackingStrategyId)));
+        else
+            stockAttacker = new RandomAI();
+
+        // sets up defender
+        if (mostlyCurrentBattle != null && defenderStockOverride)
+            stockDefender = getStockAI(UUID.fromString(mostlyCurrentBattle.defendingStrategyId));
         else if (manualPlayStockId != null)
             stockDefender = getStockAI(manualPlayStockId);
         else
             stockDefender = new RandomAI();
+
     }
 
     // gets a Java StockAI from a UUID
     static IStrategy getStockAI(UUID sentId) {
-        if (sentId == UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c"))
+        if (sentId.equals(UUID.fromString("27961240-5173-4a3d-860e-d4f2b236d35c")))
             return new EasyAI();
-        else if (sentId == UUID
-                .fromString("ff567412-30a5-444c-9ff8-437eda8a73a7"))
+        else if (sentId.equals(UUID.fromString("ff567412-30a5-444c-9ff8-437eda8a73a7")))
             return new MediumAI();
-        else if (sentId == UUID
-                .fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189"))
+        else if (sentId.equals(UUID.fromString("ecce68c3-9ce0-466c-a7b5-5bf7affd5189")))
             return new HardAI();
 
-        return new HardAI();
+        return new TrueRandomAI();
     }
 
     // runs one game loop, from creating a fresh board to returning
