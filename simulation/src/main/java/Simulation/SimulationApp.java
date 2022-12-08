@@ -504,7 +504,6 @@ public class SimulationApp {
                     new TypeReference<MassTransitMessage<SimulationRequest>>() {
                     });
             sentBattle = sentMessage.message.pendingBattle;
-            System.out.println("attackerStrategy beginning of game: " + sentBattle.getAttackerStrategy());
             sentBattle.setClientId(sentMessage.message.clientId);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -537,7 +536,6 @@ public class SimulationApp {
             sentBattle.complete(wasSourceEvalError);
         }
 
-        System.out.println("attackerStrategy end of game: " + sentBattle.getAttackerStrategy());
         debugPrintln("Finished Battle:\n" + sentBattle == null ? "null" : sentBattle.toString());
 
         // sends the resulting battle to the backend if there is RabbitMQ connection
@@ -2031,7 +2029,6 @@ public class SimulationApp {
                         UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
                         null, null, new String[] { "urn:message:AVA.API.Consumers:" + className }, res);
                 messageJSON = mapper.writeValueAsString(message);
-                System.out.println("response JSON: " + messageJSON);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of message failed     response: " + res);
