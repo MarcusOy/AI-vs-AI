@@ -114,6 +114,8 @@ const StrategyPage = () => {
     }
 
     // const handleUnrankAttack = async (strat: Strategy) => {
+
+    //     const response = await
     //     if (response.status == 200) {
     //         await execute()
     //         toast({
@@ -236,7 +238,6 @@ const StrategyPage = () => {
                                     <Center>
                                         <ModalFooter>
                                             <Button
-                                                onSubmit={onSubmit}
                                                 /* onClick={() => navigate('/Jiahao page')} */
                                                 colorScheme='orange'
                                                 mr={3}
@@ -291,8 +292,8 @@ const StrategyPage = () => {
 
                                         <ModalFooter>
                                             <Button
-                                                /* onSubmit={handleUnrankAttack()} */
-                                                onClick={attackModal.onClose}
+                                                /* onClick={() => navigate('/unrank result page?')} */
+
                                                 colorScheme='blue'
                                                 mr={3}
                                             >
