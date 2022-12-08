@@ -112,6 +112,9 @@ const StrategyPage = () => {
             })
         }
     }
+
+    // const handleUnrankAttack = async (strat: Strategy) => {}
+
     if (isLoading || strategy == undefined)
         return (
             <Center mt='10'>
@@ -277,7 +280,7 @@ const StrategyPage = () => {
 
                                         <ModalFooter>
                                             <Button
-                                                onSubmit={onSubmit}
+                                                /* onSubmit={handleUnrankAttack()} */
                                                 onClick={attackModal.onClose}
                                                 colorScheme='blue'
                                                 mr={3}
