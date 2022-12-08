@@ -599,7 +599,7 @@ public class SimulationApp {
     // make a strategy lose if its source code cannot be evaluated properly,
     static void handleEvaluationError(Battle sentBattle, boolean isWhite) {
         System.out.println("evalError, isWhite: " + isWhite);
-        String errorString = "JS EVALUATION ERROR - passed SourceCode has errors:\n";
+        String errorString = "ERROR - passed SourceCode has errors:\n";
         String stackTraceMessage = compressedExecutionTraceHolder[1];
         System.out.print(errorString + stackTraceMessage + "\n");
         sentBattle.addBattleGame();
@@ -841,8 +841,9 @@ public class SimulationApp {
     }
 
     // evaluates source code for later fast running
-    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String strategySource, boolean isAttacker, Battle battle) throws ScriptException, NoSuchMethodException {
+    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String originalStrategySource, boolean isAttacker, Battle battle) throws ScriptException, NoSuchMethodException {
         // sets up evaluator
+        String strategySource = originalStrategySource;
         //ScriptEngineManager factory = new ScriptEngineManager();
         //ScriptEngine engine = factory.getEngineByName("nashorn");
         NashornSandbox sandbox = NashornSandboxes.create();
@@ -856,7 +857,7 @@ public class SimulationApp {
 
         // ends simulation if getMove() not found
         if (indexOfGetMove < 0) {
-            String errorString = "getMove() does not exist";
+            String errorString = "ERROR: Cannot find getMove() function";
             appendStackTraceString(errorString);
             if (gameState == null)
                 gameState = new GameState();
@@ -1625,10 +1626,10 @@ public class SimulationApp {
                 System.out.println("ERROR: " + EXECUTION_TRACKER_FUNC_NAME + "() not properly added to source");
             }
         } catch (Exception e) {
-            appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
-            String errorString = "Cannot find getMove() function";
+            String errorString = "ERROR: Runtime Error";
             result = errorString;
             appendStackTraceString(errorString);
+            appendStackTraceString(e.getMessage() + "\n" + e.getStackTrace());
 
             // throws the exception again so the game can be ended immediately
             throw e;

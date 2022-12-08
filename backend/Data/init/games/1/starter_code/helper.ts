@@ -623,9 +623,7 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
   if (moveDistance <= 0) return moves;
 
   for (var i = -moveDistance; i <= moveDistance; i += moveDistance) {
-    //William, you almost got it right. I just need to change two places in the code, i++ and j++
     for (var j = -moveDistance; j <= moveDistance; j += moveDistance) {
-      //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp
       var newCol = col + i;
       var newRow = row + j;
 

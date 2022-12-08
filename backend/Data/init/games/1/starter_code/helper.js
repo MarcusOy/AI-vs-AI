@@ -56,6 +56,7 @@ class GameState {
 
 var gameState = new GameState()
 /**
+ * Accesses the gameboard 
  * @return {string[][]} -           The String[][] representation of the game
  board, comprised of ‘cells’, as described
  at the top of this doc.
@@ -356,8 +357,8 @@ function getValidMoves(arg1, arg2, arg3) {
     var moveDistance = getPieceMoveDistance(col, row);
     if (moveDistance <= 0)
         return moves;
-    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++
-        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp
+    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) {
+        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) {
             var newCol = col + i;
             var newRow = row + j;
             if ((isCellValid(newCol, newRow) === TRUE)

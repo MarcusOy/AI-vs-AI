@@ -343,6 +343,8 @@ public class Battle {
                 ", battleStatus=" + battleStatus +
                 ", attackingStrategyId=" + attackingStrategyId +
                 ", defendingStrategyId=" + defendingStrategyId +
+                ", attackingSnapshot=" + attackingStrategyId +
+                ", defendingSnapshot=" + defendingStrategyId +
                 ", iterations=" + iterations +
                 ", attackerWins=" + attackerWins +
                 ", defenderWins=" + defenderWins +
