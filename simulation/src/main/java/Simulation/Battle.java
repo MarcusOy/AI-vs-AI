@@ -267,8 +267,8 @@ public class Battle {
     // handles the completion of the Battle
     public void complete(boolean battleFailed) {
         // removes helper code from both the battle's source code snapshots
-        attackingStrategySnapshot = removeHelperCode(attackingStrategySnapshot, attackingSnapshotGetMoveLineNum);
-        defendingStrategySnapshot = removeHelperCode(defendingStrategySnapshot, defendingSnapshotGetMoveLineNum);
+        //attackingStrategySnapshot = removeHelperCode(attackingStrategySnapshot, attackingSnapshotGetMoveLineNum);
+        //defendingStrategySnapshot = removeHelperCode(defendingStrategySnapshot, defendingSnapshotGetMoveLineNum);
 
         // sets the state of the battle to complete
         battleStatus = battleFailed ? -1 : 1;
