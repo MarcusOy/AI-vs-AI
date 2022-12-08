@@ -50,29 +50,7 @@ public class StrategyController : Controller
 
     [HttpPut, Route("/Strategy/Update"), Authorize]
     public async Task<Strategy> Update([FromBody] Strategy s)
-    {
-        Strategy old = _strategyService.Get(s.Id);
-        Strategy ret = new Strategy();
-
-        if (old.Status == StrategyStatus.Draft && s.Status == StrategyStatus.Active)
-        {
-            s.Elo = 0;
-            await _strategyService.UpdateAsync(s);
-            RunBattles(s.GameId);
-            ret = _strategyService.Get(s.Id);
-        }
-        else if (old.Status == StrategyStatus.Active && s.Status == StrategyStatus.Draft)
-        {
-            s.Elo = 0;
-            ret = await _strategyService.UpdateAsync(s);
-        }
-        else
-        {
-            ret = await _strategyService.UpdateAsync(s);
-        }
-
-        return ret;
-    }
+        => await _strategyService.UpdateAsync(s);
 
     [HttpPut, Route("/Strategy/Duplicate/{id}"), Authorize]
     public async Task<Strategy> Duplicate([FromBody] Strategy s, String id)
@@ -87,7 +65,13 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
-        return await _strategyService.SubmitAsync(s);
+        Strategy strat = s;
+        strat.Status = StrategyStatus.Active;
+        strat.Elo = 0;
+        strat = await _strategyService.UpdateAsync(strat);
+        await RunBattles(strat.GameId, strat);
+
+        return strat;
     }
 
     [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
@@ -102,12 +86,19 @@ public class StrategyController : Controller
         return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }
 
-    public async void RunBattles(int gameId)
+    public async Task<String> RunBattles(int gameId, Strategy strat)
     {
         var stratQuery = _dbContext.Strategies
-            .Where(s => s.Status == StrategyStatus.Active && s.GameId == gameId);
+            .Where(s => s.Status == StrategyStatus.Active && s.GameId == gameId &&
+            (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"));
 
         List<Strategy> AllStrats = await stratQuery.ToListAsync();
+
+        if (AllStrats.Count == 1)
+        {
+            Console.WriteLine("Only 1 strategy");
+            return "OK";
+        }
 
         foreach (Strategy st in AllStrats)
         {
@@ -115,71 +106,68 @@ public class StrategyController : Controller
             await _strategyService.UpdateAsync(st);
         }
 
-        var Rand = new Random();
-        Strategy attacking = new Strategy();
-        Strategy defending = new Strategy();
-        var req = new SimulationRequest();
-        Guid oldBattleId = new Guid();
-
-        for (int i = 0; i < AllStrats.Capacity; i++)
+        for (int j = 0; j < AllStrats.Count; j++)
         {
-            for (int j = i; j < AllStrats.Capacity; j++)
+            var attacking = _dbContext.Strategies
+                                .FirstOrDefault(s => s.Id == strat.Id);
+
+            var defending = _dbContext.Strategies
+                                .FirstOrDefault(s => s.Id == AllStrats.ElementAt(j).Id);
+
+            if (attacking.Id != AllStrats.ElementAt(j).Id)
             {
-                int attacker = Rand.Next(100);
 
-                if (attacker < 50)
-                {
-                    attacking = AllStrats.ElementAt(i);
-                    defending = AllStrats.ElementAt(j);
-                }
-                else
-                {
-                    attacking = AllStrats.ElementAt(j);
-                    defending = AllStrats.ElementAt(i);
-                }
+                Guid newId = Guid.NewGuid();
+                String newName = new String(attacking.Name + " Attacks " + defending.Name + " in a Random Battle");
 
-                req = new SimulationRequest
+                var req = new SimulationRequest
                 {
                     PendingBattle = new Battle
                     {
-                        Id = Guid.NewGuid(),
-                        Name = new String(attacking.Name + " Attacks " + defending.Name + " in a Random Battle"),
+                        Id = newId,
+                        Name = newName,
                         BattleStatus = BattleStatus.Pending,
-                        Iterations = 99,
+                        Iterations = 1,
+                        IsTestSubmission = false,
                         AttackingStrategyId = attacking.Id,
                         AttackingStrategy = attacking,
                         DefendingStrategyId = defending.Id,
                         DefendingStrategy = defending
-                    },
-                    ClientId = _idService.CurrentUser.ToString()
+                    }
                 };
+
+                Battle newBattle = new Battle
+                {
+                    Id = newId,
+                    Name = newName,
+                    BattleStatus = BattleStatus.Pending,
+                    Iterations = 1,
+                    IsTestSubmission = false,
+                    AttackingStrategyId = attacking.Id,
+                    AttackingStrategy = attacking,
+                    DefendingStrategyId = defending.Id,
+                    DefendingStrategy = defending
+                };
+
+                _dbContext.Battles.Add(newBattle);
+                _dbContext.Add(newBattle);
+                _dbContext.SaveChanges();
+
+                req.PendingBattle.AttackingStrategy.CreatedByUser = null;
+                req.PendingBattle.DefendingStrategy.CreatedByUser = null;
+                req.PendingBattle.AttackingStrategy.Game.Strategies = null;
+                req.PendingBattle.DefendingStrategy.Game.Strategies = null;
+                req.PendingBattle.AttackingStrategy.AttackerBattles = null;
+                req.PendingBattle.DefendingStrategy.AttackerBattles = null;
+                req.PendingBattle.AttackingStrategy.DefenderBattles = null;
+                req.PendingBattle.DefendingStrategy.DefenderBattles = null;
 
                 var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
                 await endpoint.Send(req);
-                oldBattleId = req.PendingBattle.Id;
             }
         }
 
-        while (_battleService.Get(oldBattleId).BattleStatus == BattleStatus.Pending)
-        {
-            await Task.Delay(1000);
-        }
-
-        var NewStratQuery = _dbContext.Strategies
-            .Where(s => s.Status == StrategyStatus.Active && s.GameId == gameId)
-            .OrderByDescending(s => s.Elo);
-
-        List<Strategy> OrderedStrats = await NewStratQuery.ToListAsync();
-
-        int mid = OrderedStrats.Capacity / 2;
-        Strategy tempStrat = new Strategy();
-
-        for (int x = 0; x < OrderedStrats.Capacity; x++)
-        {
-            tempStrat = OrderedStrats.ElementAt(x);
-            tempStrat.Elo = (int)((0.5 + (mid - x)) * 10) + 1000;
-            await _strategyService.UpdateAsync(tempStrat);
-        }
+        return "OK";
     }
 
     public class SimulationRequest

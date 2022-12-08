@@ -41,21 +41,22 @@ namespace AVA.API.Services
 
         public Strategy Get(Guid id)
         {
-            Strategy s = _dbContext.Strategies
+            var s = _dbContext.Strategies
                 .Include(s => s.CreatedByUser)
                 .Include(s => s.Game)
                 .Include(s => s.AttackerBattles)
-                .Include(s => s.DefenderBattles)
+                .Include(s => s.DefenderBattles);
+            var a = s
                 .FirstOrDefault(s => s.Id == id);
 
-            if (s is null)
+            if (a is null)
                 throw new InvalidOperationException($"Strategy id [{id}] not valid.");
 
             // prevent others from seeing source code of private strategies
             // if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
             //     s.SourceCode = null;
 
-            return s;
+            return a;
         }
 
         // assumes that we are reserving certain names as prototype names
@@ -117,8 +118,9 @@ namespace AVA.API.Services
             // trust these fields
             originalStrategy.Name = strategy.Name;
             originalStrategy.SourceCode = strategy.SourceCode;
-            originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
+            originalStrategy.Status = strategy.Status;
             originalStrategy.IsPrivate = strategy.IsPrivate;
+            originalStrategy.Elo = strategy.Elo;
 
             _dbContext.Strategies.Update(originalStrategy);
             _dbContext.Update(originalStrategy);
