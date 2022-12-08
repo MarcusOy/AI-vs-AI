@@ -2031,6 +2031,7 @@ public class SimulationApp {
                         UUID.randomUUID().toString(), null, null, UUID.randomUUID().toString(), null, null, null,
                         null, null, new String[] { "urn:message:AVA.API.Consumers:" + className }, res);
                 messageJSON = mapper.writeValueAsString(message);
+                System.out.println("response JSON: " + messageJSON);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.out.println("JSON writing of message failed     response: " + res);
