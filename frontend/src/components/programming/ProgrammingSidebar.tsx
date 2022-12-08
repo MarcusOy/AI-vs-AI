@@ -57,6 +57,7 @@ import { Strategy } from '../../models/strategy'
 import { StrategyStatus } from '../../models/strategy-status'
 import DocumentationTab from './DocumentationTab'
 import EditStrategyName from './EditStrategyName'
+import GameRulesTab from './GameRulesTab'
 
 interface IProgrammingSidebarProps {
     strategy: Strategy
@@ -181,8 +182,8 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                 </TabList>
                 <TabPanels borderLeftWidth={1} borderLeftColor='chakra-border-color'>
                     <TabPanel h='100%' overflowY='scroll'>
-                        <Stack>
-                            <Heading fontSize='lg'>{game && game.name}</Heading>
+                        <GameRulesTab />
+                        {/* <Heading fontSize='lg'>{game && game.name}</Heading>
 
                             <p>{game && game.longDescription}</p>
                             <a
@@ -194,8 +195,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                             </a>
                             <p>{game && game.longDescription}</p>
                             <p>{game && game.longDescription}</p>
-                            <Box h='50' />
-                        </Stack>
+                            <Box h='50' /> */}
                     </TabPanel>
                     <TabPanel h='100%' overflowY='scroll'>
                         manual play gameboard here + step and eval buttons

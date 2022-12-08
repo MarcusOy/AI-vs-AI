@@ -93,9 +93,9 @@ function ProgrammingPage() {
             >
                 <ProgrammingSidebar
                     strategy={strategy}
-                    onStrategyChange={execute}
+                    onStrategyChange={() => execute()}
                 ></ProgrammingSidebar>
-                <ProgrammingEditor strategy={strategy} onStrategyChange={execute} />
+                <ProgrammingEditor strategy={strategy} onStrategyChange={() => execute()} />
             </Split>
         </Box>
     )
