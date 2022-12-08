@@ -96,6 +96,14 @@ namespace AVA.API.Services
             return battle;
         }
 
+        public async Task<Battle> UpdateAsync(Battle battle)
+        {
+            await _dbContext.Battles.UpdateAsync(battle);
+            await _dbContext.Battles.SaveChangesAsync();
+
+            return battle;
+        }
+
         public class GetBattlesParameters
         {
             public Guid? StrategyId { get; set; }
