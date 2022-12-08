@@ -63,6 +63,7 @@ const StrategyPage = () => {
     const { isOpen, onOpen, onClose } = useDisclosure()
     const deleteModal = useDisclosure()
     const attackModal = useDisclosure()
+    const matchMakingModal = useDisclosure()
     const { id, tab } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/Strategy/${id}`)
     const strategy: Strategy = data
@@ -192,6 +193,49 @@ const StrategyPage = () => {
                         </Text>
                     </Stack>
                     <Box flexGrow={1} />
+                    <HStack>
+                        <Button colorScheme='orange' onClick={matchMakingModal.onOpen}>
+                            Match Making
+                        </Button>
+                        <Modal
+                            initialFocusRef={initialRef}
+                            finalFocusRef={finalRef}
+                            isOpen={matchMakingModal.isOpen}
+                            onClose={matchMakingModal.onClose}
+                        >
+                            <ModalOverlay />
+                            <ModalContent>
+                                <ModalHeader>This is the place to make a match</ModalHeader>
+                                <ModalCloseButton />
+                                <ModalBody pb={6}>
+                                    <Stack>
+                                        <Select
+                                            placeholder='Choose Which Strategy To Use'
+                                            size='md'
+                                        >
+                                            {error == undefined &&
+                                                StratList.map((s, i) => {
+                                                    return <option key={s.id}>{s.name}</option>
+                                                })}
+                                        </Select>
+                                    </Stack>
+
+                                    <ModalFooter>
+                                        <Button
+                                            onSubmit={onSubmit}
+                                            /* onClick={() => navigate('/Jiahao page')} */
+                                            colorScheme='orange'
+                                            mr={3}
+                                        >
+                                            Queue Up
+                                        </Button>
+                                        <Button onClick={matchMakingModal.onClose}>Cancel</Button>
+                                    </ModalFooter>
+                                </ModalBody>
+                            </ModalContent>
+                        </Modal>
+                    </HStack>
+
                     <Menu>
                         <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
                             Actions
