@@ -1,5 +1,7 @@
 package Simulation;
 
+import IStrategy.Strategy;
+
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -17,6 +19,8 @@ public class Battle {
     public int attackerWins;
     public int defenderWins;
 
+    public Strategy attackingStrategy;
+    public Strategy defendingStrategy;
     public String attackingStrategySnapshot;
     public String defendingStrategySnapshot;
 
@@ -248,7 +252,6 @@ public class Battle {
                 String prevStackTrace = battleGame.stackTrace;
                 String a = /*prevStackTrace.substring(0, indexOfLineNumber);*/prevStackTrace.substring(0, lineNumStartIndex);
                 int injectedIndex = prevLineNum - lineOfGetMoveCommented + 3;
-                // subtract 1 for every single read structure in getMove()
                 //System.out.println(prevLineNum + " - " + lineOfGetMoveCommented + " + 3 = " + injectedIndex);
 
                 // clamps injectedIndex to be in bounds

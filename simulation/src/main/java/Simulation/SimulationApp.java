@@ -891,14 +891,15 @@ public class SimulationApp {
             lineCountingString = lineCountingString.substring(newLineIndex + 1);
         }
 
+        // injects code so that "console.log()" is recognized and functions
+        String injectedStrategySource = injectPrintingCode(strategySource);
+
         // sends the line numbers of getMove() to the battle object
         battle.setGetMoveLineNum(lineOfGetMove, isAttacker, lineOfGetMoveNoComments);
 
-        // injects code so that "console.log()" is recognized and functions
-        strategySource = injectPrintingCode(strategySource);
-
         // injects lineTrackingCode so each turn's executionTrace field can be properly set
-        battle.setInjectedSource(injectLineTrackingCode(strategySource), isAttacker);
+        injectedStrategySource = injectLineTrackingCode(injectedStrategySource);
+        battle.setInjectedSource(injectedStrategySource, isAttacker);
         strategySource = battle.getInjectedSource(isAttacker);
         //System.out.println("postInjection: " + strategySource);
 
