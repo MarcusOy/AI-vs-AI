@@ -274,6 +274,15 @@ function StrategyStats(props) {
             >
                 Status: {props.strategy.status == 0 ? 'Draft' : 'Active'}
             </Box>
+            {props.strategy.status === 1 &&
+                <Box color='gray.500'
+                fontWeight='semibold'
+                letterSpacing='wide'
+                fontSize='xs'
+                ml='2'
+                mt='2'>
+                    Elo: {props.strategy.elo}
+            </Box>}
         </VStack>
     )
 }
