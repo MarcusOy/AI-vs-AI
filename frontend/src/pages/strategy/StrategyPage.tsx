@@ -113,7 +113,18 @@ const StrategyPage = () => {
         }
     }
 
-    // const handleUnrankAttack = async (strat: Strategy) => {}
+    // const handleUnrankAttack = async (strat: Strategy) => {
+    //     if (response.status == 200) {
+    //         await execute()
+    //         toast({
+    //             title: 'Code visibility changed successfully.',
+    //             description: `You just start an unranked battle attacking ${strategy.name}.`,
+    //             status: 'success',
+    //             duration: 5000,
+    //             isClosable: true,
+    //         })
+    //     }
+    // }
 
     if (isLoading || strategy == undefined)
         return (
