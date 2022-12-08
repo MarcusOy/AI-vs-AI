@@ -3,7 +3,12 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
+import { FunctionParameter } from './function-parameter';
+
 export interface FunctionDocumentation {
-    functionName?: string;
-    functionDescription?: string;
+    name?: string;
+    description?: string;
+    parameters?: FunctionParameter[];
+    return?: FunctionParameter;
+    body?: string;
 }

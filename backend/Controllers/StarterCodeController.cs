@@ -11,46 +11,18 @@ namespace AVA.API.Controllers;
 public class StarterCodeController : Controller
 {
     private readonly AVADbContext _dbContext;
+    private readonly IStarterCodeService _starterCodeService;
 
-    public StarterCodeController(AVADbContext dbContext)
+    public StarterCodeController(AVADbContext dbContext,
+                                 IStarterCodeService starterCodeService)
     {
         _dbContext = dbContext;
+        _starterCodeService = starterCodeService;
     }
     [HttpGet, Route("/StarterCode/{id}/{language}"), Authorize]
     public GameStarterCode Get(string id, string language)
-    {
-        if (!Int32.TryParse(id, out var gameId))
-            throw new InvalidOperationException("Must use an integer for the game id.");
+        => _starterCodeService.Get(id, language);
 
-        if (!Enum.TryParse(typeof(ProgrammingLanguage), language, true, out var l))
-            throw new InvalidOperationException("Language must be either JavaScript or TypeScript");
-
-        var starterCode = _dbContext.StarterCode
-            .Where(c => c.GameId == gameId)
-            .Where(c => c.Language == (ProgrammingLanguage)l)
-            .ToList();
-
-        if (starterCode.Count <= 0)
-            throw new InvalidOperationException("No starter code for this game + language.");
-
-        var helper = starterCode
-            .FirstOrDefault(c => c.Type == StarterCodeType.Helper);
-        var boilerplate = starterCode
-            .FirstOrDefault(c => c.Type == StarterCodeType.Boilerplate);
-
-        if (helper is not null)
-        {
-            var js = new JSDocParser();
-            js.LoadText(helper.Code);
-            var parsed = js.Parse(includeComments: true);
-        }
-
-        return new GameStarterCode
-        {
-            HelperCode = helper is not null ? helper.Code : null,
-            Boilerplate = boilerplate is not null ? boilerplate.Code : null,
-        };
-    }
     [ExportTsInterface]
     public class GameStarterCode
     {
@@ -68,9 +40,27 @@ public class StarterCodeController : Controller
     public class FunctionDocumentation
     {
         [TsOptional]
-        public string FunctionName { get; set; }
-
+        public string Name { get; set; }
         [TsOptional]
-        public string FunctionDescription { get; set; }
+        public string Description { get; set; }
+        [TsOptional]
+        public List<FunctionParameter> Parameters { get; set; }
+        [TsOptional]
+        public FunctionParameter Return { get; set; }
+        [TsOptional]
+        public string Body { get; set; }
     }
+
+    [ExportTsInterface]
+    public class FunctionParameter
+    {
+        [TsOptional]
+        public string Name { get; set; }
+        [TsOptional]
+        public string Description { get; set; }
+        [TsOptional]
+        public string Type { get; set; }
+    }
+
+
 }

@@ -34,6 +34,7 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    Flex,
 } from '@chakra-ui/react'
 import { useMultiStyleConfig } from '@chakra-ui/system'
 import React, { useState } from 'react'
@@ -54,6 +55,7 @@ import { Battle } from '../../models/battle'
 import { Game } from '../../models/game'
 import { Strategy } from '../../models/strategy'
 import { StrategyStatus } from '../../models/strategy-status'
+import DocumentationTab from './DocumentationTab'
 import EditStrategyName from './EditStrategyName'
 
 interface IProgrammingSidebarProps {
@@ -88,13 +90,11 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         { manual: true },
     )
     const strategyRun = useAVAFetch('/Strategy/TestStrategy/', { method: 'POST' }, { manual: true })
-
     const game = gameFetch.data as Game
-
     const isLoading = gameFetch.isLoading || strategySubmit.isLoading || strategyRun.isLoading
 
     return (
-        <Box h='100%'>
+        <Flex flexDir='column'>
             <HStack p={3}>
                 <EditStrategyName strategy={p.strategy} onNameChange={p.onStrategyChange} />
                 <Stack justifyContent='center'>
@@ -148,14 +148,16 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                 </Stack>
             </HStack>
             <Tabs
-                h='100%'
+                flexGrow={1}
+                overflow='hidden'
                 borderTopWidth={1}
                 borderTopColor='chakra-border-color'
                 orientation='vertical'
                 variant='enclosed'
+                tabIndex={tabIndex}
                 onChange={setTabIndex}
             >
-                <TabList>
+                <TabList height='100%'>
                     <Tooltip placement='right' label={'Game details'}>
                         <CustomTab>
                             <BsJoystick size={30} />
@@ -177,22 +179,12 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                         </CustomTab>
                     </Tooltip>
                 </TabList>
-                <TabPanels borderLeftWidth={1} borderLeftColor='chakra-border-color' height='100%'>
-                    <TabPanel>
-                        <Stack height='100%' overflowY='scroll'>
-                            <Center>
-                                <Heading margin='3'>{game && game.name}</Heading>
-                            </Center>
+                <TabPanels borderLeftWidth={1} borderLeftColor='chakra-border-color'>
+                    <TabPanel h='100%' overflowY='scroll'>
+                        <Stack>
+                            <Heading fontSize='lg'>{game && game.name}</Heading>
 
                             <p>{game && game.longDescription}</p>
-                            <p>{game && game.longDescription}</p>
-                            <p>{game && game.longDescription}</p>
-                            <Box h='50' />
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel></TabPanel>
-                    <TabPanel>
-                        <Center>
                             <a
                                 href='https://docs.google.com/document/d/1gTAEE-0M2rklHGBfeS9CtV1GIerUqjE-Yyp2TkZ8RTU/edit#heading=h.hp2c6iz21hyn'
                                 target='_blank'
@@ -200,9 +192,18 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                             >
                                 <Button>Link to Documentation</Button>
                             </a>
-                        </Center>
+                            <p>{game && game.longDescription}</p>
+                            <p>{game && game.longDescription}</p>
+                            <Box h='50' />
+                        </Stack>
                     </TabPanel>
-                    <TabPanel>
+                    <TabPanel h='100%' overflowY='scroll'>
+                        manual play gameboard here + step and eval buttons
+                    </TabPanel>
+                    <TabPanel h='100%' overflowY='scroll'>
+                        <DocumentationTab strategy={p.strategy} />
+                    </TabPanel>
+                    <TabPanel h='100%' overflowY='scroll'>
                         <Accordion allowToggle>
                             {submissions.map((value, key) => {
                                 return (
@@ -266,7 +267,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-        </Box>
+        </Flex>
     )
 }
 
