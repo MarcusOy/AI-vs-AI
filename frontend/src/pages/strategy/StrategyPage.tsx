@@ -219,18 +219,21 @@ const StrategyPage = () => {
                                                 })}
                                         </Select>
                                     </Stack>
-
-                                    <ModalFooter>
-                                        <Button
-                                            onSubmit={onSubmit}
-                                            /* onClick={() => navigate('/Jiahao page')} */
-                                            colorScheme='orange'
-                                            mr={3}
-                                        >
-                                            Queue Up
-                                        </Button>
-                                        <Button onClick={matchMakingModal.onClose}>Cancel</Button>
-                                    </ModalFooter>
+                                    <Center>
+                                        <ModalFooter>
+                                            <Button
+                                                onSubmit={onSubmit}
+                                                /* onClick={() => navigate('/Jiahao page')} */
+                                                colorScheme='orange'
+                                                mr={3}
+                                            >
+                                                Queue Up
+                                            </Button>
+                                            <Button onClick={matchMakingModal.onClose}>
+                                                Cancel
+                                            </Button>
+                                        </ModalFooter>
+                                    </Center>
                                 </ModalBody>
                             </ModalContent>
                         </Modal>
