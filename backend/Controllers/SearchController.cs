@@ -71,7 +71,7 @@ public class SearchController : Controller
         return await q.ToListAsync();
     }
     [HttpGet, Route("/Interactions/")]
-    public async Task<List<InteractionResult>> Interactions(int Page)
+    public async Task<List<InteractionResult>> Interactions()
     {
         var uQuery = _dbContext.Users
             .Where(u => u.Active == true)
@@ -120,6 +120,45 @@ public class SearchController : Controller
         return await q.ToListAsync();
     }
 
+    [HttpGet, Route("/Interactions/DailyStats")]
+    public int[] DailyStats()
+    {
+        var uQuery = _dbContext.Users
+            .Where(u => u.Active == true)
+            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Select(u => new InteractionResult
+            {
+                Id = u.Id,
+                Type = InteractionType.User,
+                Time = u.CreatedOn
+            });
+
+        var cQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.CreatedStrategy,
+                Time = s.CreatedOn
+            });
+
+        var sQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Where(u => u.UpdatedOn.Date == DateTime.Today)
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.SubmittedStrategy,
+                Time = s.UpdatedOn
+            });
+        var stats = new int[3];
+        uQuery.Union(cQuery)
+            .Union(sQuery)
+            .OrderByDescending(r => r.Time).ToList().ForEach(u =>
+            stats[u.Type == InteractionType.SubmittedStrategy ? 2 : u.Type == InteractionType.CreatedStrategy ? 1 : 0] += 1);
+        return stats;
+    }
 
     [HttpGet, Route("/Search"), Authorize]
     public async Task<List<Result>> Search([FromQuery] SearchQueryParameters p)

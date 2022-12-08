@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Center, Box, Text, Flex, Spacer, Heading, Button, VStack, HStack, Avatar, Badge, Stack, Input, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel } from '@chakra-ui/react'
+import { Stat, StatLabel, StatNumber, StatHelpText, Center, Box, Switch, Text, Flex, Spacer, Heading, Button, VStack, HStack, Avatar, Badge, Stack, Input, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, GridItem, Grid, IconButton, Divider, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger } from '@chakra-ui/react'
 import ModalAi from './ModalAi'
 import { Link, useNavigate } from 'react-router-dom'
 import useAVAFetch from '../helpers/useAVAFetch'
-import { ChevronRightIcon } from '@chakra-ui/icons'
+import { ChevronRightIcon, HamburgerIcon } from '@chakra-ui/icons'
 import { TbBook2 } from 'react-icons/tb'
 import { StrategyStatus } from '../models/strategy-status'
 import { randomColor } from '@chakra-ui/theme-tools'
 import { ResultType } from '../models/result-type'
+import moment from 'moment'
+import Moment from 'react-moment'
 interface Interactions {
     type: number
     title: string
@@ -24,51 +26,75 @@ const FeedPage = () => {
         '/Interactions/',
         { method: 'GET' },
     )
+    const daily = useAVAFetch(
+        '/Interactions/DailyStats',
+        { method: 'GET' },
+    ).data
     const selectNavigation = async (r) => {
         if (r.type == ResultType.User) navigate(`/Profile/${r.id}/View`)
         else if (r.type == ResultType.Strategy || r.type == ResultType.Battle) navigate(`/Strategy/${r.id}/Stats`)
         else navigate('/Invalid')
     }
+    console.log(data)
     return (
         <Box>
             <Box>
-            <HStack spacing={'39vw'} width='100%'>
-            <Box>
-                <ModalAi overwrite={false} />
-            </Box>
-            <Box>
-                <Text>Feed page</Text>
-                <Link to='/ManualPlay'> Manual Play </Link>
-            </Box>
-                </HStack>
-            </Box>
-            <Box>
                 <VStack my='2'>
-                    <Box border={'1px'} borderColor='light-gray' w='50vw' display={'flex'} alignContent='center'>
-                     <Accordion allowToggle w={'50vw'}>
-                                <AccordionItem >
-                                    <h2>
-                                        <AccordionButton>
-                                            <Box flex='1' textAlign='left'>
-                                                Filters
-                                            </Box>
-                                            <AccordionIcon />
-                                        </AccordionButton>
-                                    </h2>
-                                    <AccordionPanel pb={4}>
-                                        <Box  marginY='4' justifyContent='center'>
-                                        <Button mx='2' onClick={() => setShowFilters([!showFilters[0], showFilters[1], showFilters[2]])}>
-                                            {!showFilters[0] ? 'Hide Created Users' : 'Show Created Users'}</Button>
-                                        <Button mx='2' onClick={() => setShowFilters([showFilters[0], !showFilters[1], showFilters[2]])}>
-                                            {!showFilters[1] ? 'Hide Created Drafts' : 'Show Created Drafts'}</Button>
-                                        <Button onClick={() => setShowFilters([showFilters[0], showFilters[1], !showFilters[2]])}>
-                                            {!showFilters[2] ? 'Hide Activated Strategies' : 'Show Activated Strategies'}</Button>
-                                        </Box>
-                                    </AccordionPanel>
-                                </AccordionItem>
-                        </Accordion>
+                    <HStack w='50vw'>
+                        <ModalAi overwrite={false} />
+                        <Spacer/>
+                        <Heading as='h2' size='xl'>
+                            Feed
+                        </Heading> 
+                        <Popover placement='right' matchWidth={true} size='sm' offset={[25, 6]}>
+                        <PopoverTrigger>
+                        <IconButton icon={<HamburgerIcon />} aria-label='filters' />
+                        </PopoverTrigger>
+                        <PopoverContent>
+                                <PopoverBody>
+                                    <VStack>
+                                        <Box display={'inherit'} gap='2'>
+                                        <Text>Created Users</Text>
+                                        <Switch defaultChecked onChange={() => setShowFilters([!showFilters[0], showFilters[1], showFilters[2]])}/>
 
-                    </Box>
+                                        </Box>
+                                        <Box display={'inherit'} gap='2'>
+                                        <Text>Created Drafts</Text>
+                                        <Switch defaultChecked onChange={() => setShowFilters([showFilters[0], !showFilters[1], showFilters[2]])}/>
+
+                                        </Box>
+                                        <Box display={'inherit'} gap='2'>
+                                        <Text>Activated Strategies</Text>
+                                        <Switch defaultChecked onChange={() => setShowFilters([showFilters[0], showFilters[1], !showFilters[2]])}/>
+                                        </Box>
+                                        </VStack>
+                            </PopoverBody>
+                        </PopoverContent>
+                        </Popover>
+                        <Spacer/>
+                        <Box mt='1'>
+                            <Link to='/ManualPlay'> Manual Play </Link> 
+                            </Box>
+                    </HStack>
+                    <Flex w={'50vw'}>
+                           <Stat>
+                            <StatLabel>New Users</StatLabel>
+                            <StatNumber>{daily == undefined ? 0 : daily[0]}</StatNumber>
+                            <StatHelpText>Since {moment().add(-1, 'day').format('h:mm a, MM/DD')} </StatHelpText>
+                            </Stat>
+                        <Spacer />   
+                        <Stat>
+                            <StatLabel>New Drafts</StatLabel>
+                            <StatNumber>{daily == undefined ? 0 : daily[1]}</StatNumber>
+                            <StatHelpText>Since {moment().add(-1, 'day').format('h:mm a, MM/DD')} </StatHelpText>
+                            </Stat> 
+                        <Spacer />
+                        <Stat>
+                            <StatLabel>New Activations</StatLabel>
+                            <StatNumber>{daily == undefined ? 0 : daily[2]}</StatNumber>
+                            <StatHelpText>Since {moment().add(-1, 'day').format('h:mm a, MM/DD')} </StatHelpText>
+                            </Stat>
+                            </Flex>
                 {data?.filter(function (item) {
                     if (!(showFilters[0] && item.type == 0)
                         && !(showFilters[1] && item.type == 1)
@@ -92,25 +118,27 @@ const FeedPage = () => {
                                 <Text fontSize='xs'>
                                     <span style={{ marginRight: 10 }}> </span>
                                     {item.type == 1 && (
-                                        <Badge variant='outline' colorScheme='cyan'>
+                                        <Badge mr='2' variant='outline' colorScheme='cyan'>
                                             Draft Strategy
                                         </Badge>
                                     )}
                                     {item.type == 2 && (
-                                        <Badge variant='solid' colorScheme='cyan'>
+                                        <Badge mr='2' variant='solid' colorScheme='cyan'>
                                             Active Strategy
                                         </Badge>
                                     )}
                                     {item.type == 0 && (
-                                        <Badge variant='solid' colorScheme='cyan'>
+                                        <Badge mr='2' variant='solid' colorScheme='cyan'>
                                             Created User
                                         </Badge>
-                                    )}
-                                </Text>
+                                        )}
+                                       {moment(item.time, 'YYYY-MM-DDThh:mm:ss').add(-5, 'hour').fromNow()}
+                                    </Text>
+                                    
                             </Stack>
                             <Box flexGrow={1} />
                             </Button>
-                            </Box>
+                        </Box>
                     )
                 })}
                     </VStack>
