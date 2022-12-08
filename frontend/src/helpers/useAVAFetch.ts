@@ -19,6 +19,7 @@ const useAVAFetch = (route: string, config?: AxiosRequestConfig, options?: Optio
     }
     const requestOptions: Options = {
         ...options,
+        useCache: false,
     }
 
     // base hook execution
