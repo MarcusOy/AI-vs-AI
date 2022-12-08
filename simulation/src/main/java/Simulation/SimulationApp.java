@@ -216,7 +216,7 @@ public class SimulationApp {
                 }
                 else {
                     // temp battle so processBattleStrategies can be used
-                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot);
+                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot, null, null);
 
                     // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
                     errorInSource = !processBattleStrategies(tempBattle);
@@ -286,7 +286,7 @@ public class SimulationApp {
                 String defenderIdString = DEFENDER_MANUAL ? "manual" : "stock";
                 String attackerSnapshot = null;
                 String defenderSnapshot = null;
-                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot);
+                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot, null, null);
                 prepareAndRunBattle(newBattle);
             }
         }
@@ -504,6 +504,7 @@ public class SimulationApp {
                     new TypeReference<MassTransitMessage<SimulationRequest>>() {
                     });
             sentBattle = sentMessage.message.pendingBattle;
+            System.out.println("attackerStrategy beginning of game: " + sentBattle.getAttackerStrategy());
             sentBattle.setClientId(sentMessage.message.clientId);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -536,6 +537,7 @@ public class SimulationApp {
             sentBattle.complete(wasSourceEvalError);
         }
 
+        System.out.println("attackerStrategy end of game: " + sentBattle.getAttackerStrategy());
         debugPrintln("Finished Battle:\n" + sentBattle == null ? "null" : sentBattle.toString());
 
         // sends the resulting battle to the backend if there is RabbitMQ connection

@@ -342,6 +342,10 @@ public class Battle {
             defendingSourceInjected = injectedSource;
     }
 
+    public Strategy getAttackerStrategy() {
+        return attackingStrategy;
+    }
+
     @Override
     public String toString() {
         return "Battle{" +
