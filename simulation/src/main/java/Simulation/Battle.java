@@ -55,12 +55,15 @@ public class Battle {
         init();
     }
 
-    public Battle(int iterations, String attackingStrategyId, String defendingStrategyId, String attackingStrategySnapshot, String defendingStrategySnapshot) {
+    public Battle(int iterations, String attackingStrategyId, String defendingStrategyId, String attackingStrategySnapshot, String defendingStrategySnapshot,
+                  Strategy attackingStrategy, Strategy defendingStrategy) {
         this();
         this.attackingStrategyId = attackingStrategyId;
         this.defendingStrategyId = defendingStrategyId;
         this.attackingStrategySnapshot = attackingStrategySnapshot;
         this.defendingStrategySnapshot = defendingStrategySnapshot;
+        this.attackingStrategy = attackingStrategy;
+        this.defendingStrategy = defendingStrategy;
 
         this.iterations = iterations;
     }
