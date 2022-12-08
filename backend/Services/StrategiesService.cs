@@ -23,14 +23,17 @@ namespace AVA.API.Services
         private readonly AVADbContext _dbContext;
         private readonly IIdentityService _identityService;
         private readonly ILogger<StrategiesService> _logger;
+        private readonly IStarterCodeService _starterCodeService;
 
         public StrategiesService(AVADbContext dbContext,
                             IIdentityService identityService,
-                            ILogger<StrategiesService> logger)
+                            ILogger<StrategiesService> logger,
+                            IStarterCodeService starterCodeService)
         {
             _dbContext = dbContext;
             _identityService = identityService;
             _logger = logger;
+            _starterCodeService = starterCodeService;
         }
 
         // public List<Strategy> GetAll()
@@ -100,7 +103,9 @@ namespace AVA.API.Services
             strategy.Game = null;
 
             // populate source code with starter code
-            //strategy.SourceCode = game.BoilerplateCode;
+            strategy.SourceCode = _starterCodeService
+                .Get(game.Id.ToString(), ProgrammingLanguage.JavaScript.ToString())
+                .Boilerplate;
 
             await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();

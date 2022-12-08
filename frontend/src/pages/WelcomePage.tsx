@@ -1,7 +1,9 @@
 import React from 'react'
 import { Center, Box, Heading, Text, Button } from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 const WelcomePage = () => {
+    useDocumentTitle()
     return (
         <Center>
             <Box maxW='32rem'>

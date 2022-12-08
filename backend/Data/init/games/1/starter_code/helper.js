@@ -19,15 +19,14 @@ var ERR_FORMAT = -5; // int
 var ERR_FORMAT_MOVE_FROM = -6; // int
 var ERR_FORMAT_MOVE_TO = -7; // int
 
-class GameState {
-    constructor() {
+var GameState = (function () {
+    function GameState() {
         this.currentPlayer = 0;
         this.numWhitePieces = 20;
         this.numBlackPieces = 20;
         this.numWhitePawns = 9;
         this.numBlackPawns = 9;
         this.numMovesMade = 0;
-
         var col9 = new Array("b1", "b1", "", "", "", "", "", "", "w1", "w3");
         var col8 = new Array("b3", "b2", "", "", "", "", "", "", "w2", "w3");
         var col7 = new Array("b2", "b2", "", "", "", "", "", "", "w2", "w2");
@@ -38,21 +37,10 @@ class GameState {
         var col2 = new Array("b2", "b2", "", "", "", "", "", "", "w2", "w2");
         var col1 = new Array("b3", "b2", "", "", "", "", "", "", "w2", "w3");
         var col0 = new Array("b3", "b1", "", "", "", "", "", "", "w1", "w1");
-
-        this.board = new Array(
-            col9,
-            col8,
-            col7,
-            col6,
-            col5,
-            col4,
-            col3,
-            col2,
-            col1,
-            col0
-        );
+        this.board = new Array(col9, col8, col7, col6, col5, col4, col3, col2, col1, col0);
     }
-}
+    return GameState;
+}());
 
 var gameState = new GameState()
 /**

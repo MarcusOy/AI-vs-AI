@@ -252,7 +252,7 @@ const GameRulesTab = () => {
                     icon={<ChevronRightIcon w='7' h='7' />}
                     variant='ghost'
                     onClick={goForward}
-                    isDisabled={index >= pages.length}
+                    isDisabled={index >= pages.length - 1}
                 />
             </HStack>
         </Flex>

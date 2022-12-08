@@ -11,7 +11,14 @@ namespace AVA.API.Helpers
         public static async Task<string> Transpile(string ts)
         {
             var tempTs = Path.GetTempFileName();
+            FileInfo fileInfoTs = new FileInfo(tempTs);
+            tempTs = Path.GetFileNameWithoutExtension(tempTs) + ".ts";
+            fileInfoTs.MoveTo(tempTs);
+
             var tempJs = Path.GetTempFileName();
+            FileInfo fileInfoJs = new FileInfo(tempJs);
+            tempJs = Path.GetFileNameWithoutExtension(tempJs) + ".js";
+            fileInfoJs.MoveTo(tempJs);
 
             try
             {

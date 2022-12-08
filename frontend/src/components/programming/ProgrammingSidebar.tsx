@@ -4,8 +4,6 @@ import {
     TabList,
     TabPanels,
     TabPanel,
-    Center,
-    Heading,
     HStack,
     Button,
     Accordion,
@@ -35,9 +33,12 @@ import {
     ModalHeader,
     ModalOverlay,
     Flex,
+    Text,
+    Heading,
+    Link,
 } from '@chakra-ui/react'
 import { useMultiStyleConfig } from '@chakra-ui/system'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
     BsJoystick,
     BsPlay,
@@ -48,6 +49,7 @@ import {
     BsThermometerLow,
 } from 'react-icons/bs'
 import { IoFlask } from 'react-icons/io5'
+import { useNavigate } from 'react-router-dom'
 import IdentityService from '../../data/IdentityService'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import useAVASocket from '../../helpers/useAVASocket'
@@ -58,6 +60,7 @@ import { StrategyStatus } from '../../models/strategy-status'
 import DocumentationTab from './DocumentationTab'
 import EditStrategyName from './EditStrategyName'
 import GameRulesTab from './GameRulesTab'
+import SubmissionsTab from './SubmissionsTab'
 
 interface IProgrammingSidebarProps {
     strategy: Strategy
@@ -74,16 +77,19 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
 
     const onTestSubmissionResult = (response) => {
         const battle = response.resultingBattle as Battle
-        console.log('TestSubmissionResult Response:', battle)
-        // @ts-ignore
-        setSubmissions((past) => [battle, ...past])
+        // console.log('TestSubmissionResult Response:', battle)
+        console.log({ submissions })
+        const newSubmissions = [...submissions].filter((b) => b.id != battle.id)
+        newSubmissions.unshift(battle)
+        console.log({ newSubmissions })
+        setSubmissions(newSubmissions)
         setIsWaitingOnSubmission(false)
     }
 
-    const onSubmitStrategy = async () => {
-        await strategySubmit.execute()
-        IdentityService.refreshIdentity()
-    }
+    // const onSubmitStrategy = async () => {
+    //     await strategySubmit.execute()
+    //     IdentityService.refreshIdentity()
+    // }
 
     const submissionWebSocket = useAVASocket([
         { key: 'TestSubmissionResult', execute: onTestSubmissionResult },
@@ -95,14 +101,18 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         { manual: true },
     )
     const strategyRun = useAVAFetch('/Strategy/TestStrategy/', { method: 'POST' }, { manual: true })
-    const game = gameFetch.data as Game
-    const runStrategy = (stock: number) => {
+    // const game = gameFetch.data as Game
+    const runStrategy = async (stock: number) => {
         const testStrategyRequest = {
             strategyIdToTest: p.strategy.id,
             stock,
             clientId: submissionWebSocket.connection?.connectionId,
         }
-        strategyRun.execute({ data: testStrategyRequest })
+        const pendingBattle = (await strategyRun.execute({ data: testStrategyRequest }))
+            .data as Battle
+        const newSubmissions = [...submissions]
+        newSubmissions.unshift(pendingBattle)
+        setSubmissions(newSubmissions)
         setIsWaitingOnSubmission(true)
         setTabIndex(3)
     }
@@ -186,7 +196,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                 borderTopColor='chakra-border-color'
                 orientation='vertical'
                 variant='enclosed'
-                tabIndex={tabIndex}
+                index={tabIndex}
                 onChange={setTabIndex}
             >
                 <TabList height='100%'>
@@ -235,41 +245,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                         <DocumentationTab strategy={p.strategy} />
                     </TabPanel>
                     <TabPanel h='100%' overflowY='scroll'>
-                        <Accordion allowToggle>
-                            {submissions.map((value, key) => {
-                                return (
-                                    <AccordionItem key={key}>
-                                        <h2>
-                                            <AccordionButton>
-                                                <Box
-                                                    flex='1'
-                                                    textAlign='left'
-                                                    color={
-                                                        value.attackerWins === 1 ? 'green' : 'red'
-                                                    }
-                                                >
-                                                    Submission #{submissions.length - key}
-                                                </Box>
-                                                <AccordionIcon />
-                                            </AccordionButton>
-                                        </h2>
-                                        <AccordionPanel pb={4}>
-                                            <VStack>
-                                                <Box>{value.name}</Box>
-                                                <Box>
-                                                    {value.attackerWins === 1
-                                                        ? 'You Win!'
-                                                        : 'Iterate and Improve, You Lost...'}
-                                                </Box>
-                                                <Box>
-                                                    Turns: {value.battleGames[0].turns.length}
-                                                </Box>
-                                            </VStack>
-                                        </AccordionPanel>
-                                    </AccordionItem>
-                                )
-                            })}
-                        </Accordion>
+                        <SubmissionsTab submissions={submissions} />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

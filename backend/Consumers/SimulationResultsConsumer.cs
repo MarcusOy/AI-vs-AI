@@ -28,10 +28,12 @@ namespace AVA.API.Consumers
         public async Task Consume(ConsumeContext<SimulationResponse> context)
         {
             // Save Battle to database
+            var attacker = context.Message.ResultingBattle.AttackingStrategy;
+            var defender = context.Message.ResultingBattle.DefendingStrategy;
+            context.Message.ResultingBattle.AttackingStrategy = null;
+            context.Message.ResultingBattle.DefendingStrategy = null;
             try
             {
-                context.Message.ResultingBattle.AttackingStrategy = null;
-                context.Message.ResultingBattle.DefendingStrategy = null;
                 _logger.LogInformation($"Simulation result recieved. {context.Message.ResultingBattle.Name}");
                 _logger.LogInformation(JsonConvert.SerializeObject(context.Message.ResultingBattle, Formatting.Indented));
 
@@ -54,6 +56,10 @@ namespace AVA.API.Consumers
                     // strip parent Battle navigation property from each Battlegame
                     for (int x = 0; x < context.Message.ResultingBattle.BattleGames.Count; x++)
                         context.Message.ResultingBattle.BattleGames[x].Battle = null;
+
+                    // add back attacker and defender
+                    context.Message.ResultingBattle.AttackingStrategy = attacker;
+                    context.Message.ResultingBattle.DefendingStrategy = defender;
 
                     _logger.LogInformation($"Sending test submission battle to client {context.Message.ClientId}...");
                     await _hubContext.Clients.Client(context.Message.ClientId).SendAsync("TestSubmissionResult", context.Message);

@@ -4,18 +4,21 @@ using AVA.API.Models;
 using static AVA.API.Controllers.StarterCodeController;
 using DocParser;
 using AVA.API.Helpers;
+using Microsoft.CodeAnalysis;
 
 namespace AVA.API.Services
 {
     public interface IStarterCodeService
     {
         GameStarterCode Get(string id, string language);
+        Task<string> BuildStrategySource(Strategy s);
     }
 
     public class StarterCodeService : IStarterCodeService
     {
         private readonly AVADbContext _dbContext;
         private readonly ILogger<StarterCodeService> _logger;
+        const string HELPER_CODE_BORDER = "\n\n/*----- HELPER CODE BORDER -----*/\n\n";
 
         public StarterCodeService(AVADbContext dbContext,
                             ILogger<StarterCodeService> logger)
@@ -83,6 +86,27 @@ namespace AVA.API.Services
             };
         }
 
+        public async Task<string> BuildStrategySource(Strategy s)
+        {
+            var helper = _dbContext.StarterCode
+                .Where(c => c.GameId == s.GameId)
+                .Where(c => c.Language == s.Language)
+                .FirstOrDefault(c => c.Type == StarterCodeType.Helper);
+            var source = "";
+
+            if (helper is null)
+                throw new InvalidOperationException($"No helper code found for game id ${s.GameId} and language ${s.Language.ToString()}.");
+
+            if (s.SourceCode.IndexOf(HELPER_CODE_BORDER) != -1)
+                throw new InvalidOperationException("Please remove the false helper code border from your source code.");
+
+            source = helper.Code + HELPER_CODE_BORDER + s.SourceCode;
+
+            if (s.Language == ProgrammingLanguage.TypeScript)
+                source = await JavaScriptHelpers.Transpile(source);
+
+            return source;
+        }
 
     }
 }

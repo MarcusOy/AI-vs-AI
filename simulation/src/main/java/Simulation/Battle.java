@@ -171,6 +171,10 @@ public class Battle {
 
     // returns the newly created BattleGame
     public BattleGame addBattleGame() {
+        // initializes if uninitialized
+        if (battleGames == null)
+            init();
+
         // alternates attacker color every consecutive BattleGame
         Color attackerColor = getAttackerColor();
         battleGames.add(new BattleGame(battleGames.size() + 1, id, attackerColor));

@@ -35,6 +35,7 @@ import {
 import { MdPause, MdPlayArrow } from 'react-icons/md'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Battle } from '../models/battle'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 export const BOARD_SIZES = {
     DEFAULT: 600, // for replay view
@@ -42,21 +43,28 @@ export const BOARD_SIZES = {
     RECAP: 150, // for list display
 }
 
-const ReplayPage = () => {
+interface IReplayPageProps {
+    battleId: string
+    gameNumber: string
+}
+
+const HELPER_CODE_BORDER = '/*----- HELPER CODE BORDER -----*/'
+
+const ReplayPage = (p: IReplayPageProps) => {
     const navigate = useNavigate()
-    const { bid, gnum } = useParams()
+    // const { bid, gnum } = useParams()
     const [currentTurn, setCurrentTurn] = useState(0)
     const [showTooltip, setShowTooltip] = useState(false)
     const [isPlaying, setIsPlaying] = useState(false)
     const [speed, setSpeed] = useState(1)
 
-    const { data, isLoading, error } = useAVAFetch(`/Battle/${bid}/${gnum}`)
-    const battleFetch = useAVAFetch(`/Battle/${bid}/`)
+    const { data, isLoading, error } = useAVAFetch(`/Battle/${p.battleId}/${p.gameNumber}`)
+    const battleFetch = useAVAFetch(`/Battle/${p.battleId}/`)
 
     // reset current turn when navigating between games
     useEffect(() => {
         setCurrentTurn(0)
-    }, [bid, gnum])
+    }, [p.battleId, p.gameNumber])
 
     // update turn slider helper text on turn data load
     useEffect(() => {
@@ -108,6 +116,14 @@ const ReplayPage = () => {
     }
     const goToLastTurn = () => setCurrentTurn(turns.length)
 
+    useDocumentTitle(
+        battleFetch.data && data
+            ? `Game ${(data as BattleGame).gameNumber} on ${
+                  (battleFetch.data as Battle).name
+              } Replay`
+            : 'Replay',
+    )
+
     if (isLoading || battleFetch.isLoading) return <Spinner />
 
     const battle = battleFetch.data as Battle
@@ -117,8 +133,10 @@ const ReplayPage = () => {
 
     if (turns.length <= 0) return <Spinner />
 
-    const goBackwardAGame = () => navigate(`/Replay/${bid}/${Number.parseInt(gnum!) - 1}`)
-    const goForwardAGame = () => navigate(`/Replay/${bid}/${Number.parseInt(gnum!) + 1}`)
+    const goBackwardAGame = () =>
+        navigate(`/Replay/${p.battleId}/${Number.parseInt(p.gameNumber!) - 1}`)
+    const goForwardAGame = () =>
+        navigate(`/Replay/${p.battleId}/${Number.parseInt(p.gameNumber!) + 1}`)
 
     const didWhiteWin =
         (battleGame.isAttackerWhite && battleGame.didAttackerWin) ||
@@ -334,14 +352,20 @@ const ReplayPage = () => {
                                 customStyle={{
                                     overflow: 'scroll',
                                     maxHeight: 600,
-                                    maxWidth: 500,
-                                    flexGrow: 1,
+                                    width: '100%',
                                 }}
                                 codeContainerStyle={{
                                     fontFamily: 'revert',
                                     fontSize: 11,
                                 }}
-                                text={battle.attackingStrategySnapshot}
+                                text={
+                                    battle.attackingStrategySnapshot.split(HELPER_CODE_BORDER)
+                                        .length == 2
+                                        ? battle.attackingStrategySnapshot
+                                              .split(HELPER_CODE_BORDER)[1]
+                                              .trim()
+                                        : battle.attackingStrategySnapshot
+                                }
                                 language='typescript'
                                 showLineNumbers
                                 theme={vs2015}
@@ -365,17 +389,24 @@ const ReplayPage = () => {
                                 customStyle={{
                                     overflow: 'scroll',
                                     maxHeight: 600,
-                                    maxWidth: 500,
-                                    flexGrow: 1,
+                                    width: '100%',
                                 }}
                                 codeContainerStyle={{
                                     fontFamily: 'revert',
                                     fontSize: 11,
                                 }}
-                                text={battle.defendingStrategySnapshot}
+                                text={
+                                    battle.defendingStrategySnapshot.split(HELPER_CODE_BORDER)
+                                        .length == 2
+                                        ? battle.defendingStrategySnapshot
+                                              .split(HELPER_CODE_BORDER)[1]
+                                              .trim()
+                                        : battle.defendingStrategySnapshot
+                                }
                                 language='typescript'
                                 showLineNumbers
                                 theme={vs2015}
+                                wrapLongLines
                             />
                         ) : (
                             <Center px='10'>

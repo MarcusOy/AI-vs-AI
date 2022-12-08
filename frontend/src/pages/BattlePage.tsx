@@ -20,6 +20,7 @@ import { TbBook2, TbShield, TbSword, TbTrophy } from 'react-icons/tb'
 import GameboardViewer, { GAME_COLORS } from '../components/GameboardViewer'
 import { BOARD_SIZES } from './ReplayPage'
 import { IoFlask } from 'react-icons/io5'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 const BattlePage = () => {
     const { id } = useParams()
@@ -27,6 +28,8 @@ const BattlePage = () => {
     const navigate = useNavigate()
 
     const battle = data as Battle
+
+    useDocumentTitle(battle ? `${battle.name} Battle` : 'Battle')
 
     if (isLoading || battle == undefined)
         return (

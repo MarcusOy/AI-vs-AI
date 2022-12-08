@@ -18,11 +18,14 @@ import { Strategy } from '../models/strategy'
 import ProgrammingEditor from '../components/programming/ProgrammingEditor'
 import ProgrammingSidebar from '../components/programming/ProgrammingSidebar'
 import { WarningIcon } from '@chakra-ui/icons'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 function ProgrammingPage() {
     const { id } = useParams()
     const { data, isLoading, error, execute } = useAVAFetch(`/getAi/${id}`)
 
     const strategy = data as Strategy
+
+    useDocumentTitle(strategy ? `✏️ ${strategy.name}` : 'Programming Page')
 
     if (isLoading || strategy == undefined)
         return (

@@ -12,17 +12,20 @@ public class AiController : Controller
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
     private readonly IIdentityService _identityService;
+    private readonly IStarterCodeService _starterCodeService;
     private readonly AVADbContext _dbContext;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
                         AVADbContext dbContext,
-                        IIdentityService identityService)
+                        IIdentityService identityService,
+                        IStarterCodeService starterCodeService)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
         _dbContext = dbContext;
         _identityService = identityService;
+        _starterCodeService = starterCodeService;
     }
 
     [HttpGet, Route("/getAi/{id}")]
@@ -63,6 +66,8 @@ public class AiController : Controller
         var defendingStrategy = _dbContext.Strategies
             .FirstOrDefault(s => s.Id == defenderGuid);
 
+        s.SourceCode = await _starterCodeService.BuildStrategySource(s);
+
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
@@ -77,10 +82,13 @@ public class AiController : Controller
                 {
                     Id = attackGuid,
                     Name = s.Name,
-                    Status = StrategyStatus.Active,
-                    SourceCode = s.SourceCode
                 },
                 DefendingStrategyId = defendingStrategy.Id,
+                DefendingStrategy = new Strategy
+                {
+                    Id = defenderGuid,
+                    Name = defendingStrategy.Name
+                },
                 IsTestSubmission = true
             },
             ClientId = req.ClientId
@@ -88,6 +96,10 @@ public class AiController : Controller
 
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         await endpoint.Send(request);
+
+        // send strategy objects for frontend to use
+        request.PendingBattle.AttackingStrategy = s;
+        request.PendingBattle.DefendingStrategy = defendingStrategy;
 
         return request.PendingBattle;
     }

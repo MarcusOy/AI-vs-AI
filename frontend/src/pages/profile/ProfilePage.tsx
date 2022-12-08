@@ -30,6 +30,7 @@ import ProfileStrategiesTab from './ProfileStrategiesTab'
 import ProfileBattlesTab from './ProfileAndStratBattlesTab'
 import ProfileSubmissionsTab from './ProfileSubmissionsTab'
 import { WarningIcon } from '@chakra-ui/icons'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const ProfilePage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -54,6 +55,8 @@ const ProfilePage = () => {
             : tab == 'Submissions'
             ? 3
             : -1
+
+    useDocumentTitle(user ? `@${user.username} ${tab}` : 'User')
 
     const handleTabsChange = (index) => {
         const tab =

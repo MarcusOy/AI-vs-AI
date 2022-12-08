@@ -2,7 +2,10 @@ import React from 'react'
 import { Center, Box, Text, Flex, Spacer, Heading, Button } from '@chakra-ui/react'
 import ModalAi from './ModalAi'
 import { Link } from 'react-router-dom'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 const FeedPage = () => {
+    useDocumentTitle('Feed')
+
     return (
         <Flex>
             <Box>
