@@ -72,9 +72,10 @@ class GameState {
 }
 
 /** 
+ * Accesses the grid Chess Board on which the game is played.
+ * 
 * @return {string[][]} -           The String[][] representation of the game
-                         board, comprised of ‘cells’, as described
-                         at the top of this doc.
+                         board, comprised of ‘cells’ of values "A0" to "J9".
 */
 function getBoard(): string[][] {
   // String[][]
@@ -82,6 +83,8 @@ function getBoard(): string[][] {
 }
 
 /**
+ * Shows which color pieces you control.
+ * 
  * @return {number}	-	  	 An integer representing the color of
  * 				 	 the current player.
  * 				 	 0 = WHITE  and  1 = BLACK
@@ -91,11 +94,12 @@ function getMyColor(): number {
 }
 
 /**
+ * Shows which color pieces an opponent controls.
  *
  * @param {number} myColor - An integer representing the color of
- * 				 	 the not current player.
+ * 				 	 the current player.
  * @returns {number}	-	  	 An integer representing the color of
- * 				 	 the not current player.
+ * 				 	 the not current player (an opponent).
  * 				 	 0 = WHITE  and  1 = BLACK
  * 				 	 Returns a negative integer, ERR_INVALID_COLOR,
  * 				 	 if myColor is invalid
@@ -113,6 +117,8 @@ function getOpponentColor(myColor: number): number {
 */
 
 /**
+* Gives the value of a piece on the given grid square, or ‘cell’.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  *				 values “A0” to “J9”.
  * @param {any} unusedParam -  Unused parameter for overloading
@@ -124,6 +130,8 @@ function getOpponentColor(myColor: number): number {
  */
 function getCellValue(cell: string, unusedParam: any): string;
 /**
+* Gives the value of a piece on the given grid square, or ‘cell’.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  *				 String[][] board, retrieved through using
  *				 cellToCol().
@@ -162,6 +170,8 @@ function getCellValue(arg1: any, arg2: any): string {
 */
 
 /**
+ * Converts a Chess Board ‘cell’ string to its corresponding column.
+ * 
  * @param {string}  cell -   The position of the cell on the board, from values “A0” to “J9”.
  *
  * @return {number} -       The index of the target cell’s column in the
@@ -183,6 +193,8 @@ function cellToCol(cell: string): number {
 }
 
 /**
+ * Converts a Chess Board ‘cell’ string to its corresponding row.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @return {number} -       The index of the target cell’s row in the
@@ -204,25 +216,25 @@ function cellToRow(cell: string): number {
 }
 
 /**
- *
+ * Gives the character representing the column that a ‘cell’ is in.
+ * 
  * @param {string} cell - The position of the cell on the board, from
  * 				 values "A0" to "J9".
  *
  * @return {number} -     The column of the cell on the board, from
- * 				 characters A-J as an ASCII integer.
- *
- *				 See Board documention
+ * 				 characters A-J as ASCII integers 0-9.
  */
 function cellToColChar(cell: string): number {
   return cell.charCodeAt(0);
 }
 
 /**
- *
+ * Gives the character representing the row that a ‘cell’ is in.
+ * 
  * @param {string} cell - The position of the cell on the board, from
  * 				 values "A0" to "J9".
  * @return {number} -     The row of the cell on the board, from
- * 				 characters A-J as an ASCII number.
+ * 				 characters A-J as ASCII integers 0-9.
  *
  *				 See Board documention
  */
@@ -237,17 +249,23 @@ Array Index Conversion
 */
 
 /**
+ * Converts a column integer to the corresponding character.
+ * This character can be used to represent the column integer in a ‘cell’ string.
+ * 
  * @param {number} col -   The index of the target col’s row in the
  * 				 String[][] board.
  *
  * @return {string} -      The column of the cell on the board, from
- *				 characters A-J. See diagram at top of doc as a string of length 1.
+ *				 characters A-J.
  */
 function colToColChar(col: number): string {
   return String.fromCharCode(col + "A".charCodeAt(0));
 }
 
 /**
+ * Converts a row integer to the corresponding character.
+ * This character can be used to represent the row integer in a ‘cell’ string.
+ * 
  * @param {number} row -   The index of the target row’s row in the
  * 				 String[][] board.
  *
@@ -259,6 +277,8 @@ function rowToRowChar(row: number): string {
 }
 
 /**
+ * Converts a column and row integer to a complete corresponding ‘cell’ string, from values  "A0" to "J9".
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -282,6 +302,8 @@ Simple Cell Evaluation
 */
 
 /**
+ * Determines if the specified ‘cell’ has a piece on it.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {any} unusedParam -  Unused parameter for overloading
@@ -301,6 +323,8 @@ Simple Cell Evaluation
  */
 function cellHasPiece(cell: string, unusedParam: any): number;
 /**
+ * Determines if the specified ‘cell’ has a piece on it.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -345,6 +369,8 @@ function cellHasPiece(arg1: any, arg2: any): number {
 }
 
 /**
+ * Determines if the specified ‘cell’ has a piece of the specified color on it.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {number} myColor - The integer representing your color WHITE=0, BLACK=1
@@ -364,6 +390,8 @@ function cellHasPiece(arg1: any, arg2: any): number {
  */
 function isMyPiece(cell: string, myColor: number, unusedParam: any): number;
 /**
+ * Determines if the specified ‘cell’ has a piece of the specified color on it.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -410,6 +438,8 @@ function isMyPiece(arg1: any, arg2: any, arg3: any): number {
 }
 
 /**
+ * Gives the color of the piece on the specified ‘cell’.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {any} unusedParam -  Unused parameter for overloading
@@ -426,6 +456,8 @@ function isMyPiece(arg1: any, arg2: any, arg3: any): number {
  */
 function getPieceColor(cell: string, unusedParam: any): number;
 /**
+ * Gives the color of the piece on the specified ‘cell’.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -477,6 +509,8 @@ function getPieceColor(arg1: any, arg2: any): number {
 }
 
 /**
+ * Gets the number of squares that the piece on a given ‘cell’ can move each turn.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {any} unusedParam -  Unused parameter for overloading
@@ -493,6 +527,8 @@ function getPieceColor(arg1: any, arg2: any): number {
  */
 function getPieceMoveDistance(cell: string, unusedParam: any): number;
 /**
+ * Gets the number of squares that the piece on a given ‘cell’ can move each turn.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -543,6 +579,7 @@ function getPieceMoveDistance(arg1: any, arg2: any): number {
 */
 
 /**
+ * Get all of the ‘cells’ that hold pieces of the specified color.
  *
  * @param {number} color - An integer representing the color of
  * 				 the current player.
@@ -569,13 +606,17 @@ function getMyPieceLocations(color: number): string[] {
 }
 
 /**
+ * Gets all of the ‘cells’ that a piece on a given ‘cell’ can legally move to.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {number} myColor - The integer representing your color WHITE=0, BLACK=1
  * @param {any} unusedParam -  Unused parameter for overloading
  * @return {string[]} -      An array of all cell positions that the piece
  * 				 in the current cell can move to, represented
- * 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
+ * 				 like [“E7”, “G7”, “E6”, “H8”].  You are not allowed to move on top of
+ *               other pieces that you control, or to not get yourself out of check
+ *               if you are in check.
  */
 function getValidMoves(
   cell: string,
@@ -583,6 +624,8 @@ function getValidMoves(
   unusedParam: any
 ): string[];
 /**
+ * Gets all of the ‘cells’ that a piece on a given ‘cell’ can legally move to.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -592,7 +635,9 @@ function getValidMoves(
  * @param {number} myColor - The integer representing your color WHITE=0, BLACK=1
  * @return {string[]} -      An array of all cell positions that the piece
  * 				 in the current cell can move to, represented
- * 				 like [“E7”, “G7”, “E6”, “H8”].  If the owner of
+ * 				 like [“E7”, “G7”, “E6”, “H8”].  You are not allowed to move on top of
+ *               other pieces that you control, or to not get yourself out of check
+ *               if you are in check.
  */
 function getValidMoves(col: number, row: number, myColor: number): string[];
 
@@ -632,8 +677,6 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
         isMyPiece(newCol, newRow, myColor) != TRUE
       ) {
         var pieceColor = getPieceColor(col, row);
-        /*if (isPlayerInCheck(pieceColor) == TRUE && ((pieceColor == WHITE && row != 0) || (pieceColor == BLACK && row != 9)))
-                    continue;*/
         if (isPlayerInCheck(pieceColor) == TRUE) {
           var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);
           var rowToCheck = pieceColor == WHITE ? 9 : 0;
@@ -649,6 +692,10 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
 }
 
 /**
+ * Determines if the player of the passed color is currently in check.
+ * Being in check means that an enemy pawn (1-piece) has reached your back
+ * rank.
+ * 
 * @param {number} color - An integer representing the color of
 * 			     the current player.
 * 			     0 = WHITE  and  1 = BLACK
@@ -668,7 +715,6 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
                     is not WHITE or BLACK.
 */
 
-// similar func in GameState
 function isPlayerInCheck(color: number): number {
   var rowToCheck;
 
@@ -688,6 +734,10 @@ function isPlayerInCheck(color: number): number {
 }
 
 /**
+ * Provides the column in which an enemy pawn (1-piece) is putting the given
+ * color player in check.  Check is reached when an opponent reaches their pawn
+ * to your back rank.
+ * 
  * @param {number} color  An integer representing the color of
  * 			     the current player.
  * 			     0 = WHITE  and  1 = BLACK
@@ -733,6 +783,8 @@ function whichColumnIsPlayerInCheck(color: number): number {
 */
 
 /**
+ * Determines if the specified move is properly formatted.
+ * 
  * @param {string} moveString - A string representation of a move of
  * 					  piece from one cell to another cell, in the
  * 					  format: “<cellFrom>, <cellTo>”.  ‘cellFrom’
@@ -762,6 +814,8 @@ function isMoveValid(
   unusedParam: any
 ): number;
 /**
+ * Determines if the specified move is properly formatted.
+ * 
  * @param {string} fromCell -  A string representation of the cell that
  * 					  a piece starts in, with values "A0"-"J9".
  * @param {string} toCell   A string representation of the cell that
@@ -835,6 +889,8 @@ function isMoveValid(arg1: any, arg2: any, arg3: any): number {
 }
 
 /**
+ * Determines if a ‘cell’ string is properly formatted to map onto a specific column and row of the game board.
+ * 
  * @param {string} cell -  The position of the cell on the board, from
  * 				 values “A0” to “J9”.
  * @param {any} unusedParam -  Unused parameter for overloading
@@ -851,6 +907,8 @@ function isMoveValid(arg1: any, arg2: any, arg3: any): number {
  */
 function isCellValid(cell: string, unusedParam: any): number;
 /**
+ * Determines if a ‘cell’ string is properly formatted to map onto a specific column and row of the game board.
+ * 
  * @param {number} col -   The index of the target cell’s column in the
  * 				 String[][] board, retrieved through using
  * 				 cellToCol().
@@ -893,4 +951,107 @@ function isCellValid(arg1: any, arg2: any): number {
   if (row < 0 || row > 9) return ERR_INVALID_ROW;
 
   return TRUE;
+}
+
+/**
+ * Gets all legal moves that capture a 1-piece without using an allied 1-piece to do so.
+ * @return All legal move strings that capture (not trade) a 1-piece, along with how many moves, all in an outer array of 2 elements.
+ * For example,  [<all legal 1-piece capture moveStrings array>, <number of moves in array>]
+ */
+function getAllLegalCapture1PieceMoves(): [string[], number] {
+  const board: string[][] = gameState.board;
+  const pieceLocations: string[] = getMyPieceLocations(getMyColor());
+  let numMovesFound: number = 0;
+  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
+  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+    const piece: string = pieceLocations[i];
+    if (piece === "")
+      break;
+    const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
+    for (let j: number = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+      const move: string = validMoves[j];
+      if (move === "")
+        break;
+
+      if (getPieceMoveDistance(move, board) == 1
+        && getPieceMoveDistance(piece, board) > getPieceMoveDistance(move, board)) {
+        moves[numMovesFound] = piece + ", " + move;
+        numMovesFound++;
+      }
+    }
+  }
+  return [moves, numMovesFound];
+}
+
+/**
+* Gets all legal moves that capture a enemy piece without losing an allied piece in the process.
+* @return All legal move strings that capture (not trade) a piece, along with how many moves, all in an outer array of 2 elements.
+* For example,  [<all legal capture moveStrings array>, <number of moves in array>]
+*/
+function getAllLegalCaptureMoves(): [string[], number] {
+  const board: string[][] = gameState.board;
+  const pieceLocations: string[] = getMyPieceLocations(getMyColor());
+  let numMovesFound: number = 0;
+  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
+  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+    const piece: string = pieceLocations[i];
+    if (piece === "")
+      break;
+    const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
+    for (let j: number = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+      const move: string = validMoves[j];
+      if (move === "")
+        break;
+
+      if (getPieceMoveDistance(move, board) != 0
+        && getPieceMoveDistance(piece, board) > getPieceMoveDistance(move, board)) {
+        moves[numMovesFound] = piece + ", " + move;
+        numMovesFound++;
+      }
+    }
+  }
+  return [moves, numMovesFound];
+}
+
+/**
+* Gets all legal moves.
+* @return All legal move strings, along with how many moves, all in an outer array of 2 elements.
+* For example,  [<all legal moveStrings array>, <number of moves in array>]
+*/
+function getAllLegalMoves(): [string[], number] {
+  const board: string[][] = gameState.board;
+  const pieceLocations: string[] = getMyPieceLocations(getMyColor());
+  let numMovesFound: number = 0;
+  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
+  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+    let piece: string = pieceLocations[i];
+    if (piece === "")
+      break;
+    const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
+    for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+      const move: string = validMoves[j];
+      if (move === "")
+        break;
+      moves[numMovesFound] = piece + ", " + move;
+      numMovesFound++;
+    }
+  }
+  return [moves, numMovesFound];
+}
+
+/**
+* Gets a random valid move.
+* 
+* @return Returns a legal random moveString given the current game state (i.e. must escape check).
+* If no legal move exists, returns "CHECKMATED" to indicate that you have lost.
+*/
+function getRandomMove(): string {
+  const arr: [string[], number] = getAllLegalMoves();
+  const moves: string[] = arr[0];
+  const numMovesFound: number = arr[1];
+
+  if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated
+    return "CHECKMATED";
+  }
+  return moves[Math.floor((Math.random() * numMovesFound))];
 }
