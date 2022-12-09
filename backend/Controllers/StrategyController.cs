@@ -78,7 +78,7 @@ public class StrategyController : Controller
         return strat;
     }
 
-    [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
+    [HttpPut, Route("/Strategy/Delete/{id}"), Authorize]
     public async Task<Strategy> Delete(String id)
         => await _strategyService.DeleteAsync(new Guid(id));
 

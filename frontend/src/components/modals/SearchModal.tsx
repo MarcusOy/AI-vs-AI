@@ -20,6 +20,7 @@ import {
     AlertDescription,
     AlertIcon,
     AlertTitle,
+    Highlight,
 } from '@chakra-ui/react'
 import { randomColor } from '@chakra-ui/theme-tools'
 import useAVAFetch from '../../helpers/useAVAFetch'
@@ -47,7 +48,7 @@ const SearchModal = (p: IModalProps) => {
         onClose()
 
         if (r.type == ResultType.User) navigate(`/Profile/${r.id}/View`)
-        else if (r.type == ResultType.Strategy) navigate(`/Strategy/${r.id}`)
+        else if (r.type == ResultType.Strategy) navigate(`/Strategy/${r.id}/Stats`)
         else if (r.type == ResultType.Battle) navigate(`/Battle/${r.id}`)
         else navigate('/Invalid')
     }
@@ -129,7 +130,17 @@ const SearchModal = (p: IModalProps) => {
                                                     <Text fontSize='xs' color='CaptionText'>
                                                         {r.subtitle}
                                                     </Text>
-                                                    <Text>{r.title}</Text>
+                                                    {/* <Text>{r.title}</Text> */}
+                                                    <Highlight
+                                                        query={debounced}
+                                                        styles={{
+                                                            // px: '1',
+                                                            // py: '1',
+                                                            bg: 'yellow.100',
+                                                        }}
+                                                    >
+                                                        {r.title}
+                                                    </Highlight>
                                                 </Box>
                                                 <ArrowForwardIcon />
                                             </HStack>
