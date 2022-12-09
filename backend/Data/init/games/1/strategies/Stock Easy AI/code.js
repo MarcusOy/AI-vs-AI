@@ -1,4 +1,4 @@
-var turnNumber = 0;
+var turnNumber = -1;
 
 function getMove() {
     turnNumber++;
