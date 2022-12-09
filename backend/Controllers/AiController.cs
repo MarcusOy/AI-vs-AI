@@ -4,6 +4,7 @@ using AVA.API.Models;
 using AVA.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AVA.API.Controllers;
 
@@ -104,6 +105,43 @@ public class AiController : Controller
         return request.PendingBattle;
     }
 
+    // [HttpPost, Route("/Strategy/ManualBattle")]
+    // public async Task<Guid> ManualBattle([FromBody] ManualBattleRequest req)
+    // {
+    //     var attacking = _dbContext.Strategies
+    //                         .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+    //                         .AsNoTracking()
+    //                         .FirstOrDefault(s => s.Id == req.AttackingStrategyId);
+
+    //     var defending = _dbContext.Strategies
+    //                         .AsNoTracking()
+    //                         .FirstOrDefault(sd => sd.Id == req.DefendingStrategyId);
+
+    //     Battle newBattle = new Battle
+    //     {
+    //         Id = Guid.NewGuid(),
+    //         Name = attacking.Name + " manually attacked " + defending.Name,
+    //         BattleStatus = BattleStatus.Pending,
+    //         Iterations = 1,
+    //         IsTestSubmission = true,
+    //         AttackingStrategyId = attacking.Id,
+    //         AttackingStrategySnapshot = await _starterCodeService.BuildStrategySource(attacking),
+    //         DefendingStrategyId = defending.Id,
+    //         DefendingStrategySnapshot = await _starterCodeService.BuildStrategySource(defending),
+    //     };
+
+    //     var request = new SimulationRequest
+    //     {
+    //         PendingBattle = newBattle,
+    //         ClientId = _identityService.CurrentUser.Id.ToString()
+    //     };
+
+    //     var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
+    //     await endpoint.Send(request);
+
+    //     return newBattle.Id;
+    // }
+
     [HttpGet, Route("/Strategy/TestPublish")]
     public async Task<ActionResult> TestPublish()
     {
@@ -157,5 +195,11 @@ public class AiController : Controller
         public Guid StrategyIdToTest { get; set; }
         public int Stock { get; set; }
         public String ClientId { get; set; }
+    }
+
+    public class ManualBattleRequest
+    {
+        public Guid AttackingStrategyId { get; set; }
+        public Guid DefendingStrategyId { get; set; }
     }
 }
