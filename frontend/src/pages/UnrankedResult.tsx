@@ -12,6 +12,8 @@ import {
     Spinner,
     Stack,
     Highlight,
+    UnorderedList,
+    ListItem,
 } from '@chakra-ui/react'
 import ModalAi from './ModalAi'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -35,7 +37,20 @@ const UnrankedResult = () => {
         return <Spinner></Spinner>
     }
     const battleName = battleFetch.data.name
-    return <Heading>This is the result of a unranked battle which name is {battleName}</Heading>
+    return (
+        <Stack>
+            <Heading fontSize='xxx-large'>Result of {battleFetch.data.name}</Heading>
+            <Box>
+                <UnorderedList>
+                    <ListItem fontSize='xx-large'>
+                        Battle Winner is: {battleFetch.data.battle}
+                    </ListItem>
+                    <ListItem fontSize='xx-large'>Strategy Version: {}</ListItem>
+                    <ListItem fontSize='xx-large'>Strategy in game: {}</ListItem>
+                </UnorderedList>
+            </Box>
+        </Stack>
+    )
 }
 
 export default UnrankedResult
