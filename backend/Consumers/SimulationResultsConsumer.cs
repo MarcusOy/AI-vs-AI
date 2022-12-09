@@ -36,8 +36,8 @@ namespace AVA.API.Consumers
         {
             Console.WriteLine("CONSUME");
             // Save Battle to database
-            var attacker = context.Message.ResultingBattle.AttackingStrategy;
-            var defender = context.Message.ResultingBattle.DefendingStrategy;
+            var a = context.Message.ResultingBattle.AttackingStrategy;
+            var d = context.Message.ResultingBattle.DefendingStrategy;
             context.Message.ResultingBattle.AttackingStrategy = null;
             context.Message.ResultingBattle.DefendingStrategy = null;
             try
@@ -76,8 +76,8 @@ namespace AVA.API.Consumers
                         context.Message.ResultingBattle.BattleGames[x].Battle = null;
 
                     // add back attacker and defender
-                    context.Message.ResultingBattle.AttackingStrategy = attacker;
-                    context.Message.ResultingBattle.DefendingStrategy = defender;
+                    context.Message.ResultingBattle.AttackingStrategy = a;
+                    context.Message.ResultingBattle.DefendingStrategy = d;
 
                     _logger.LogInformation($"Sending test submission battle to client {context.Message.ClientId}...");
                     await _hubContext.Clients.Client(context.Message.ClientId).SendAsync("TestSubmissionResult", context.Message);

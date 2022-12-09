@@ -32,7 +32,21 @@ const ProgrammingEditor = (p: IProgrammingEditorProps) => {
     const initializeEditor = () => {
         const m = monacoRef as typeof monaco
         const e = editorRef as monaco.editor.IStandaloneCodeEditor
-        const h = (data as GameStarterCode).helperCode!
+        let h = (data as GameStarterCode).helperCode!
+
+        h += `function Console() {
+            /**
+             * Prints a single object/primitive out to the console window.
+             * This function does not have all the functionality of a 
+             * browser console.log().
+             * 
+             * @param {any} data - A single object/primitive to be printed
+             */
+              this.log = function(...data) {
+                  // this is internal code that will print out printString
+              };
+          };
+          var console = new Console();`
 
         m.languages.typescript.javascriptDefaults.setEagerModelSync(true)
         m.languages.typescript.javascriptDefaults.addExtraLib(h, 'HelperFunctions')

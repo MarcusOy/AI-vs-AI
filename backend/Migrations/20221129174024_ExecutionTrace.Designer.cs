@@ -206,9 +206,6 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("BoilerplateCode")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
 
@@ -243,9 +240,7 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 1,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\n                ",
                             Name = "1234 Chess",
                             ShortDescription = "Advance a 1-piece past your opponent's last rank.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -253,9 +248,7 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 2,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nCheckers is a board game played between two people on an 8x8 checked board.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
                             Name = "Checkers",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -263,10 +256,8 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 3,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DeletedOn = new DateTime(2022, 11, 29, 17, 40, 23, 834, DateTimeKind.Utc).AddTicks(5520),
-                            LongDescription = "\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
                             Name = "Chess",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
