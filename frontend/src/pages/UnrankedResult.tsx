@@ -30,6 +30,8 @@ const UnrankedResult = () => {
 
     console.log(data)
 
+    const battleFetch = useAVAFetch(`/Battle/${data}`)
+
     return <Heading>This is the result of a unranked battle which id is {data}</Heading>
 }
 
