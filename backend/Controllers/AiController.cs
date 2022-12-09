@@ -12,14 +12,20 @@ public class AiController : Controller
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
     private readonly AVADbContext _dbContext;
+    private readonly IIdentityService _identityService;
+    private readonly IBattlesService _battleService;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
-                        AVADbContext dbContext)
+                        AVADbContext dbContext,
+                        IIdentityService identityService,
+                        IBattlesService battlesService)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
         _dbContext = dbContext;
+        _identityService = identityService;
+        _battleService = battlesService;
     }
 
     [HttpGet, Route("/getAi/{id}")]
@@ -27,32 +33,61 @@ public class AiController : Controller
       => _strategiesService.Get(new Guid(id));
 
     [HttpPost, Route("/Strategy/ManualBattle")]
-    public async Task<ActionResult> ManualBattle([FromBody] ManualBattleRequest req)
+    public async Task<Guid> ManualBattle([FromBody] ManualBattleRequest req)
     {
-        var attacking = _strategiesService.Get(req.AttackingStrategyId);
-        var defending = _strategiesService.Get(req.DefendingStrategyId);
+        var attacking = _dbContext.Strategies
+                            .FirstOrDefault(s => s.Id == req.AttackingStrategyId);
+
+        var defending = _dbContext.Strategies
+                            .FirstOrDefault(sd => sd.Id == req.DefendingStrategyId);
+
+        Guid newId = Guid.NewGuid();
+        String newName = attacking.Name + " manually attacked " + defending.Name;
 
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
             {
-                Id = Guid.NewGuid(),
-                Name = attacking.CreatedByUser + "'s " + attacking.Name + " manually attacked " + defending.CreatedByUser + "'s " + defending.Name,
+                Id = newId,
+                Name = newName,
                 BattleStatus = BattleStatus.Pending,
                 Iterations = 1,
+                IsTestSubmission = true,
                 AttackingStrategyId = attacking.Id,
                 AttackingStrategy = attacking,
                 DefendingStrategyId = defending.Id,
-                DefendingStrategy = defending,
-                IsTestSubmission = false
+                DefendingStrategy = defending
             },
-            ClientId = attacking.CreatedByUserId.ToString()
+            ClientId = _identityService.CurrentUser.Id.ToString()
         };
+
+        Battle newBattle = new Battle
+        {
+            Id = newId,
+            Name = newName,
+            BattleStatus = BattleStatus.Pending,
+            Iterations = 1,
+            IsTestSubmission = true,
+            AttackingStrategyId = attacking.Id,
+            AttackingStrategy = attacking,
+            DefendingStrategyId = defending.Id,
+            DefendingStrategy = defending
+        };
+
+        await _battleService.CreateAsync(newBattle);
+        _dbContext.ChangeTracker.Clear();
+
+        request.PendingBattle.AttackingStrategy.CreatedByUser = null;
+        request.PendingBattle.DefendingStrategy.CreatedByUser = null;
+        request.PendingBattle.AttackingStrategy.AttackerBattles = null;
+        request.PendingBattle.DefendingStrategy.AttackerBattles = null;
+        request.PendingBattle.AttackingStrategy.DefenderBattles = null;
+        request.PendingBattle.DefendingStrategy.DefenderBattles = null;
 
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         await endpoint.Send(request);
 
-        return Ok("Simulation request sent. Battle Id: " + request.PendingBattle.Id);
+        return newId;
     }
 
     // TODO Have frontend send stock to test with in uri
