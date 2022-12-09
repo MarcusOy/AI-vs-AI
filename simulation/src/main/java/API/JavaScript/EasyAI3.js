@@ -495,70 +495,71 @@ function getMove() {
 
     switch (gameState.numMovesMade / 2 + 1) {
         case 1:
-            if (getMyColor(gameState) === 0) {    //we are playing white
+            if (getMyColor() === 0) {    //we are playing white
                 return "C9, E7"; //move the LEFT 2
             } else {                               //we are playing black
                 return "H0, F2"; //move the LEFT 2
             }
         case 2:
-            if (getMyColor(gameState) === 0) {    //we are playing white
+            if (getMyColor() === 0) {    //we are playing white
                 return "H9, F7"; //move the RIGHT 2
             } else {                               //we are playing black
                 return "C0, E2"; //move the RIGHT 2
             }
         case 3:
-            if (getMyColor(gameState) === 0) {    //we are playing white
+            if (getMyColor() === 0) {    //we are playing white
                 return "E9, E5"; //move the LEFT 4
             } else {                               //we are playing black
                 return "F0, F4"; //move the LEFT 4
             }
         case 4:
-            if (getMyColor(gameState) === 0) {    //we are playing white
+            if (getMyColor() === 0) {    //we are playing white
                 return "F9, F5"; //move the RIGHT 4
             } else {                               //we are playing black
                 return "E0, E4"; //move the RIGHT 4
             }
         case 5:     //here is where we take advantage of switch fallthrough (in 5 second cond isn't necessary, just for consistency)
-            if (getMyColor(gameState) === 0) {    //we are playing white
-                if (board[1][9] === "w3") {
+            if (getMyColor() === 0) {    //we are playing white
+                if (getCellValue(1, 9) === "w3") {
                     return "B9, E9"; //move the LEFT 3
                 }
             } else {                               //we are playing black
-                if (board[8][0] === "b3") {
+                if (getCellValue(8, 0) === "b3") {
                     return "I0, F0"; //move the LEFT 3
                 }
             }
         case 6:
-            if (getMyColor(gameState) === 0) {    //we are playing white
-                if (board[8][9] === "w3") {
+            if (getMyColor() === 0) {    //we are playing white
+                if (getCellValue(8, 9) === "w3") {
                     return "I9, F9"; //move the RIGHT 3
                 }
             } else {                               //we are playing black
-                if (board[1][0] === "b3") {
+                if (getCellValue(1, 0) === "b3") {
                     return "B0, E0"; //move the RIGHT 3
                 }
             }
         case 7:
-            if (getMyColor(gameState) === 0) {    //we are playing white
-                if (board[3][9] === "w1") {
+            if (getMyColor() === 0) {    //we are playing white
+                if (getCellValue(3, 9) === "w1") {
                     return "D9, C9"; //move the 1 blocking the OUTER 3
                 }
             } else {                               //we are playing black
-                if (board[6][0] === "b1") {
+                if (getCellValue(6, 0) === "b1") {
                     return "G0, H0"; //move the 1 blocking the OUTER 3
                 }
             }
         case 8:
-            if (getMyColor(gameState) === 0) {    //we are playing white
-                if (board[0][9] === "w3") {
+            if (getMyColor() === 0) {    //we are playing white
+                if (getCellValue(0, 9) === "w3") {
                     return "A9, D9"; //move the OUTER 3
                 }
             } else {                               //we are playing black
-                if (board[9][0] === "b3") {
+                if (getCellValue(9, 0) === "b3") {
                     return "J0, G0"; //move the OUTER 3
                 }
             }
         default:
+            var moves;
             if (isPlayerInCheck(getMyColor()) === TRUE) {        // Capture the opponent’s 1
                 moves = new Array(NUM_PIECES_PER_SIDE);
                 var movesAdded = 0;
