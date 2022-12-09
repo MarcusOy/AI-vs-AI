@@ -65,10 +65,14 @@ public class StrategyController : Controller
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
-        Strategy strat = s;
+        Strategy strat = _dbContext.Strategies
+                            .AsNoTracking()
+                            .FirstOrDefault(st => st.Id == s.Id);
+
         strat.Status = StrategyStatus.Active;
         strat.Elo = 0;
         strat = await _strategyService.UpdateAsync(strat);
+        _dbContext.ChangeTracker.Clear();
         await RunBattles(strat.GameId, strat);
 
         return strat;
@@ -90,9 +94,10 @@ public class StrategyController : Controller
     {
         var stratQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Active && s.GameId == gameId &&
-            (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"));
+            (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"))
+            .AsNoTracking();
 
-        List<Strategy> AllStrats = await stratQuery.ToListAsync();
+        List<Strategy> AllStrats = await stratQuery.AsNoTracking().ToListAsync();
 
         if (AllStrats.Count == 1)
         {
@@ -100,11 +105,16 @@ public class StrategyController : Controller
             return "OK";
         }
 
-        foreach (Strategy st in AllStrats)
-        {
-            st.Elo = 0;
-            await _strategyService.UpdateAsync(st);
-        }
+        // foreach (Strategy st in AllStrats)
+        // {
+        //     Strategy t = _dbContext.Strategies
+        //                     .AsNoTracking()
+        //                     .FirstOrDefault(str => str.Id == st.Id);
+        //     t.Elo = 0;
+
+        //     _dbContext.Strategies.Update(t);
+        //     await _dbContext.SaveChangesAsync();
+        // }
 
         for (int j = 0; j < AllStrats.Count; j++)
         {
@@ -149,14 +159,13 @@ public class StrategyController : Controller
                     DefendingStrategy = defending
                 };
 
-                _dbContext.Battles.Add(newBattle);
-                _dbContext.Add(newBattle);
-                _dbContext.SaveChanges();
+                await _dbContext.Battles.AddAsync(newBattle);
+                await _dbContext.SaveChangesAsync();
 
                 req.PendingBattle.AttackingStrategy.CreatedByUser = null;
                 req.PendingBattle.DefendingStrategy.CreatedByUser = null;
-                req.PendingBattle.AttackingStrategy.Game.Strategies = null;
-                req.PendingBattle.DefendingStrategy.Game.Strategies = null;
+                // req.PendingBattle.AttackingStrategy.Game.Strategies = null;
+                // req.PendingBattle.DefendingStrategy.Game.Strategies = null;
                 req.PendingBattle.AttackingStrategy.AttackerBattles = null;
                 req.PendingBattle.DefendingStrategy.AttackerBattles = null;
                 req.PendingBattle.AttackingStrategy.DefenderBattles = null;

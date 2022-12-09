@@ -51,6 +51,7 @@ namespace AVA.API.Consumers
                 else
                 {
                     await _battleService.UpdateAsync(context.Message.ResultingBattle);
+                    _dbContext.ChangeTracker.Clear();
                 }
                 _logger.LogInformation($"Resulting battle has been saved. {context.Message.ResultingBattle.Name}");
             }
@@ -84,7 +85,8 @@ namespace AVA.API.Consumers
             if (!context.Message.ResultingBattle.IsTestSubmission)
             {
                 var BattleListQuery = _dbContext.Battles
-                    .Where(b => b.BattleStatus == BattleStatus.Success && !b.IsTestSubmission);
+                    .Where(b => b.BattleStatus == BattleStatus.Success && !b.IsTestSubmission)
+                    .AsNoTracking();
 
                 List<Battle> BattleList = await BattleListQuery.ToListAsync();
 
@@ -93,8 +95,11 @@ namespace AVA.API.Consumers
                     Guid AttackerId = bt.AttackingStrategyId;
                     Guid DefenderId = bt.DefendingStrategyId;
 
-                    Strategy attacker = _strategyService.Get(AttackerId);
-                    Strategy defender = _strategyService.Get(DefenderId);
+                    Strategy attacker = _dbContext.Strategies
+                                            .FirstOrDefault(sa => sa.Id == AttackerId);
+
+                    Strategy defender = _dbContext.Strategies
+                                            .FirstOrDefault(sd => sd.Id == DefenderId);
 
                     if (attacker.Status == StrategyStatus.Active && defender.Status == StrategyStatus.Active)
                     {
@@ -104,28 +109,40 @@ namespace AVA.API.Consumers
                         int TotAttackerWins = 0;
                         int TotDefenderWins = 0;
 
-                        foreach (Battle AttackerAttackWins in attacker.AttackerBattles)
+                        if (attacker.AttackerBattles != null)
                         {
-                            // AttackerAttackWins.AttackingStrategy = null;
-                            TotAttackerWins += AttackerAttackWins.AttackerWins;
+                            foreach (Battle AttackerAttackWins in attacker.AttackerBattles)
+                            {
+                                // AttackerAttackWins.AttackingStrategy = null;
+                                TotAttackerWins += AttackerAttackWins.AttackerWins;
+                            }
                         }
 
-                        foreach (Battle AttackerDefenderWins in attacker.DefenderBattles)
+                        if (attacker.DefenderBattles != null)
                         {
-                            // AttackerDefenderWins.DefendingStrategy = null;
-                            TotAttackerWins += AttackerDefenderWins.DefenderWins;
+                            foreach (Battle AttackerDefenderWins in attacker.DefenderBattles)
+                            {
+                                // AttackerDefenderWins.DefendingStrategy = null;
+                                TotAttackerWins += AttackerDefenderWins.DefenderWins;
+                            }
                         }
 
-                        foreach (Battle DefenderAttackWins in defender.AttackerBattles)
+                        if (defender.AttackerBattles != null)
                         {
-                            // DefenderAttackWins.AttackingStrategy = null;
-                            TotDefenderWins += DefenderAttackWins.AttackerWins;
+                            foreach (Battle DefenderAttackWins in defender.AttackerBattles)
+                            {
+                                // DefenderAttackWins.AttackingStrategy = null;
+                                TotDefenderWins += DefenderAttackWins.AttackerWins;
+                            }
                         }
 
-                        foreach (Battle DefenderDefendWins in defender.AttackerBattles)
+                        if (defender.DefenderBattles != null)
                         {
-                            // DefenderDefendWins.DefendingStrategy = null;
-                            TotDefenderWins += DefenderDefendWins.DefenderWins;
+                            foreach (Battle DefenderDefendWins in defender.DefenderBattles)
+                            {
+                                // DefenderDefendWins.DefendingStrategy = null;
+                                TotDefenderWins += DefenderDefendWins.DefenderWins;
+                            }
                         }
 
                         int AttackerEloGen2 = bt.AttackerWins * TotDefenderWins + 1;
@@ -134,18 +151,18 @@ namespace AVA.API.Consumers
                         int FinalAttackerElo = AttackerEloGen1 + AttackerEloGen2;
                         int FinalDefenderElo = DefenderEloGen1 + DefenderEloGen2;
 
-                        attacker.Elo += FinalAttackerElo;
-                        defender.Elo += FinalDefenderElo;
-
                         var newAttacker = _dbContext.Strategies
+                                            .AsNoTracking()
                                             .FirstOrDefault(na => na.Id == attacker.Id);
 
                         var newDefender = _dbContext.Strategies
+                                            .AsNoTracking()
                                             .FirstOrDefault(nd => nd.Id == defender.Id);
 
                         newAttacker.Elo += FinalAttackerElo;
                         newDefender.Elo += FinalDefenderElo;
 
+                        _dbContext.ChangeTracker.Clear();
                         _dbContext.Strategies.Update(newAttacker);
                         _dbContext.Update(newAttacker);
                         _dbContext.Strategies.Update(newDefender);
@@ -154,12 +171,15 @@ namespace AVA.API.Consumers
                     }
                 }
 
-                Strategy GameStrat = _strategyService.Get(context.Message.ResultingBattle.AttackingStrategyId);
+                Strategy GameStrat = _dbContext.Strategies
+                                        .AsNoTracking()
+                                        .FirstOrDefault(g => g.Id == context.Message.ResultingBattle.AttackingStrategyId);
 
                 var StratQuery = _dbContext.Strategies
-                    .Where(s => s.Status == StrategyStatus.Active && s.GameId == GameStrat.GameId &&
-                    (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"))
-                    .OrderByDescending(s => s.Elo);
+                                    .Where(s => s.Status == StrategyStatus.Active && s.GameId == GameStrat.GameId &&
+                                    (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"))
+                                    .AsNoTracking()
+                                    .OrderByDescending(s => s.Elo);
 
                 List<Strategy> StratList = await StratQuery.ToListAsync();
 
@@ -171,9 +191,11 @@ namespace AVA.API.Consumers
                     tempStrat.Elo = (int)((0.5 + (mid - (x + 1))) * 10) + 1000;
 
                     var OriginalStrat = _dbContext.Strategies
+                                    .AsNoTracking()
                                     .FirstOrDefault(s => s.Id == tempStrat.Id);
 
                     OriginalStrat.Elo = tempStrat.Elo;
+                    _dbContext.ChangeTracker.Clear();
                     _dbContext.Strategies.Update(OriginalStrat);
                     _dbContext.Update(OriginalStrat);
                     await _dbContext.SaveChangesAsync();
