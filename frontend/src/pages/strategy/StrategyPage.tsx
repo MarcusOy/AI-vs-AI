@@ -216,9 +216,6 @@ const StrategyPage = () => {
                     </Stack>
                     <Box flexGrow={1} />
                     <HStack>
-                        <Button colorScheme='orange' onClick={matchMakingModal.onOpen}>
-                            Match Making
-                        </Button>
                         <Modal
                             initialFocusRef={initialRef}
                             finalFocusRef={finalRef}
@@ -244,7 +241,7 @@ const StrategyPage = () => {
                                     <Center>
                                         <ModalFooter>
                                             <Button
-                                                onClick={() => navigate(`/Result/${id}`)} 
+                                                onClick={() => navigate(`/Result/${id}`)}
                                                 colorScheme='orange'
                                                 mr={3}
                                             >

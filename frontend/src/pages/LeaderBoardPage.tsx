@@ -40,7 +40,7 @@ const LeaderBoardPage = () => {
                 </Flex>
             </Center>
 
-            <Box mx='100'>
+            <Box mx='50'>
                 <Stack alignItems='center'>
                     {error == undefined &&
                         StratList.map((s, i) => {
@@ -86,8 +86,7 @@ const LeaderBoardPage = () => {
                                                 {s.createdByUser?.username}
                                             </Text>
                                             {/* <Text>{r.title}</Text> */}
-
-                                            {s.name}
+                                            {i}. {s.name}
                                         </Box>
                                         <ArrowForwardIcon />
                                     </HStack>

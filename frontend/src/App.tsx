@@ -80,10 +80,10 @@ function App() {
                             <Route path='/Replay/:bid/:gnum' element={<ReplayWrapperPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
                             <Route path='/LeaderBoard/:id' element={<LeaderBoardPage />} />
-                            <Route
+                            {/* <Route
                                 path='/UnrankedGameResult/:id1/:id2'
                                 element={<UnrankedResult />}
-                            />
+                            /> */}
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>
