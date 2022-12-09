@@ -161,6 +161,7 @@ public class StrategyController : Controller
 
                 await _dbContext.Battles.AddAsync(newBattle);
                 await _dbContext.SaveChangesAsync();
+                _dbContext.ChangeTracker.Clear();
 
                 req.PendingBattle.AttackingStrategy.CreatedByUser = null;
                 req.PendingBattle.DefendingStrategy.CreatedByUser = null;
