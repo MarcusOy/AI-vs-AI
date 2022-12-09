@@ -127,7 +127,7 @@ public class SearchController : Controller
     {
         var uQuery = _dbContext.Users
             .Where(u => u.Active == true)
-            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Select(u => new InteractionResult
             {
                 Id = u.Id,
@@ -137,7 +137,7 @@ public class SearchController : Controller
 
         var cQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Draft)
-            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
@@ -147,7 +147,7 @@ public class SearchController : Controller
 
         var sQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Active)
-            .Where(u => u.UpdatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
