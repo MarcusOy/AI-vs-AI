@@ -45,18 +45,17 @@ namespace AVA.API.Services
                 .Include(s => s.CreatedByUser)
                 .Include(s => s.Game)
                 .Include(s => s.AttackerBattles)
-                .Include(s => s.DefenderBattles);
-            var a = s
+                .Include(s => s.DefenderBattles)
                 .FirstOrDefault(s => s.Id == id);
 
-            if (a is null)
+            if (s is null)
                 throw new InvalidOperationException($"Strategy id [{id}] not valid.");
 
             // prevent others from seeing source code of private strategies
             if (s.CreatedByUserId != _identityService.CurrentUser.Id && s.IsPrivate)
                 s.SourceCode = null;
 
-            return a;
+            return s;
         }
 
         // assumes that we are reserving certain names as prototype names
