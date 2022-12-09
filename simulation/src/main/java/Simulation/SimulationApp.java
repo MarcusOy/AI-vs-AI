@@ -62,7 +62,7 @@ public class SimulationApp {
     public static String ENV_USER = "AVA__RABBITMQ__USER";
     public static String ENV_PASS = "AVA__RABBITMQ__PASS";
     public static String ENV_PORT = "AVA__RABBITMQ__PORT";
-    
+
     public static String EXECUTION_TRACKER_VAR_NAME = "ExecString";
     public static String EXECUTION_TRACKER_FUNC_NAME = "get" + EXECUTION_TRACKER_VAR_NAME;
 
@@ -408,7 +408,7 @@ public class SimulationApp {
                     gameState.board[i][j] = curVal;
                 else
                     gameState.board[i][j] = curVal.substring(2); // assumes that the piece id is the first 2 chars of
-                                                                 // cellVal
+                // cellVal
 
                 String cellString = api.colAndRowToCell(i, j);
 
@@ -441,7 +441,7 @@ public class SimulationApp {
             for (int j = 0; j < responseBoard[i].length; j++) {
                 String requestVal = requestBoard[i][j];
                 String requestValSub = requestVal.length() == 0 ? requestVal : requestVal.substring(2); // assumes ID is
-                                                                                                        // first 2 chars
+                // first 2 chars
                 String responseVal = responseBoard[i][j];
                 boolean inReq = !requestVal.equals("");
                 boolean inResp = !responseVal.equals("");
@@ -452,7 +452,7 @@ public class SimulationApp {
                     responseBoard[i][j] = requestVal;
                 else if (inReq && !inResp
                         && getPieceColor((new API()).colAndRowToCell(i, j), reqIdlessBoard).equals(AIColor)) { // if moved
-                                                                                                             // from
+                    // from
                     preMovePieceString = requestVal;
                 } else if (inResp && changed) { // if moved to
                     postMovePieceString = responseVal;
@@ -582,11 +582,11 @@ public class SimulationApp {
             else if (JAVASCRIPT_STOCK) {
                 attackerStockOverride = false;
                 evaluatingAttacker = true;
-                String attackerSourceToUse = getMaliciousAI(5);//getRandomAIJS();
+                String attackerSourceToUse = getRandomAIJS();
                 sentBattle.attackingStrategySnapshot = attackerSourceToUse;
                 attackingSandbox = evaluateSourceCode(attackerSourceToUse, true, sentBattle);
                 evaluatingAttacker = false;
-                String defenderSourceToUse = getMaliciousAI(5);//getRandomAIJS();
+                String defenderSourceToUse = getRandomAIJS();
                 sentBattle.defendingStrategySnapshot = defenderSourceToUse;
                 defendingSandbox = evaluateSourceCode(defenderSourceToUse, false, sentBattle);
             }
@@ -707,16 +707,16 @@ public class SimulationApp {
 
         // test 1A
         board = new String[][]{
-            {"00b1", "01b1", "", "", "", "", "", "", "02w1", "03w3"},
-            {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
-            {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
-            {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
-            {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
-            {"20b4", "21b1", "", "", "", "", "", "", "22w1", "23w4"},
-            {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
-            {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
-            {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
-            {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
+                {"00b1", "01b1", "", "", "", "", "", "", "02w1", "03w3"},
+                {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
+                {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
+                {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
+                {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
+                {"20b4", "21b1", "", "", "", "", "", "", "22w1", "23w4"},
+                {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+                {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
+                {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
+                {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
         };
         isWhiteTurn = true;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
@@ -726,16 +726,16 @@ public class SimulationApp {
         // test 1B
         board = new String[][]{
                 {"00b1", "01b1", "", "", "", "", "", "", "02w1", "03w3"},
-    {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
-    {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
-    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
-    {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
-    {"20b4", "21b1", "", "", "", "23w4", "", "", "22w1", ""},
-    {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
-    {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
-    {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
-    {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
-};
+                {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
+                {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
+                {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
+                {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
+                {"20b4", "21b1", "", "", "", "23w4", "", "", "22w1", ""},
+                {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+                {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
+                {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
+                {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
+        };
         isWhiteTurn = false;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
         boolean passedTest1B = !result.isGameOver;
@@ -744,16 +744,16 @@ public class SimulationApp {
         // test 2A
         board = new String[][] {
                 {"", "", "", "", "", "", "", "", "02w1", ""},
-    {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
-    {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
-    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
-    {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
-    {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
-    {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
-    {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
-    {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
-    {"", "", "", "", "", "", "", "", "", "37b1"},
-};
+                {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
+                {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
+                {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
+                {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
+                {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
+                {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+                {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
+                {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
+                {"", "", "", "", "", "", "", "", "", "37b1"},
+        };
         isWhiteTurn = true;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
         boolean passedTest2A = ("E5, A9").equals(result.moveString);
@@ -762,16 +762,16 @@ public class SimulationApp {
         // test 2B
         board = new String[][] {
                 {"02w1", "", "", "", "", "", "", "", "", ""},
-    {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
-    {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
-    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
-    {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
-    {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
-    {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
-    {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
-    {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
-    {"", "37b1", "", "", "", "", "", "", "", ""},
-};
+                {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
+                {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
+                {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
+                {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
+                {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
+                {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+                {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
+                {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
+                {"", "37b1", "", "", "", "", "", "", "", ""},
+        };
         isWhiteTurn = false;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
         boolean passedTest2B = ("F4, J0").equals(result.moveString);
@@ -780,16 +780,16 @@ public class SimulationApp {
         // test 3A
         board = new String[][] {
                 {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "10w2", ""},
-    {"", "", "", "", "", "", "", "", "06w2", ""},
-    {"12b1", "", "", "", "16b4", "19w4", "", "11w2", "", ""},
-    {"24b1", "", "", "", "20b4", "23w4", "", "31w2", "", ""},
-    {"", "", "", "", "", "", "36b3", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", "39w1"},
-};
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "10w2", ""},
+                {"", "", "", "", "", "", "", "", "06w2", ""},
+                {"12b1", "", "", "", "16b4", "19w4", "", "11w2", "", ""},
+                {"24b1", "", "", "", "20b4", "23w4", "", "31w2", "", ""},
+                {"", "", "", "", "", "", "36b3", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", "39w1"},
+        };
         isWhiteTurn = true;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
         boolean passedTest3A = ("A9, A8").equals(result.moveString);
@@ -798,16 +798,16 @@ public class SimulationApp {
         // test 3B
         board = new String[][] {
                 {"00b1", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "03w3", "", "", "", "", "", ""},
-    {"", "", "08b2", "", "16b4", "19w4", "", "", "", "15w1"},
-    {"", "", "28b2", "", "20b4", "23w4", "", "", "", "27w1"},
-    {"", "33b2", "", "", "", "", "", "", "", ""},
-    {"", "29b2", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-    {"", "", "", "", "", "", "", "", "", ""},
-};
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "03w3", "", "", "", "", "", ""},
+                {"", "", "08b2", "", "16b4", "19w4", "", "", "", "15w1"},
+                {"", "", "28b2", "", "20b4", "23w4", "", "", "", "27w1"},
+                {"", "33b2", "", "", "", "", "", "", "", ""},
+                {"", "29b2", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", ""},
+                {"", "", "", "", "", "", "", "", "", ""},
+        };
         isWhiteTurn = false;
         result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
         boolean passedTest3B = ("J0, J1").equals(result.moveString);
@@ -1081,22 +1081,22 @@ public class SimulationApp {
 
         }
         else { */   // inject line tracking code
-            //System.out.println("input: " + strategySource);
-            //System.out.println("TEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\n");
-            battle.setupLineNumConversionList(isAttacker, strategySource);
-            //System.out.println("\n\n\n\noutput: " + strategySource);
-            //try {
-                sandbox.eval(strategySource);
-                processStrategySource(sandbox, compressedExecutionTraceHolder);
-                String executionTrace = compressedExecutionTraceHolder[0];//sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
-                //String rawExecutionTrace = executionTrace;
-                //System.out.println("Executed Lines: " + executionTrace);
-                //executionTrace = compressExecutionTraceCycles(executionTrace);
-                //System.out.println("CompressedCycles: " + executionTrace);
-                //executionTrace = compressExecutionTraceConsecutive(executionTrace);
-                //System.out.println("Compressed: " + executionTrace);
-                //rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
-                //System.out.println("Minimal: " + rawExecutionTrace);
+        //System.out.println("input: " + strategySource);
+        //System.out.println("TEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\n");
+        battle.setupLineNumConversionList(isAttacker, strategySource);
+        //System.out.println("\n\n\n\noutput: " + strategySource);
+        //try {
+        sandbox.eval(strategySource);
+        processStrategySource(sandbox, compressedExecutionTraceHolder);
+        String executionTrace = compressedExecutionTraceHolder[0];//sandbox.getSandboxedInvocable().invokeFunction(EXECUTION_TRACKER_FUNC_NAME).toString();
+        //String rawExecutionTrace = executionTrace;
+        //System.out.println("Executed Lines: " + executionTrace);
+        //executionTrace = compressExecutionTraceCycles(executionTrace);
+        //System.out.println("CompressedCycles: " + executionTrace);
+        //executionTrace = compressExecutionTraceConsecutive(executionTrace);
+        //System.out.println("Compressed: " + executionTrace);
+        //rawExecutionTrace = getMinimalExecutionTrace(rawExecutionTrace);
+        //System.out.println("Minimal: " + rawExecutionTrace);
             /*} catch (Exception e) {
                 e.printStackTrace();
             }*/
@@ -1454,7 +1454,7 @@ public class SimulationApp {
         // detects cycles
         PriorityQueue<CycleInfo> cycleInfoHeap = new PriorityQueue<>();
         // looks for cycles that start with the line number stored in lineStringsToCheck.get(i).
-            // this is unique in the lineStringsToCheck list
+        // this is unique in the lineStringsToCheck list
         for (int i = 0; i < lineStringsToCheck.size(); i++) {
             ArrayList<String> curSubList = lineStringsToCheck.get(i);
 
@@ -1633,27 +1633,27 @@ public class SimulationApp {
             String cycleStringNoDigits = "";
             //try {
             // removes {<splitArrIndex>} if there
-                int cycleOpenIndex = -1;
-                int cycleCloseIndex = curLineString.indexOf(CycleInfo.REPETITION_END_CHAR);
+            int cycleOpenIndex = -1;
+            int cycleCloseIndex = curLineString.indexOf(CycleInfo.REPETITION_END_CHAR);
 
-                String adjustedIntString = curLineString;
-                int curCycleOpenIndex;
-                String curCycleStartString = curLineString;
-                while ((curCycleOpenIndex = curCycleStartString.indexOf(CycleInfo.REPETITION_START_CHAR)) >= 0) {
-                    adjustedIntString = curCycleStartString.substring(curCycleOpenIndex + 1);
-                    cycleStringNoDigits += curCycleStartString.substring(0, curCycleOpenIndex + 1);
-                    curCycleStartString = adjustedIntString;
-                    startingOrEndingCycle = true;
-                    cycleOpenIndex = curCycleOpenIndex;
-                }
-                if (cycleCloseIndex >= 0) {
-                    adjustedIntString = curLineString.substring(0, cycleCloseIndex);
-                    cycleStringNoDigits = curLineString.substring(cycleCloseIndex);
-                    startingOrEndingCycle = true;
-                }
-                //curLineNumFromCycle = Integer.parseInt(adjustedIntString);
+            String adjustedIntString = curLineString;
+            int curCycleOpenIndex;
+            String curCycleStartString = curLineString;
+            while ((curCycleOpenIndex = curCycleStartString.indexOf(CycleInfo.REPETITION_START_CHAR)) >= 0) {
+                adjustedIntString = curCycleStartString.substring(curCycleOpenIndex + 1);
+                cycleStringNoDigits += curCycleStartString.substring(0, curCycleOpenIndex + 1);
+                curCycleStartString = adjustedIntString;
+                startingOrEndingCycle = true;
+                cycleOpenIndex = curCycleOpenIndex;
+            }
+            if (cycleCloseIndex >= 0) {
+                adjustedIntString = curLineString.substring(0, cycleCloseIndex);
+                cycleStringNoDigits = curLineString.substring(cycleCloseIndex);
+                startingOrEndingCycle = true;
+            }
+            //curLineNumFromCycle = Integer.parseInt(adjustedIntString);
 
-                curLineNum = Integer.parseInt(adjustedIntString);
+            curLineNum = Integer.parseInt(adjustedIntString);
             /*} catch (Exception e) {
                 curLineNum = -5;
             }*/
@@ -1897,8 +1897,8 @@ public class SimulationApp {
         }
 
         // detects a repeated move (cycle)
-            // this is if this player's previous and current moves match this player's 2 moves before that
-            // this indicates that a strategy is moving a piece back and forth repeatedly
+        // this is if this player's previous and current moves match this player's 2 moves before that
+        // this indicates that a strategy is moving a piece back and forth repeatedly
         if (battleGame != null) {
             ArrayList<Turn> turns = battleGame.turns;
             Color currentColor = getPlayerColor(gameState.currentPlayer);
@@ -2087,7 +2087,7 @@ public class SimulationApp {
         boolean movingPieceNotFarEnough = ((0 < Math.abs(cellToRow(fromCell) - cellToRow(toCell))
                 && Math.abs(cellToRow(fromCell) - cellToRow(toCell)) < pieceMoveDistance)
                 || (0 < Math.abs(cellToCol(fromCell) - cellToCol(toCell))
-                        && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
+                && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) < pieceMoveDistance));
 
         if (movingPieceNotFarEnough) {
             debugPrintln("Trying to move piece not far enough");
@@ -5744,145 +5744,145 @@ public class SimulationApp {
                 "    return moves[Math.floor((Math.random() * moves.length))];\n" +
                 "}" +
                 "var turnNumber = -1;\n" +
-                        "\n" +
-                        "function getMove() {\n" +
-                        "     console.log(\"turnNumber: \" + turnNumber);" +
-                        "    turnNumber++;\n" +
-                        "\n" +
-                        "    var board = getBoard();\n" +
-                        "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
-                        "\n" +
-                        "    switch (turnNumber) {\n" +
-                        "        case 1:\n" +
-                        "            if (getMyColor() === 0) {    //we are playing white\n" +
-                        "                if (board[1][3] === (\"b3\") || board[4][3] === (\"b3\")) {\n" +
-                        "                    return \"F9, F5\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
-                        "                } else if (board[5][3] === \"b3\" || board[9][3] === \"b3\") {\n" +
-                        "                    return \"E9, E5\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
-                        "                } else {\n" +
-                        "                    moves = new Array(\"E9, E5\", \"F9, F5\");      //pick randomly\n" +
+                "\n" +
+                "function getMove() {\n" +
+                "     console.log(\"turnNumber: \" + turnNumber);" +
+                "    turnNumber++;\n" +
+                "\n" +
+                "    var board = getBoard();\n" +
+                "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
+                "\n" +
+                "    switch (turnNumber) {\n" +
+                "        case 1:\n" +
+                "            if (getMyColor() === 0) {    //we are playing white\n" +
+                "                if (board[1][3] === (\"b3\") || board[4][3] === (\"b3\")) {\n" +
+                "                    return \"F9, F5\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
+                "                } else if (board[5][3] === \"b3\" || board[9][3] === \"b3\") {\n" +
+                "                    return \"E9, E5\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
+                "                } else {\n" +
+                "                    moves = new Array(\"E9, E5\", \"F9, F5\");      //pick randomly\n" +
                 "     console.log(\"moves: \" + moves);\n" +
-                        "                    return moves[Math.floor((Math.random() * moves.length))];\n" +
-                        "                }\n" +
-                        "            } else {                            //we are playing black\n" +
-                        "                if (board[1][6] === (\"w3\") || board[4][6] === (\"w3\")) {\n" +
-                        "                    return \"F0, F4\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
-                        "                } else if (board[5][6] === (\"w3\") || board[9][6] === (\"w3\")) {\n" +
-                        "                    return \"E0, E4\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
-                        "                } else {\n" +
-                        "                    moves = new Array(\"E0, E4\", \"F0, F4\");      //pick randomly\n" +
+                "                    return moves[Math.floor((Math.random() * moves.length))];\n" +
+                "                }\n" +
+                "            } else {                            //we are playing black\n" +
+                "                if (board[1][6] === (\"w3\") || board[4][6] === (\"w3\")) {\n" +
+                "                    return \"F0, F4\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
+                "                } else if (board[5][6] === (\"w3\") || board[9][6] === (\"w3\")) {\n" +
+                "                    return \"E0, E4\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
+                "                } else {\n" +
+                "                    moves = new Array(\"E0, E4\", \"F0, F4\");      //pick randomly\n" +
                 "     console.log(\"moves: \" + moves);\n" +
-                        "                    return moves[Math.floor((Math.random() * moves.length))];\n" +
-                        "                }\n" +
-                        "            }\n" +
-                        "        case 2:\n" +
-                        "            if (getMyColor() === 0) {    //we are playing white\n" +
-                        "                if (board[5][5] === \"w4\") {      //we moved the RIGHT 4 for our first move\n" +
-                        "                    if (board[5][3] === \"b3\" || board[9][3] === \"b3\") {\n" +
-                        "                        return \"E9, E5\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
-                        "                    } else {                    //otherwise move the RIGHT 2\n" +
-                        "                        return \"H9, F9\";\n" +
-                        "                    }\n" +
-                        "                } else if (board[4][5] === \"w4\") {                     //we moved the LEFT 4 for our first move\n" +
-                        "                    if (board[1][3] === \"b3\" || board[4][3] === \"b3\") {\n" +
-                        "                        return \"F9, F5\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
-                        "                    } else {                    //otherwise move the LEFT 2\n" +
-                        "                        return \"C9, E9\";\n" +
-                        "                    }\n" +
-                        "                }\n" +
-                        "            } else {                            //we are playing black\n" +
-                        "                if (board[5][4] === \"b4\") {      //we moved the RIGHT 4 for our first move\n" +
-                        "                    if (board[5][6] === \"w3\" || board[9][6] === \"w3\") {\n" +
-                        "                        return \"E0, E4\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
-                        "                    } else {                    //otherwise move the RIGHT 2\n" +
-                        "                        return \"H0, F0\";\n" +
-                        "                    }\n" +
-                        "                } else if (board[4][4] === \"b4\") {                     //we moved the LEFT 4 for our first move\n" +
-                        "                    if (board[1][6] === \"w3\" || board[4][6] === \"w3\") {\n" +
-                        "                        return \"F0, F4\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
-                        "                    } else {                    //otherwise move the LEFT 2\n" +
-                        "                        return \"C0, E0\";\n" +
-                        "                    }\n" +
-                        "                }\n" +
-                        "            }\n" +
-                        "        case 3:\n" +
-                        "            if (getMyColor() === 0) {    //we are playing white\n" +
-                        "                if (board[5][9] === \"w2\") {      //we moved the RIGHT 2 for our second move\n" +
-                        "                    return \"E9, E5\";            //move the LEFT 4\n" +
-                        "                } else if (board[4][9] === \"w2\") { //we moved the LEFT 2 for our second move\n" +
-                        "                    return \"F9, F5\";            //move the RIGHT 4\n" +
-                        "                } else {\n" +
-                        "                    moves = new Array(\"H9, F9\", \"C9, E9\");      //let's just move a random 2 and hope for the best =)\n" +
-                        "                    return moves[Math.floor(Math.random() * moves.length)];\n" +
-                        "                }\n" +
-                        "            } else {                            //we are playing black\n" +
-                        "                if (board[5][0] === \"b2\") {      //we moved the RIGHT 2 for our second move\n" +
-                        "                    return \"E0, E4\";            //move the LEFT 4\n" +
-                        "                } else if (board[4][0] === \"b2\") { //we moved the LEFT 2 for our second move\n" +
-                        "                    return \"F0, F4\";            //move the RIGHT 4\n" +
-                        "                } else {\n" +
-                        "                    moves = new Array(\"H0, F0\", \"C0, E0\");      //let's just move a random 2 and hope for the best =)\n" +
-                        "                    return moves[Math.floor(Math.random() * moves.length)];\n" +
-                        "                }\n" +
-                        "            }\n" +
-                        "        case 4:\n" +
-                        "            if (getMyColor() === 0) {    //we are playing white\n" +
-                        "                if (board[5][9] === \"w2\") {      //we moved the RIGHT 2 already\n" +
-                        "                    return \"C9, E9\";            //move the LEFT 2\n" +
-                        "                } else {\n" +
-                        "                    return \"H9, F9\";            //move the RIGHT 2\n" +
-                        "                }\n" +
-                        "            } else {\n" +
-                        "                if (board[5][0] === \"b2\") {      //we moved the RIGHT 2 already\n" +
-                        "                    return \"C0, E0\";            //move the LEFT 2\n" +
-                        "                } else {\n" +
-                        "                    return \"H0, F0\";            //move the RIGHT 2\n" +
-                        "                }\n" +
-                        "            }\n" +
-                        "        default:\n" +
-                        "            if (isPlayerInCheck(getMyColor()) === TRUE) {        // Capture the opponent’s 1\n" +
-                        "                moves = new Array();\n" +
-                        "                for (var i = 0; i < pieceLocations.length; i++) {\n" +
-                        "                    var location = pieceLocations[i];\n" +
-                        "\n" +
-                        "                    var validMoves = getValidMoves(location, getMyColor(), null);\n" +
-                        "                    for (var j = 0; j < validMoves.length; j++) {\n" +
-                        "                        var move = validMoves[j];\n" +
-                        "\n" +
-                        "                        moves.push(location + \", \" + move);\n" +
-                        "                    }\n" +
-                        "                }\n" +
-                        "                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated\n" +
-                        "                    return \"CHECKMATED\";\n" +
-                        "                }\n" +
-                        "                return moves[Math.floor(Math.random() * moves.length)];\n" +
-                        "            } else {\n" +
-                        "                moves = new Array();\n" +
-                        "                for (var i = 0; i < pieceLocations.length; i++) {\n" +
-                        "                    var location = pieceLocations[i];\n" +
-                        "\n" +
-                        "                    var piece = getPieceMoveDistance(location);\n" +
-                        "                    if (piece === 4) {                   //do not move pieces that are part of the formation\n" +
-                        "                        continue;\n" +
-                        "                    }\n" +
-                        "                    if (piece === 2 && cellToRow(location) % 2 !== getMyColor()) {   //neat way to check which parity of 2s\n" +
-                        "                        continue;\n" +
-                        "                    }\n" +
-                        "\n" +
-                        "                    var validMoves = getValidMoves(location, getMyColor());\n" +
-                        "                    for (var j = 0; j < validMoves.length; j++) {\n" +
-                        "                        var move = validMoves[j];\n" +
-                        "\n" +
-                        "                        moves.push(location + \", \" + move);\n" +
-                        "                    }\n" +
-                        "                }\n" +
-                        "                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated\n" +
-                        "                    return moves + \"     \" + pieceLocations + \"     \" + moves.length + \"  \" + \"CHECKMATED\";\n" +
-                        "                }\n" +
-                        "                return moves[Math.floor(Math.random() * moves.length)];\n" +
-                        "            }\n" +
-                        "    }\n" +
-                        "}";
+                "                    return moves[Math.floor((Math.random() * moves.length))];\n" +
+                "                }\n" +
+                "            }\n" +
+                "        case 2:\n" +
+                "            if (getMyColor() === 0) {    //we are playing white\n" +
+                "                if (board[5][5] === \"w4\") {      //we moved the RIGHT 4 for our first move\n" +
+                "                    if (board[5][3] === \"b3\" || board[9][3] === \"b3\") {\n" +
+                "                        return \"E9, E5\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
+                "                    } else {                    //otherwise move the RIGHT 2\n" +
+                "                        return \"H9, F9\";\n" +
+                "                    }\n" +
+                "                } else if (board[4][5] === \"w4\") {                     //we moved the LEFT 4 for our first move\n" +
+                "                    if (board[1][3] === \"b3\" || board[4][3] === \"b3\") {\n" +
+                "                        return \"F9, F5\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
+                "                    } else {                    //otherwise move the LEFT 2\n" +
+                "                        return \"C9, E9\";\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            } else {                            //we are playing black\n" +
+                "                if (board[5][4] === \"b4\") {      //we moved the RIGHT 4 for our first move\n" +
+                "                    if (board[5][6] === \"w3\" || board[9][6] === \"w3\") {\n" +
+                "                        return \"E0, E4\";            //move the LEFT 4 if opponent moved the RIGHT 3\n" +
+                "                    } else {                    //otherwise move the RIGHT 2\n" +
+                "                        return \"H0, F0\";\n" +
+                "                    }\n" +
+                "                } else if (board[4][4] === \"b4\") {                     //we moved the LEFT 4 for our first move\n" +
+                "                    if (board[1][6] === \"w3\" || board[4][6] === \"w3\") {\n" +
+                "                        return \"F0, F4\";            //move the RIGHT 4 if opponent moved the LEFT 3\n" +
+                "                    } else {                    //otherwise move the LEFT 2\n" +
+                "                        return \"C0, E0\";\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            }\n" +
+                "        case 3:\n" +
+                "            if (getMyColor() === 0) {    //we are playing white\n" +
+                "                if (board[5][9] === \"w2\") {      //we moved the RIGHT 2 for our second move\n" +
+                "                    return \"E9, E5\";            //move the LEFT 4\n" +
+                "                } else if (board[4][9] === \"w2\") { //we moved the LEFT 2 for our second move\n" +
+                "                    return \"F9, F5\";            //move the RIGHT 4\n" +
+                "                } else {\n" +
+                "                    moves = new Array(\"H9, F9\", \"C9, E9\");      //let's just move a random 2 and hope for the best =)\n" +
+                "                    return moves[Math.floor(Math.random() * moves.length)];\n" +
+                "                }\n" +
+                "            } else {                            //we are playing black\n" +
+                "                if (board[5][0] === \"b2\") {      //we moved the RIGHT 2 for our second move\n" +
+                "                    return \"E0, E4\";            //move the LEFT 4\n" +
+                "                } else if (board[4][0] === \"b2\") { //we moved the LEFT 2 for our second move\n" +
+                "                    return \"F0, F4\";            //move the RIGHT 4\n" +
+                "                } else {\n" +
+                "                    moves = new Array(\"H0, F0\", \"C0, E0\");      //let's just move a random 2 and hope for the best =)\n" +
+                "                    return moves[Math.floor(Math.random() * moves.length)];\n" +
+                "                }\n" +
+                "            }\n" +
+                "        case 4:\n" +
+                "            if (getMyColor() === 0) {    //we are playing white\n" +
+                "                if (board[5][9] === \"w2\") {      //we moved the RIGHT 2 already\n" +
+                "                    return \"C9, E9\";            //move the LEFT 2\n" +
+                "                } else {\n" +
+                "                    return \"H9, F9\";            //move the RIGHT 2\n" +
+                "                }\n" +
+                "            } else {\n" +
+                "                if (board[5][0] === \"b2\") {      //we moved the RIGHT 2 already\n" +
+                "                    return \"C0, E0\";            //move the LEFT 2\n" +
+                "                } else {\n" +
+                "                    return \"H0, F0\";            //move the RIGHT 2\n" +
+                "                }\n" +
+                "            }\n" +
+                "        default:\n" +
+                "            if (isPlayerInCheck(getMyColor()) === TRUE) {        // Capture the opponent’s 1\n" +
+                "                moves = new Array();\n" +
+                "                for (var i = 0; i < pieceLocations.length; i++) {\n" +
+                "                    var location = pieceLocations[i];\n" +
+                "\n" +
+                "                    var validMoves = getValidMoves(location, getMyColor(), null);\n" +
+                "                    for (var j = 0; j < validMoves.length; j++) {\n" +
+                "                        var move = validMoves[j];\n" +
+                "\n" +
+                "                        moves.push(location + \", \" + move);\n" +
+                "                    }\n" +
+                "                }\n" +
+                "                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated\n" +
+                "                    return \"CHECKMATED\";\n" +
+                "                }\n" +
+                "                return moves[Math.floor(Math.random() * moves.length)];\n" +
+                "            } else {\n" +
+                "                moves = new Array();\n" +
+                "                for (var i = 0; i < pieceLocations.length; i++) {\n" +
+                "                    var location = pieceLocations[i];\n" +
+                "\n" +
+                "                    var piece = getPieceMoveDistance(location);\n" +
+                "                    if (piece === 4) {                   //do not move pieces that are part of the formation\n" +
+                "                        continue;\n" +
+                "                    }\n" +
+                "                    if (piece === 2 && cellToRow(location) % 2 !== getMyColor()) {   //neat way to check which parity of 2s\n" +
+                "                        continue;\n" +
+                "                    }\n" +
+                "\n" +
+                "                    var validMoves = getValidMoves(location, getMyColor());\n" +
+                "                    for (var j = 0; j < validMoves.length; j++) {\n" +
+                "                        var move = validMoves[j];\n" +
+                "\n" +
+                "                        moves.push(location + \", \" + move);\n" +
+                "                    }\n" +
+                "                }\n" +
+                "                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated\n" +
+                "                    return moves + \"     \" + pieceLocations + \"     \" + moves.length + \"  \" + \"CHECKMATED\";\n" +
+                "                }\n" +
+                "                return moves[Math.floor(Math.random() * moves.length)];\n" +
+                "            }\n" +
+                "    }\n" +
+                "}";
 
         if (num == 1)
             return m1;
