@@ -12,6 +12,9 @@ import {
     Image,
     ButtonGroup,
     Button,
+    UnorderedList,
+    ListItem,
+    OrderedList,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
 
@@ -196,6 +199,32 @@ const GameObjectivePage = () => {
     )
 }
 
+const GameMiscellaneousPage = () => {
+    return (
+        <Stack>
+            <Text>A few more miscellaneous rules:</Text>
+
+            <UnorderedList pl={4}>
+                <ListItem>
+                    In the unlikely event that a player captures the opponent&apos;s last 1-piece
+                    with the player&apos;s last 1-piece, causing both to be removed from play, the
+                    player who just moved and made the capture wins
+                </ListItem>
+                <ListItem>
+                    In the unlikely event 1000 moves get played without someone winning, a
+                    tiebreaker occurs to decide who won. The tiebreakers are in order:
+                </ListItem>
+            </UnorderedList>
+            <OrderedList pl={12}>
+                <ListItem>Most 1-pieces remaining</ListItem>
+                <ListItem>Most pieces remaining</ListItem>
+                <ListItem>Farthest advanced 1-piece by row</ListItem>
+                <ListItem>Black</ListItem>
+            </OrderedList>
+        </Stack>
+    )
+}
+
 const pages = [
     {
         title: 'Overview',
@@ -213,6 +242,10 @@ const pages = [
         title: 'Objectives',
         component: <GameObjectivePage />,
     },
+    {
+        title: 'Miscellaneous',
+        component: <GameMiscellaneousPage />,
+    },
 ]
 
 const GameRulesTab = () => {
@@ -226,36 +259,40 @@ const GameRulesTab = () => {
     }
 
     return (
-        <Flex h='100%' flexDir='column'>
-            <Heading fontSize='lg'>1234Chess</Heading>
-            <Box my={5} flexGrow={1}>
-                {pages[index].component}
-            </Box>
-            <HStack>
-                <IconButton
-                    aria-label='Go forward a page'
-                    icon={<ChevronLeftIcon w='7' h='7' />}
-                    variant='ghost'
-                    onClick={goBack}
-                    isDisabled={index <= 0}
-                />
-                <Stack flexGrow={1}>
-                    <Center>
-                        <Heading fontSize='sm'>
-                            {index + 1}. {pages[index].title}
-                        </Heading>
-                    </Center>
-                    <Progress value={((index + 1) / pages.length) * 100} size='xs' />
+        <Box h='100%'>
+            <Flex h='100%' justifyContent='center'>
+                <Stack spacing='5' flexGrow={1} maxW='sm'>
+                    <Heading fontSize='lg'>1234Chess</Heading>
+                    <Box my={5} flexGrow={1}>
+                        {pages[index].component}
+                    </Box>
+                    <HStack>
+                        <IconButton
+                            aria-label='Go forward a page'
+                            icon={<ChevronLeftIcon w='7' h='7' />}
+                            variant='ghost'
+                            onClick={goBack}
+                            isDisabled={index <= 0}
+                        />
+                        <Stack flexGrow={1}>
+                            <Center>
+                                <Heading fontSize='sm'>
+                                    {index + 1}. {pages[index].title}
+                                </Heading>
+                            </Center>
+                            <Progress value={((index + 1) / pages.length) * 100} size='xs' />
+                        </Stack>
+                        <IconButton
+                            aria-label='Go back a page'
+                            icon={<ChevronRightIcon w='7' h='7' />}
+                            variant='ghost'
+                            onClick={goForward}
+                            isDisabled={index >= pages.length - 1}
+                        />
+                    </HStack>
                 </Stack>
-                <IconButton
-                    aria-label='Go back a page'
-                    icon={<ChevronRightIcon w='7' h='7' />}
-                    variant='ghost'
-                    onClick={goForward}
-                    isDisabled={index >= pages.length - 1}
-                />
-            </HStack>
-        </Flex>
+            </Flex>
+        </Box>
     )
 }
 

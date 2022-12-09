@@ -30,7 +30,7 @@ class Stack<T> implements IStack<T> {
     }
 }
 
-function decompressExecTrace(compressedExecTrace: string): string {
+export function decompressExecTrace(compressedExecTrace: string): string {
     const result: string = ''
     const pipeSplit: string[] = compressedExecTrace.split('|')
     let workingString: string = compressedExecTrace
@@ -160,7 +160,7 @@ function lineNumberFrequency(input: string) {
     return { frequencies: hash, min, max }
 }
 
-function lineNumberColors(input: string) {
+export function lineNumberColors(input: string) {
     const { frequencies, min, max } = lineNumberFrequency(input)
     const keys = Object.keys(frequencies)
 
@@ -195,5 +195,3 @@ function colorInterpolate(colorA, colorB, intval) {
     const colorVal = (prop) => Math.round(rgbA[prop] * (1 - intval) + rgbB[prop] * intval)
     return `rgb(${colorVal('r')},${colorVal('g')},${colorVal('b')})`
 }
-
-export default lineNumberColors

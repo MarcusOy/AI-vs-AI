@@ -20,6 +20,7 @@ import {
     Heading,
     Center,
     Text,
+    Spacer,
 } from '@chakra-ui/react'
 import { GoLock } from 'react-icons/go'
 import { FaChessBoard } from 'react-icons/fa'
@@ -36,6 +37,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Battle } from '../models/battle'
 import useDocumentTitle from '../hooks/useDocumentTitle'
 import ReplayPageCodeViewer from '../components/ReplayPageCodeViewer'
+import { Code, vs2015 } from 'react-code-blocks'
 
 export const BOARD_SIZES = {
     DEFAULT: 600, // for replay view
@@ -285,46 +287,64 @@ const ReplayPage = (p: IReplayPageProps) => {
             <Box bg='whiteAlpha.200' flexGrow={1} ml='6' mr='3' borderRadius={3}>
                 <Stack p='3'>
                     <HStack>
-                        <Box
-                            w='5'
-                            h='5'
-                            borderRadius='5'
-                            borderColor={GAME_COLORS.BLACK_PIECE.STROKE}
-                            borderWidth='2px'
-                            backgroundColor={GAME_COLORS.BLACK_PIECE.FILL}
-                        />
-                        {!battleGame.isAttackerWhite ? (
-                            <TbSword size='15' />
-                        ) : (
-                            <TbShield size='15' />
+                        <Stack>
+                            <HStack>
+                                <Box
+                                    w='5'
+                                    h='5'
+                                    borderRadius='5'
+                                    borderColor={GAME_COLORS.BLACK_PIECE.STROKE}
+                                    borderWidth='2px'
+                                    backgroundColor={GAME_COLORS.BLACK_PIECE.FILL}
+                                />
+                                {!battleGame.isAttackerWhite ? (
+                                    <TbSword size='15' />
+                                ) : (
+                                    <TbShield size='15' />
+                                )}
+                                <Text>
+                                    {!battleGame.isAttackerWhite
+                                        ? battle.attackingStrategy.name
+                                        : battle.defendingStrategy.name}
+                                </Text>
+                                {currentTurn > 0 && !isWhiteTurn && <ArrowBackIcon w={5} h={5} />}
+                            </HStack>
+                            <HStack>
+                                <Box
+                                    w='5'
+                                    h='5'
+                                    borderRadius='5'
+                                    borderColor={GAME_COLORS.WHITE_PIECE.STROKE}
+                                    borderWidth='2px'
+                                    backgroundColor={GAME_COLORS.WHITE_PIECE.FILL}
+                                />
+                                {battleGame.isAttackerWhite ? (
+                                    <TbSword size='15' />
+                                ) : (
+                                    <TbShield size='15' />
+                                )}
+                                <Text>
+                                    {battleGame.isAttackerWhite
+                                        ? battle.attackingStrategy.name
+                                        : battle.defendingStrategy.name}
+                                </Text>
+                                {currentTurn > 0 && isWhiteTurn && <ArrowBackIcon w={5} h={5} />}
+                            </HStack>
+                        </Stack>
+                        <Spacer />
+                        {turns && currentTurn > 0 && (
+                            <Stack>
+                                <Text>{isWhiteTurn ? 'White' : 'Black'} returned:</Text>
+                                <Code
+                                    customStyle={{
+                                        textAlign: 'center',
+                                    }}
+                                    text={`"${turns[currentTurn - 1].turnData}"`}
+                                    language='javascript'
+                                    theme={vs2015}
+                                />
+                            </Stack>
                         )}
-                        <Text>
-                            {!battleGame.isAttackerWhite
-                                ? battle.attackingStrategy.name
-                                : battle.defendingStrategy.name}
-                        </Text>
-                        {currentTurn > 0 && !isWhiteTurn && <ArrowBackIcon w={5} h={5} />}
-                    </HStack>
-                    <HStack>
-                        <Box
-                            w='5'
-                            h='5'
-                            borderRadius='5'
-                            borderColor={GAME_COLORS.WHITE_PIECE.STROKE}
-                            borderWidth='2px'
-                            backgroundColor={GAME_COLORS.WHITE_PIECE.FILL}
-                        />
-                        {battleGame.isAttackerWhite ? (
-                            <TbSword size='15' />
-                        ) : (
-                            <TbShield size='15' />
-                        )}
-                        <Text>
-                            {battleGame.isAttackerWhite
-                                ? battle.attackingStrategy.name
-                                : battle.defendingStrategy.name}
-                        </Text>
-                        {currentTurn > 0 && isWhiteTurn && <ArrowBackIcon w={5} h={5} />}
                     </HStack>
                     <Text fontSize='xs'>
                         {didBlackWin ? 'Black' : 'White'} won by{' '}
