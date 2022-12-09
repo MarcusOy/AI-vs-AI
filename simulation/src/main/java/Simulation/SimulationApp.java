@@ -822,17 +822,13 @@ public class SimulationApp {
 
         boolean errorInSource = false;
         // temp battle so processBattleStrategies can be used
-        Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", strategyId, null, strategySnapshot, null, null, false);
-
-        // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
-        errorInSource = !processBattleStrategies(tempBattle);
+        Battle tempBattle = new Battle(1, "No Attacker for Test Suite", strategyId, null, strategySnapshot, null, null, false);
 
         // resets execTrace and stackTrace
         compressedExecutionTraceHolder = new String[3];
 
         Color potentialWinner = null;
-        if (!errorInSource) // only runs the turn if there isn't invalid source to run
-            potentialWinner = playTurn(true, false, null, null);
+        potentialWinner = playTurn(true, false, tempBattle, tempBattle.battleGames.get(0));
 
         String[][] responseBoard = addPieceIds(board, reqIdlessBoard, isWhiteTurn);
         SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,

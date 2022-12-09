@@ -93,37 +93,26 @@ function getMove() {
             }
         default:
             if (isPlayerInCheck(getMyColor()) === TRUE) {        // Capture the opponent’s 1
-                moves = new Array(NUM_PIECES_PER_SIDE);
-                var movesAdded = 0;
-                for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
+                moves = new Array();
+                for (var i = 0; i < pieceLocations.length; i++) {
                     var location = pieceLocations[i];
-                    if (location === "")
-                        break;
-                    var validMoves = getValidMoves(location, getMyColor(), null);
-                    for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
-                        var move = validMoves[j];
-                        if (move === "")
-                            break;
 
-                        moves[movesAdded] = location + ", " + move;
-                        movesAdded++
+                    var validMoves = getValidMoves(location, getMyColor(), null);
+                    for (var j = 0; j < validMoves.length; j++) {
+                        var move = validMoves[j];
+
+                        moves.push(location + ", " + move);
                     }
                 }
-                if (movesAdded === 0) {                //if you have no legal moves, that means you are checkmated
+                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated
                     return "CHECKMATED";
                 }
-                return moves[Math.floor(Math.random() * movesAdded)];
+                return moves[Math.floor(Math.random() * moves.length)];
             } else {
-                moves = new Array(NUM_PIECES_PER_SIDE);
-                var movesAdded = 0;
-                for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
+                moves = new Array();
+                for (var i = 0; i < pieceLocations.length; i++) {
                     var location = pieceLocations[i];
-                    if (location === "")
-                        break;
-                    /*if (piece === "w4" || piece === "b4")
-                        continue;
-                    if (piece === "w2" || piece === "b2")
-                        continue;*/
+
                     var piece = getPieceMoveDistance(location);
                     if (piece === 4) {                   //do not move pieces that are part of the formation
                         continue;
@@ -133,19 +122,16 @@ function getMove() {
                     }
 
                     var validMoves = getValidMoves(location, getMyColor());
-                    for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+                    for (var j = 0; j < validMoves.length; j++) {
                         var move = validMoves[j];
-                        if (move === "")
-                            break;
 
-                        moves[movesAdded] = location + ", " + move;
-                        movesAdded++;
+                        moves.push(location + ", " + move);
                     }
                 }
-                if (movesAdded === 0) {                //if you have no legal moves, that means you are checkmated
-                    return moves + "     " + pieceLocations + "     " + movesAdded + "  " + "CHECKMATED";
+                if (moves.length === 0) {                //if you have no legal moves, that means you are checkmated
+                    return moves + "     " + pieceLocations + "     " + moves.length + "  " + "CHECKMATED";
                 }
-                return moves[Math.floor(Math.random() * movesAdded)];
+                return moves[Math.floor(Math.random() * moves.length)];
             }
     }
 }

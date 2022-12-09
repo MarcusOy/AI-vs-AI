@@ -16,16 +16,11 @@ function getMove() {
     //
     // Moves are stored in the string form "<fromCell>, <toCell>"
     //    Example - "B5, E2"
-    var numMovesFound = 0;
-    var moves = new Array(NUM_PIECES_PER_SIDE);
+    var moves = new Array();
 
     // Iterate through every piece I have
-    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
+    for (var i = 0; i < pieceLocations.length; i++) {
         var piece = pieceLocations[i];
-
-        // Stop iterating if there are no more pieces
-        if (piece === "")
-            break;
 
         // Iterates through all valid moves that my pieces have, adding
         // each valid move to the moves Array.
@@ -33,26 +28,21 @@ function getMove() {
         // These valid moves are stored in a fixed-size Array whose
         // elements are never null, but instead are "" when empty.
         var validMoves = getValidMoves(piece, getMyColor(), null);
-        for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+        for (var j = 0; j < validMoves.length; j++) {
             var move = validMoves[j];
 
-            // Stop iterating if there are no more valid moves for this piece
-            if (move === "")
-                break;
-
             // Adds the current move to the moves Array
-            moves[numMovesFound] = piece + ", " + move;
-            numMovesFound++;
+            moves.push(piece + ", " + move);
         }
     }
 
     //if you have no legal moves, that means you are checkmated
-    if (numMovesFound === 0) {
+    if (moves.length === 0) {
         // Since you are about to lose, it is ok to return an invalid
         //    move string here, like "CHECKMATED"
         return "CHECKMATED";
     }
 
     // chooses a random move from the valid moves Array
-    return moves[Math.floor((Math.random() * numMovesFound))];
+    return moves[Math.floor((Math.random() * moves.length))];
 }
