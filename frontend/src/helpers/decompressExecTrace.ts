@@ -35,7 +35,7 @@ function decompressExecTrace(compressedExecTrace: string): string {
     const pipeSplit: string[] = compressedExecTrace.split('|')
     let workingString: string = compressedExecTrace
 
-    let cycleStack: Stack<string> = new Stack<string>()
+    const cycleStack: Stack<string> = new Stack<string>()
     let hasStartedCycle: boolean = false
 
     while (true) {
@@ -60,16 +60,16 @@ function decompressExecTrace(compressedExecTrace: string): string {
         }
         // no more cycle parsing
         else {
-            let popValue = cycleStack.pop()
-            let popOptional: string = popValue == undefined ? '' : popValue
+            const popValue = cycleStack.pop()
+            const popOptional: string = popValue == undefined ? '' : popValue
             const strToPush: string = uncompressSequence(popOptional + workingString)
             cycleStack.push(strToPush)
             break
         }
 
         // inserts remaining chars to current stack element,
-        let popValue = cycleStack.pop()
-        let popOptional: string = popValue == undefined ? '' : popValue
+        const popValue = cycleStack.pop()
+        const popOptional: string = popValue == undefined ? '' : popValue
         const stringToInsert: string =
             startingCycle && !hasStartedCycle
                 ? uncompressSequence(workingString.substring(0, indexToUse))
@@ -94,31 +94,31 @@ function decompressExecTrace(compressedExecTrace: string): string {
                 cycleLengthString += curChar
                 workingString = workingString.substring(1)
             }
-            let cycleLength = parseInt(cycleLengthString)
+            const cycleLength = parseInt(cycleLengthString)
 
             // uncompresses the cycle contents
             const cyclePop = cycleStack.pop()
             const finishedCycleString: string = cyclePop == undefined ? '' : cyclePop
-            const uncompressedCycleString: String = uncompressSequence(finishedCycleString)
+            const uncompressedCycleString: string = uncompressSequence(finishedCycleString)
 
             // unrolls the cycle
             let unrolledCycleString = uncompressedCycleString
             for (let i: number = 0; i < cycleLength - 1; i++)
                 unrolledCycleString += '|' + uncompressedCycleString
 
-            let popValue = cycleStack.pop()
-            let popOptional: string = popValue == undefined ? '' : popValue
+            const popValue = cycleStack.pop()
+            const popOptional: string = popValue == undefined ? '' : popValue
             const strToPush: string = popOptional + unrolledCycleString
             cycleStack.push(strToPush)
         }
     }
 
-    let popVal = cycleStack.pop()
+    const popVal = cycleStack.pop()
 
     return popVal == undefined ? '' : popVal
 }
 
-function uncompressSequence(input: String): string {
+function uncompressSequence(input: string): string {
     let uncompressedCycleString: string = ''
     const pipeSplit: string[] = input.split('|')
     for (let i: number = 0; i < pipeSplit.length; i++) {
@@ -142,4 +142,58 @@ function uncompressSequence(input: String): string {
     return uncompressedCycleString
 }
 
-export default uncompressSequence
+function lineNumberFrequency(input: string) {
+    const hash = {}
+    const uncompressed = decompressExecTrace(input).split('|')
+    let min = 0
+    let max = 0
+
+    for (let x = 0; x < uncompressed.length; x++) {
+        const num = uncompressed[x]
+        if (hash[num] == undefined) hash[num] = 1
+        else hash[num]++
+
+        min = Math.min(min, hash[num])
+        max = Math.max(max, hash[num])
+    }
+
+    return { frequencies: hash, min, max }
+}
+
+function lineNumberColors(input: string) {
+    const { frequencies, min, max } = lineNumberFrequency(input)
+    const keys = Object.keys(frequencies)
+
+    console.log({ min, max })
+
+    for (let x = 0; x < keys.length; x++) {
+        const key = keys[x]
+        const percent = (frequencies[key] - min) / (max - min)
+        console.log(key, frequencies[key], percent)
+        frequencies[key] = colorInterpolate('rgb(65, 75, 0)', 'rgb(0, 255, 0)', percent)
+    }
+
+    return frequencies
+}
+
+function getRgb(color) {
+    const [r, g, b] = color
+        .replace('rgb(', '')
+        .replace(')', '')
+        .split(',')
+        .map((str) => Number(str))
+    return {
+        r,
+        g,
+        b,
+    }
+}
+
+function colorInterpolate(colorA, colorB, intval) {
+    const rgbA = getRgb(colorA),
+        rgbB = getRgb(colorB)
+    const colorVal = (prop) => Math.round(rgbA[prop] * (1 - intval) + rgbB[prop] * intval)
+    return `rgb(${colorVal('r')},${colorVal('g')},${colorVal('b')})`
+}
+
+export default lineNumberColors

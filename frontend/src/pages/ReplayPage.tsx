@@ -23,7 +23,6 @@ import {
 } from '@chakra-ui/react'
 import { GoLock } from 'react-icons/go'
 import { FaChessBoard } from 'react-icons/fa'
-import { CodeBlock, vs2015 } from 'react-code-blocks'
 import { TbShield, TbSword } from 'react-icons/tb'
 import {
     ArrowBackIcon,
@@ -36,6 +35,7 @@ import { MdPause, MdPlayArrow } from 'react-icons/md'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Battle } from '../models/battle'
 import useDocumentTitle from '../hooks/useDocumentTitle'
+import ReplayPageCodeViewer from '../components/ReplayPageCodeViewer'
 
 export const BOARD_SIZES = {
     DEFAULT: 600, // for replay view
@@ -47,8 +47,6 @@ interface IReplayPageProps {
     battleId: string
     gameNumber: string
 }
-
-const HELPER_CODE_BORDER = '/*----- HELPER CODE BORDER -----*/'
 
 const ReplayPage = (p: IReplayPageProps) => {
     const navigate = useNavigate()
@@ -348,27 +346,13 @@ const ReplayPage = (p: IReplayPageProps) => {
                     )}
                     <Box display={currentTurn > 0 && isAttackerTurn ? 'block' : 'none'}>
                         {battle.attackingStrategySnapshot ? (
-                            <CodeBlock
-                                customStyle={{
-                                    overflow: 'scroll',
-                                    maxHeight: 600,
-                                    width: '100%',
-                                }}
-                                codeContainerStyle={{
-                                    fontFamily: 'revert',
-                                    fontSize: 11,
-                                }}
-                                text={
-                                    battle.attackingStrategySnapshot.split(HELPER_CODE_BORDER)
-                                        .length == 2
-                                        ? battle.attackingStrategySnapshot
-                                              .split(HELPER_CODE_BORDER)[1]
-                                              .trim()
-                                        : battle.attackingStrategySnapshot
+                            <ReplayPageCodeViewer
+                                sourceCode={battle.attackingStrategySnapshot}
+                                executionTrace={
+                                    turns && currentTurn > 0
+                                        ? turns[currentTurn - 1].linesExecuted!
+                                        : undefined
                                 }
-                                language='typescript'
-                                showLineNumbers
-                                theme={vs2015}
                             />
                         ) : (
                             <Center px='10'>
@@ -385,28 +369,13 @@ const ReplayPage = (p: IReplayPageProps) => {
                     </Box>
                     <Box display={currentTurn > 0 && !isAttackerTurn ? 'block' : 'none'}>
                         {battle.defendingStrategySnapshot ? (
-                            <CodeBlock
-                                customStyle={{
-                                    overflow: 'scroll',
-                                    maxHeight: 600,
-                                    width: '100%',
-                                }}
-                                codeContainerStyle={{
-                                    fontFamily: 'revert',
-                                    fontSize: 11,
-                                }}
-                                text={
-                                    battle.defendingStrategySnapshot.split(HELPER_CODE_BORDER)
-                                        .length == 2
-                                        ? battle.defendingStrategySnapshot
-                                              .split(HELPER_CODE_BORDER)[1]
-                                              .trim()
-                                        : battle.defendingStrategySnapshot
+                            <ReplayPageCodeViewer
+                                sourceCode={battle.defendingStrategySnapshot}
+                                executionTrace={
+                                    turns && currentTurn > 0
+                                        ? turns[currentTurn - 1].linesExecuted!
+                                        : undefined
                                 }
-                                language='typescript'
-                                showLineNumbers
-                                theme={vs2015}
-                                wrapLongLines
                             />
                         ) : (
                             <Center px='10'>
