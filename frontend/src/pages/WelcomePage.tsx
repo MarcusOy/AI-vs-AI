@@ -2,7 +2,9 @@ import React from 'react'
 import { Center, Box, Image, Heading, Flex, Text, Button, VStack, Spacer } from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
 import { CodeBlock, tomorrowNight } from 'react-code-blocks';
+import { ArrowRightIcon } from '@chakra-ui/icons';
 import ReplayPage from './ManualPlayPage'
+import GameRulesTab from '../components/programming/GameRulesTab'
 const WelcomePage = () => {
     return (
         <VStack>
@@ -54,11 +56,20 @@ const WelcomePage = () => {
                 </Center>
                 <ReplayPage/>
             </Box>
-            <Box paddingBottom={'3rem'} width={'32vw'} textAlign={'center'}>
+            <Box width={'32vw'} textAlign={'center'}>
                 <Center paddingBottom={'1rem'}>
                     <Heading size={'xl'}>As you discover your hidden potential in our unique chess variation</Heading>
                 </Center>
             </Box>
+            <Box width={'32vw'} textAlign={'center'} paddingBottom={'3rem'}>
+                <GameRulesTab />
+            </Box>
+            <Center paddingBottom={'3rem'}>
+                    <Button size='lg' mt='24px'>
+                    <Link to='/Auth/Login'>Chart your journey today</Link>
+                    <ArrowRightIcon ml='3'/>
+                    </Button>
+                </Center>
         </VStack>
     )
 }
