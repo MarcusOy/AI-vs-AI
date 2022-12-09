@@ -1,12 +1,8 @@
-var turnNumber = -1;
-
 function getMove() {
-    turnNumber++;
-
     var board = getBoard();
     var pieceLocations = getMyPieceLocations(getMyColor());
 
-    switch (turnNumber) {
+    switch (gameState.numMovesMade / 2 + 1) {
         case 1:
             if (getMyColor() === 0) {    //we are playing white
                 if (board[1][3] === ("b3") || board[4][3] === ("b3")) {

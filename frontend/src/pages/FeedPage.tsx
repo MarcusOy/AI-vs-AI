@@ -119,9 +119,10 @@ const FeedPage = () => {
                             </PopoverContent>
                         </Popover>
                         <Spacer />
-                        <Box mt='1'>
+                        <Stack mt='1'>
                             <Link to='/ManualPlay'> Manual Play </Link>
-                        </Box>
+                            <Link to='/Leaderboard/1'> Leaderboard </Link>
+                        </Stack>
                     </HStack>
                     <Flex w={'50vw'}>
                         <Stat>
