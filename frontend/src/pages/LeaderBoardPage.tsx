@@ -54,6 +54,8 @@ const LeaderBoardPage = () => {
                                     variant='ghost'
                                     width='80'
                                     size={i == 0 ? '2xl' : 'lg'}
+                                    onClick={() => navigate(`/Strategy/${s.id}/Stats`)}
+
                                 >
                                     <HStack flexGrow={1}>
                                         {i == 0 ? (
