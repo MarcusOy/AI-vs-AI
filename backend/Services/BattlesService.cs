@@ -11,6 +11,7 @@ namespace AVA.API.Services
         Task<List<Battle>> GetAsync(GetBattlesParameters p);
         Task<BattleGame> GetBattleGameAsync(Guid battleId, int gameId);
         Task<Battle> CreateAsync(Battle battle);
+        Task<Battle> UpdateAsync(Battle battle);
     }
 
     public class BattlesService : IBattlesService
@@ -90,10 +91,29 @@ namespace AVA.API.Services
 
         public async Task<Battle> CreateAsync(Battle battle)
         {
-            await _dbContext.AddAsync(battle);
+            await _dbContext.Battles.AddAsync(battle);
             await _dbContext.SaveChangesAsync();
 
             return battle;
+        }
+
+        public async Task<Battle> UpdateAsync(Battle battle)
+        {
+            var OriginalBattle = _dbContext.Battles
+                .FirstOrDefault(b => b.Id == battle.Id);
+
+            OriginalBattle.Name = battle.Name;
+            OriginalBattle.BattleStatus = battle.BattleStatus;
+            OriginalBattle.IsTestSubmission = battle.IsTestSubmission;
+            OriginalBattle.Iterations = battle.Iterations;
+            OriginalBattle.AttackerWins = battle.AttackerWins;
+            OriginalBattle.DefenderWins = battle.DefenderWins;
+            OriginalBattle.BattleGames = battle.BattleGames;
+
+            _dbContext.Battles.Update(OriginalBattle);
+            await _dbContext.SaveChangesAsync();
+
+            return OriginalBattle;
         }
 
         public class GetBattlesParameters

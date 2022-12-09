@@ -407,7 +407,7 @@ public class SimulationApp {
     // processes the message sent to the app to create a new battle
     // Returns true if no parsing errors
     static Battle processMessage(String message) {
-
+        System.out.println("Message:\n" + message);
         // parses JSON
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

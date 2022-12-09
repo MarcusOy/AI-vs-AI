@@ -36,6 +36,7 @@ const StrategyStatTab = (p: IStrategyPage) => {
                     <ListItem fontSize='xx-large'>Strategy created by: {username}</ListItem>
                     <ListItem fontSize='xx-large'>Strategy Version: {version}</ListItem>
                     <ListItem fontSize='xx-large'>Strategy in game: {game}</ListItem>
+                    {p.strategy.status === 1 && <ListItem fontSize='xx-large'>Strategy Elo: {p.strategy.elo}</ListItem>}
                     <ListItem fontSize='xx-large'>
                         Strategy Status: {isPrivate ? 'Private' : 'Public'}
                     </ListItem>
