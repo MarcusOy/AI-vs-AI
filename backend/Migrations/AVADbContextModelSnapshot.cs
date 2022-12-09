@@ -69,14 +69,14 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("AttackerStrategySnapshot")
-                        .HasColumnType("longtext");
-
                     b.Property<int>("AttackerWins")
                         .HasColumnType("int");
 
                     b.Property<Guid>("AttackingStrategyId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("AttackingStrategySnapshot")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("BattleStatus")
                         .HasColumnType("int");
@@ -151,6 +151,9 @@ namespace AVA.Migrations
                     b.Property<string>("FinalBoard")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("IsAttackerWhite")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("StackTrace")
                         .HasColumnType("longtext");
 
@@ -201,17 +204,11 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("BoilerplateCode")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("HelperCode")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("LongDescription")
                         .HasMaxLength(2000)
@@ -238,34 +235,55 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 1,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\n                ",
                             Name = "1234 Chess",
-                            ShortDescription = "Advance a 1-piece past your opponent's last rank.",
+                            ShortDescription = "To be populated by Initialization Service.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LongDescription = "\nCheckers is a board game played between two people on an 8x8 checked board.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
                             Name = "Checkers",
-                            ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
+                            ShortDescription = "To be populated by Initialization Service.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3,
-                            BoilerplateCode = "\n                    const step(state, actions) => {\n                        return null;\n                    }\n\n                    export default step;\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedOn = new DateTime(2022, 11, 4, 1, 54, 3, 289, DateTimeKind.Utc).AddTicks(9260),
-                            LongDescription = "\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
                             Name = "Chess",
-                            ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
+                            ShortDescription = "To be populated by Initialization Service.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
+                });
+
+            modelBuilder.Entity("AVA.API.Models.StarterCode", b =>
+                {
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Language")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("GameId", "Type", "Language");
+
+                    b.ToTable("StarterCode");
                 });
 
             modelBuilder.Entity("AVA.API.Models.Strategy", b =>
@@ -288,6 +306,9 @@ namespace AVA.Migrations
 
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Language")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -322,7 +343,8 @@ namespace AVA.Migrations
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             GameId = 1,
                             IsPrivate = false,
-                            Name = "Stock Easy AI",
+                            Language = 0,
+                            Name = "Stock Easy AI (Java)",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -333,7 +355,9 @@ namespace AVA.Migrations
                             CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             GameId = 1,
-                            Name = "Stock Medium AI",
+                            IsPrivate = false,
+                            Language = 0,
+                            Name = "Stock Medium AI (Java)",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -344,7 +368,9 @@ namespace AVA.Migrations
                             CreatedByUserId = new Guid("f9b1224c-c19b-474f-81ac-7666476fee51"),
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             GameId = 1,
-                            Name = "Stock Hard AI",
+                            IsPrivate = false,
+                            Language = 0,
+                            Name = "Stock Hard AI (Java)",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -370,6 +396,9 @@ namespace AVA.Migrations
 
                     b.Property<bool>("IsAttackTurn")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LinesExecuted")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("TurnData")
                         .IsRequired()
@@ -451,8 +480,8 @@ namespace AVA.Migrations
                             Email = "marcus.orciuch@gmail.com",
                             FirstName = "System",
                             LastName = "User",
-                            Password = "t6AgeRhND2Za6hb1d0wHZMM/5Xs9m4Pc8tcCdgMNNjo=",
-                            Salt = "ZJg76QyA1SzWVnAdBXkuaQ==",
+                            Password = "YjasCROT8HzlSoRBIQN5wlieAW2fg/lvCTuVOX9E6vo=",
+                            Salt = "ky+fPO3g//LlBkCBFgLMdA==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "system"
                         },
@@ -464,8 +493,8 @@ namespace AVA.Migrations
                             Email = "morciuch@purdue.edu",
                             FirstName = "Marcus",
                             LastName = "Orciuch",
-                            Password = "XnMOvV2EM1vzfa8dnRRfyoV1OHgcPwC+YB7rhdxFEHg=",
-                            Salt = "CmdkZduCBhU+jZHXVRNiKw==",
+                            Password = "NYGUpmbuttfQdsPdYFPFkL60ZIwa7VWYqSe+uPn/8ks=",
+                            Salt = "NKVAn2IO+gPFQaZw59rpZg==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "marcus"
                         },
@@ -477,8 +506,8 @@ namespace AVA.Migrations
                             Email = "korciuch@purdue.edu",
                             FirstName = "Kyle",
                             LastName = "Orciuch",
-                            Password = "wsgwvU0CJ7694v2TvBMbC7FRZ1l6GaUH/9dwDq0s41M=",
-                            Salt = "P9biM/UD/gXUU/IYuw9HIA==",
+                            Password = "RHE5rbS5JaInIi/Jrds2uwd4NRUECvmBPtfjx+1J2G4=",
+                            Salt = "UEUtg/ImhiAkyQt0+qiZLQ==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "kyle"
                         });
@@ -542,6 +571,17 @@ namespace AVA.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("AVA.API.Models.StarterCode", b =>
+                {
+                    b.HasOne("AVA.API.Models.Game", "Game")
+                        .WithMany("StarterCode")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+                });
+
             modelBuilder.Entity("AVA.API.Models.Strategy", b =>
                 {
                     b.HasOne("AVA.API.Models.User", "CreatedByUser")
@@ -601,6 +641,8 @@ namespace AVA.Migrations
 
             modelBuilder.Entity("AVA.API.Models.Game", b =>
                 {
+                    b.Navigation("StarterCode");
+
                     b.Navigation("Strategies");
 
                     b.Navigation("UsersWhoFavorited");

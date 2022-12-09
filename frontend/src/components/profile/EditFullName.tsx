@@ -41,7 +41,7 @@ const EditFullName = () => {
                 isOpen={isOpen}
                 onOpen={onOpen}
                 onClose={onClose}
-                placement='right'
+                placement='right-start'
                 closeOnBlur={false}
             >
                 <PopoverTrigger>

@@ -15,7 +15,7 @@ const Header = (props: IHeader) => {
     return (
         <Box
             as='header'
-            borderWidth='1px'
+            borderBottomWidth='1px'
             background='chakra-body-bg'
             py='1rem'
             position='sticky'
@@ -66,11 +66,11 @@ const Header = (props: IHeader) => {
                         </>
                     ) : (
                         <>
-                            <IconButton
+                            {/* <IconButton
                                 variant='ghost'
                                 icon={<BellIcon w='5' h='5' />}
                                 aria-label={'View notifications'}
-                            />
+                            /> */}
                             <IconButton
                                 variant='ghost'
                                 icon={<SearchIcon w='4' h='4' />}

@@ -40,20 +40,19 @@ public class StrategyController : Controller
         return await _strategyService.CreateAsync(s);
     }
 
-    [HttpPut, Route("/Strategy/Submit"), Authorize]
-    public async Task<Strategy> Submit([FromBody] Strategy s)
-    {
-        return await _strategyService.SubmitAsync(s);
-    }
+    [HttpPost, Route("/Strategy/Submit/{id}"), Authorize]
+    public async Task<Strategy> Submit(Guid id)
+        => await _strategyService.SubmitAsync(id);
 
-    [HttpDelete, Route("/Strategy/Delete/{id}"), Authorize]
+
+    [HttpPut, Route("/Strategy/Delete/{id}"), Authorize]
     public async Task<Strategy> Delete(String id)
         => await _strategyService.DeleteAsync(new Guid(id));
 
 
     // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
     [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
-    public async Task<Strategy> GetStockStrategy(String stockToChoose)
+    public Strategy GetStockStrategy(String stockToChoose)
     {
         return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }

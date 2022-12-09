@@ -23,7 +23,11 @@ You can check if they are installed globally with these commands respectively:
 Once `dotnet` is installed, install two global tools needed for this project:
 
 - `dotnet tool install --global dotnet-ef`
-- `dotnet tool install --global dotnet-typegen`
+- `dotnet tool install --global dotnet-typegen --version 3.1.0`
+
+This project also needs TypeScript to be installed to allow for TypeScript strategies:
+
+- `npm install -g typescript`
 
 ## Development
 

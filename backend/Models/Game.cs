@@ -16,8 +16,9 @@ public class Game : BaseEntity
     public string ShortDescription { get; set; }
     [StringLength(2000)]
     public string LongDescription { get; set; }
-    public string BoilerplateCode { get; set; }
-    public string HelperCode { get; set; }
+
+    // StarterCode relationship (Game uses starter code of different languages and types)
+    public List<StarterCode> StarterCode { get; set; }
 
     // Strategy Relationship (Game is played by strategies)
     public List<Strategy> Strategies { get; set; }

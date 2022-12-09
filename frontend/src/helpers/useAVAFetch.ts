@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { AxiosRequestConfig } from 'axios'
 import useAxios, { Options } from 'axios-hooks'
+import { request } from 'http'
 
 const useAVAFetch = (route: string, config?: AxiosRequestConfig, options?: Options) => {
     // make sure there is an API_ENDPOINT environment variable set
@@ -19,10 +21,17 @@ const useAVAFetch = (route: string, config?: AxiosRequestConfig, options?: Optio
     }
     const requestOptions: Options = {
         ...options,
+        useCache: false,
     }
 
     // base hook execution
     const [{ data, loading, error }, refetch] = useAxios(requestConfig, requestOptions)
+
+    // refetch if route changes
+    useEffect(() => {
+        if (!requestOptions.manual) refetch()
+    }, [route])
+
     return {
         data,
         isLoading: loading,

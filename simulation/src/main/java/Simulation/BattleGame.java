@@ -5,6 +5,7 @@ import java.util.ArrayList;
 // One specific game within the battle.
 public class BattleGame {
     public int gameNumber;
+    public boolean isAttackerWhite;
     public boolean didAttackerWin;
 
     public String battleId;
@@ -16,18 +17,24 @@ public class BattleGame {
     public int defenderPawnsLeft;
 
     public ArrayList<Turn> turns;
+    public String stackTrace;
 
     private Color AttackerColor;
+    private int whiteCycleLength;
+    private int blackCycleLength;
 
     public BattleGame(int gameNumber, String battleId, Color attackerColor) {
         this.gameNumber = gameNumber;
         this.battleId = battleId;
         this.AttackerColor = attackerColor;
+        this.isAttackerWhite = this.AttackerColor.equals(Color.WHITE);
         turns = new ArrayList<>();
+        stackTrace = "";
     }
 
-    public void addTurn(String battleId, Color currentPlayerColor, String moveString) {
-        turns.add(new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString));
+    public void addTurn(String battleId, Color currentPlayerColor, String moveString, String compressedLineTrace, String printInfo) {
+        turns.add(
+                new Turn(battleId, gameNumber, turns.size() + 1, currentPlayerColor.equals(AttackerColor), moveString, compressedLineTrace, printInfo));
     }
 
     public void setWinner(Color winnerColor, String finalBoard, int aPieces, int aPawns, int dPieces, int dPawns) {
@@ -39,11 +46,33 @@ public class BattleGame {
         defenderPawnsLeft = dPawns;
     }
 
-    public int getGameNumber() { return gameNumber; }
+    public int getGameNumber() {
+        return gameNumber;
+    }
 
-    public Color getAttackerColor() { return AttackerColor; }
+    public Color getAttackerColor() {
+        return AttackerColor;
+    }
 
-    public Color getDefenderColor() { return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE; }
+    public Color getDefenderColor() {
+        return AttackerColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+    }
+
+    public int getWhiteCycleLength() {
+        return whiteCycleLength;
+    }
+
+    public void setWhiteCycleLength(int cycleLength) {
+        whiteCycleLength = cycleLength;
+    }
+
+    public int getBlackCycleLength() {
+        return blackCycleLength;
+    }
+
+    public void setBlackCycleLength(int cycleLength) {
+        blackCycleLength = cycleLength;
+    }
 
     public String getTurnsString() {
         StringBuilder s = new StringBuilder();
@@ -61,7 +90,8 @@ public class BattleGame {
                 ", gameNumber=" + gameNumber +
                 ", didAttackerWin=" + didAttackerWin +
                 ", attackerColor=" + AttackerColor +
-                ", turns=" +  getTurnsString() /*turns*/ +
+                ", stackTrace=" + stackTrace +
+                ", turns=" + getTurnsString() /* turns */ +
                 '}';
     }
 }

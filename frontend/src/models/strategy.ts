@@ -4,6 +4,7 @@
  */
 
 import { BaseEntity } from './base-entity';
+import { ProgrammingLanguage } from './programming-language';
 import { StrategyStatus } from './strategy-status';
 import { User } from './user';
 import { Game } from './game';
@@ -12,6 +13,7 @@ import { Battle } from './battle';
 export interface Strategy extends BaseEntity {
     id?: string;
     name: string;
+    language: ProgrammingLanguage;
     sourceCode: string;
     status?: StrategyStatus;
     version?: number;

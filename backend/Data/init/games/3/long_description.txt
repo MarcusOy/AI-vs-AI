@@ -1,0 +1,3 @@
+Chess is a board game played between two people on an 8x8 checked board like the one shown below.
+Each player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. 
+Blah blah blah
