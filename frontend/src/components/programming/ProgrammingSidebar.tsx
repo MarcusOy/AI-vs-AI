@@ -119,7 +119,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         newSubmissions.unshift(pendingBattle)
         setSubmissions(newSubmissions)
         setIsWaitingOnSubmission(true)
-        setTabIndex(3)
+        setTabIndex(2)
     }
 
     const isLoading =
@@ -214,11 +214,11 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                             <BsJoystick size={30} />
                         </CustomTab>
                     </Tooltip>
-                    <Tooltip placement='right' label={'Testing'}>
-                        <CustomTab>
+                    {/* <Tooltip placement='right' label={'Testing'}>
+                        <CustomTab >
                             <BsPlay size={30} />
                         </CustomTab>
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip placement='right' label={'Documentation'}>
                         <CustomTab>
                             <BsCodeSlash size={30} />
@@ -247,9 +247,9 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                             <p>{game && game.longDescription}</p>
                             <Box h='50' /> */}
                     </TabPanel>
-                    <TabPanel h='100%' overflowY='scroll'>
+                    {/* <TabPanel h='100%' overflowY='scroll'>
                         manual play gameboard here + step and eval buttons
-                    </TabPanel>
+                    </TabPanel> */}
                     <TabPanel h='100%' overflowY='scroll'>
                         <DocumentationTab strategy={p.strategy} />
                     </TabPanel>
