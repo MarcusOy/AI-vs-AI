@@ -168,6 +168,7 @@ namespace AVA.API.Consumers
                         _dbContext.Strategies.Update(newDefender);
                         _dbContext.Update(newDefender);
                         await _dbContext.SaveChangesAsync();
+                        _dbContext.ChangeTracker.Clear();
                     }
                 }
 
@@ -199,6 +200,7 @@ namespace AVA.API.Consumers
                     _dbContext.Strategies.Update(OriginalStrat);
                     _dbContext.Update(OriginalStrat);
                     await _dbContext.SaveChangesAsync();
+                    _dbContext.ChangeTracker.Clear();
                 }
             }
         }
