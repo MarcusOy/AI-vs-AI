@@ -36,9 +36,9 @@ public class Strategy : BaseEntity
     public Game Game { get; set; }
 
     // Battle Relationship (Strategy fights in battles)
-    [TsOptional]
+    [TsOptional, JsonIgnore]
     public List<Battle> AttackerBattles { get; set; }
-    [TsOptional]
+    [TsOptional, JsonIgnore]
     public List<Battle> DefenderBattles { get; set; }
 }
 

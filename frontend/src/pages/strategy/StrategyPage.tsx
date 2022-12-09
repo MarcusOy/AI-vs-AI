@@ -127,10 +127,12 @@ const StrategyPage = () => {
                         icon={<TbBook2 size='50' />}
                     />
                     <Stack spacing='0'>
-                        {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
                         <HStack>
                             <Heading fontSize='4xl' mt={0}>
                                 {strategy.name}
+                            </Heading>
+                            <Heading fontSize='2xl' mt={0}>
+                                v{strategy.version}
                             </Heading>
                             <Tooltip
                                 label={strategy.isPrivate ? 'Private strategy' : 'Public strategy'}

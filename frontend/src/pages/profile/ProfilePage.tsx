@@ -38,12 +38,8 @@ const ProfilePage = () => {
     const navigate = useNavigate()
 
     const isSelf = id == whoAmI?.id
-    const { data, error, isLoading } = useAVAFetch(
-        `/Account/${id}`,
-        {},
-        { manual: isSelf }, // don't retrieve account if self
-    )
-    const user: User = isSelf ? whoAmI : data
+    const { data, error, isLoading } = useAVAFetch(`/Account/${id}`)
+    const user: User = data
 
     const index =
         tab == 'View'

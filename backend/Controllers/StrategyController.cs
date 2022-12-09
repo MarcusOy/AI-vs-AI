@@ -62,24 +62,59 @@ public class StrategyController : Controller
         return await _strategyService.CreateAsync(s);
     }
 
+    // [HttpPost, Route("/Strategy/Submit/{id}"), Authorize]
+    // public async Task<Strategy> Submit(Guid id)
+    //     => await _strategyService.SubmitAsync(id);
+
     [HttpPost, Route("/Strategy/Submit/{id}"), Authorize]
     public async Task<Strategy> Submit(Guid id)
-        => await _strategyService.SubmitAsync(id);
-
-    [HttpPut, Route("/Strategy/Submit"), Authorize]
-    public async Task<Strategy> Submit([FromBody] Strategy s)
     {
         Strategy strat = _dbContext.Strategies
+                            .Where(s => s.Status == StrategyStatus.Draft)
+                            .Where(s => s.CreatedByUserId == _idService.CurrentUser.Id)
                             .AsNoTracking()
-                            .FirstOrDefault(st => st.Id == s.Id);
+                            .FirstOrDefault(st => st.Id == id);
 
-        strat.Status = StrategyStatus.Active;
-        strat.Elo = 0;
-        strat = await _strategyService.UpdateAsync(strat);
-        _dbContext.ChangeTracker.Clear();
+        if (strat is null)
+            throw new InvalidOperationException("Strategy id is not valid.");
+
         await RunBattles(strat.GameId, strat);
 
         return strat;
+    }
+
+    [HttpPost, Route("/Strategy/Unsubmit/{id}"), Authorize]
+    public async Task<Strategy> Unsubmit(Guid id)
+    {
+        var strat = _dbContext.Strategies
+                    .Where(s => s.Status == StrategyStatus.Active)
+                    .Where(s => s.CreatedByUserId == _idService.CurrentUser.Id)
+                    // .AsNoTracking()
+                    .FirstOrDefault(st => st.Id == id);
+
+        if (strat is null)
+            throw new InvalidOperationException("Strategy id is not valid.");
+
+        strat.Status = StrategyStatus.InActive;
+        strat = await _strategyService.UpdateAsync(strat);
+        _dbContext.ChangeTracker.Clear();
+
+        var newStrat = new Strategy
+        {
+            Name = strat.Name,
+            Language = strat.Language,
+            SourceCode = strat.SourceCode,
+            Status = StrategyStatus.Draft,
+            Version = strat.Version + 1,
+            IsPrivate = strat.IsPrivate,
+            Elo = 0,
+            CreatedByUserId = _idService.CurrentUser.Id,
+            GameId = strat.GameId
+        };
+
+        await _strategyService.CreateAsync(newStrat);
+        await _dbContext.SaveChangesAsync();
+        return newStrat;
     }
 
     [HttpPut, Route("/Strategy/Delete/{id}"), Authorize]
@@ -94,95 +129,62 @@ public class StrategyController : Controller
         return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }
 
-    public async Task<String> RunBattles(int gameId, Strategy strat)
+    public async Task<String> RunBattles(int gameId, Strategy attackingStrat)
     {
-        var stratQuery = _dbContext.Strategies
-            .Where(s => s.Status == StrategyStatus.Active && s.GameId == gameId &&
-            (s.Name != "Stock Easy AI" && s.Name != "Stock Medium AI" && s.Name != "Stock Hard AI"))
-            .AsNoTracking();
+        using var transaction = _dbContext.Database.BeginTransaction();
+        attackingStrat.Status = StrategyStatus.Active;
+        attackingStrat.Elo = 0;
+        attackingStrat = await _strategyService.UpdateAsync(attackingStrat);
+        _dbContext.ChangeTracker.Clear();
 
-        List<Strategy> AllStrats = await stratQuery.AsNoTracking().ToListAsync();
+        var allOtherValidOpponents = await _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Where(s => s.CreatedByUserId != _idService.CurrentUser.Id)
+            .Where(s => s.GameId == gameId)
+            .Where(s => s.Name != "Stock Easy AI (Java)"
+                && s.Name != "Stock Medium AI (Java)"
+                && s.Name != "Stock Hard AI (Java)")
+            .AsNoTracking()
+            .ToListAsync();
 
-        if (AllStrats.Count == 1)
+        var reqQueue = new List<SimulationRequest>();
+
+        if (allOtherValidOpponents.Count == 0)
         {
-            Console.WriteLine("Only 1 strategy");
+            Console.WriteLine("No other strategies to play.");
             return "OK";
         }
 
-        // foreach (Strategy st in AllStrats)
-        // {
-        //     Strategy t = _dbContext.Strategies
-        //                     .AsNoTracking()
-        //                     .FirstOrDefault(str => str.Id == st.Id);
-        //     t.Elo = 0;
-
-        //     _dbContext.Strategies.Update(t);
-        //     await _dbContext.SaveChangesAsync();
-        // }
-
-        for (int j = 0; j < AllStrats.Count; j++)
+        foreach (var defendingStrat in allOtherValidOpponents)
         {
-            var attacking = _dbContext.Strategies
-                                .FirstOrDefault(s => s.Id == strat.Id);
-
-            var defending = _dbContext.Strategies
-                                .FirstOrDefault(s => s.Id == AllStrats.ElementAt(j).Id);
-
-            if (attacking.Id != AllStrats.ElementAt(j).Id)
+            Battle newBattle = new Battle
             {
+                Id = Guid.NewGuid(),
+                Name = attackingStrat.Name + " vs. " + defendingStrat.Name,
+                BattleStatus = BattleStatus.Pending,
+                Iterations = 3,
+                IsTestSubmission = false,
+                AttackingStrategyId = attackingStrat.Id,
+                DefendingStrategyId = defendingStrat.Id,
+            };
 
-                Guid newId = Guid.NewGuid();
-                String newName = new String(attacking.Name + " Attacks " + defending.Name + " in a Random Battle");
 
-                var req = new SimulationRequest
-                {
-                    PendingBattle = new Battle
-                    {
-                        Id = newId,
-                        Name = newName,
-                        BattleStatus = BattleStatus.Pending,
-                        Iterations = 3,
-                        IsTestSubmission = false,
-                        AttackingStrategyId = attacking.Id,
-                        AttackingStrategy = attacking,
-                        DefendingStrategyId = defending.Id,
-                        DefendingStrategy = defending
-                    }
-                };
+            await _dbContext.Battles.AddAsync(newBattle);
+            await _dbContext.SaveChangesAsync();
 
-                Battle newBattle = new Battle
-                {
-                    Id = newId,
-                    Name = newName,
-                    BattleStatus = BattleStatus.Pending,
-                    Iterations = 3,
-                    IsTestSubmission = false,
-                    AttackingStrategyId = attacking.Id,
-                    AttackingStrategy = attacking,
-                    DefendingStrategyId = defending.Id,
-                    DefendingStrategy = defending
-                };
 
-                // await _dbContext.Battles.AddAsync(newBattle);
-                // await _dbContext.SaveChangesAsync();
-                // _dbContext.ChangeTracker.Clear();
-
-                await _battleService.CreateAsync(newBattle);
-                _dbContext.ChangeTracker.Clear();
-
-                req.PendingBattle.AttackingStrategy.CreatedByUser = null;
-                req.PendingBattle.DefendingStrategy.CreatedByUser = null;
-                // req.PendingBattle.AttackingStrategy.Game.Strategies = null;
-                // req.PendingBattle.DefendingStrategy.Game.Strategies = null;
-                req.PendingBattle.AttackingStrategy.AttackerBattles = null;
-                req.PendingBattle.DefendingStrategy.AttackerBattles = null;
-                req.PendingBattle.AttackingStrategy.DefenderBattles = null;
-                req.PendingBattle.DefendingStrategy.DefenderBattles = null;
-
-                var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
-                await endpoint.Send(req);
-            }
+            reqQueue.Add(new SimulationRequest { PendingBattle = newBattle });
         }
+
+        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
+        foreach (var req in reqQueue)
+        {
+            // req.PendingBattle.AttackingStrategy.CreatedByUser.Strategies = null;
+            // req.PendingBattle.DefendingStrategy.CreatedByUser.Strategies = null;
+            await endpoint.Send(req);
+        }
+
+        transaction.Commit();
 
         return "OK";
     }

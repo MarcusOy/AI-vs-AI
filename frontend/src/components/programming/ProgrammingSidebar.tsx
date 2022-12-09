@@ -26,9 +26,10 @@ import {
     ModalHeader,
     ModalOverlay,
     Flex,
+    Heading,
 } from '@chakra-ui/react'
 import { useMultiStyleConfig } from '@chakra-ui/system'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     BsJoystick,
     BsPlay,
@@ -48,6 +49,8 @@ import DocumentationTab from './DocumentationTab'
 import EditStrategyName from './EditStrategyName'
 import GameRulesTab from './GameRulesTab'
 import SubmissionsTab from './SubmissionsTab'
+import IdentityService from '../../data/IdentityService'
+import { useNavigate } from 'react-router-dom'
 
 interface IProgrammingSidebarProps {
     strategy: Strategy
@@ -55,8 +58,9 @@ interface IProgrammingSidebarProps {
 }
 
 const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
+    const navigate = useNavigate()
     const submitModal = useDisclosure()
-    const testModal = useDisclosure()
+    const unsubmitModal = useDisclosure()
 
     const [tabIndex, setTabIndex] = useState(0)
     const [submissions, setSubmissions] = useState<Battle[]>([])
@@ -70,10 +74,22 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         setIsWaitingOnSubmission(false)
     }
 
-    // const onSubmitStrategy = async () => {
-    //     await strategySubmit.execute()
-    //     IdentityService.refreshIdentity()
-    // }
+    const onSubmitStrategy = async () => {
+        const res = await strategySubmit.execute()
+        if (res.status == 200) {
+            IdentityService.refreshIdentity()
+            navigate(`/Strategy/${p.strategy.id}/Battles`)
+        }
+    }
+
+    const onUnsubmitStrategy = async () => {
+        const res = await strategyUnsubmit.execute()
+        if (res.status == 200) {
+            const newStrat = res.data as Strategy
+            IdentityService.refreshIdentity()
+            navigate(`/Programming/${newStrat.id}`)
+        }
+    }
 
     const submissionWebSocket = useAVASocket([
         { key: 'TestSubmissionResult', execute: onTestSubmissionResult },
@@ -81,6 +97,11 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
     const gameFetch = useAVAFetch('/Games/1') // TODO: dynamically change on strategy gameid
     const strategySubmit = useAVAFetch(
         `/Strategy/Submit/${p.strategy.id}`,
+        { method: 'POST' },
+        { manual: true },
+    )
+    const strategyUnsubmit = useAVAFetch(
+        `/Strategy/Unsubmit/${p.strategy.id}`,
         { method: 'POST' },
         { manual: true },
     )
@@ -107,10 +128,16 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
         strategyRun.isLoading ||
         isWaitingOnSubmission
 
+    // open unsubmit modal if strategy is active
+    useEffect(() => {
+        if (p.strategy.status == StrategyStatus.Active) unsubmitModal.onOpen()
+    }, [])
+
     return (
         <Flex flexDir='column'>
             <HStack p={3}>
                 <EditStrategyName strategy={p.strategy} onNameChange={p.onStrategyChange} />
+                <Heading size='sm'>v{p.strategy.version}</Heading>
                 <Stack justifyContent='center'>
                     {p.strategy.status == StrategyStatus.Draft && (
                         <Badge variant='outline' colorScheme='cyan'>
@@ -138,7 +165,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                                 aria-label='Test strategy'
                                 icon={<IoFlask />}
                                 variant='outline'
-                                disabled={isWaitingOnSubmission}
+                                disabled={p.strategy.status == StrategyStatus.Active || isLoading}
                             />
                             <MenuList>
                                 <MenuItem
@@ -163,9 +190,7 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                         </Menu>
                         <Button
                             rightIcon={<ArrowForwardIcon />}
-                            disabled={
-                                p.strategy.status == StrategyStatus.Active || isWaitingOnSubmission
-                            }
+                            disabled={p.strategy.status == StrategyStatus.Active || isLoading}
                             onClick={submitModal.onOpen}
                         >
                             Submit
@@ -233,27 +258,69 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
                     </TabPanel>
                 </TabPanels>
             </Tabs>
-            <Modal isOpen={submitModal.isOpen} onClose={submitModal.onClose}>
+            <Modal
+                isOpen={submitModal.isOpen}
+                closeOnOverlayClick={false}
+                closeOnEsc={false}
+                onClose={submitModal.onClose}
+            >
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Confirmation</ModalHeader>
-                    <ModalCloseButton />
                     <ModalBody>
                         By submitting this strategy, you will matchmake with other strategies and be
                         unable to edit it&apos;s source code.
                     </ModalBody>
 
                     <ModalFooter>
-                        <Button variant='ghost' mr={3} onClick={submitModal.onClose}>
-                            Close
+                        <Button
+                            variant='ghost'
+                            mr={3}
+                            onClick={submitModal.onClose}
+                            disabled={strategySubmit.isLoading}
+                        >
+                            Cancel
                         </Button>
                         <Button
-                            onClick={() => {
-                                submitModal.onClose()
-                                // runStrategy()
-                            }}
+                            onClick={() => onSubmitStrategy()}
+                            isLoading={strategySubmit.isLoading}
+                            isDisabled={strategySubmit.isLoading}
                         >
                             Submit
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+            <Modal
+                isOpen={unsubmitModal.isOpen}
+                closeOnOverlayClick={false}
+                closeOnEsc={false}
+                onClose={unsubmitModal.onClose}
+            >
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Cannot edit active strategy</ModalHeader>
+                    <ModalBody>
+                        This strategy is currently active, so most functionality of this page is
+                        currently disabled. To use this page, this strategy must be unsubmitted and
+                        its version number will be incremented. Would you like to do this?
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button
+                            variant='ghost'
+                            mr={3}
+                            onClick={unsubmitModal.onClose}
+                            disabled={strategyUnsubmit.isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => onUnsubmitStrategy()}
+                            isLoading={strategyUnsubmit.isLoading}
+                            isDisabled={strategyUnsubmit.isLoading}
+                        >
+                            Unsubmit
                         </Button>
                     </ModalFooter>
                 </ModalContent>

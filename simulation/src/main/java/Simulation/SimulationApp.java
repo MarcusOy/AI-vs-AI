@@ -827,6 +827,7 @@ public class SimulationApp {
 
         boolean errorInSource = false;
         // temp battle so processBattleStrategies can be used
+
         Battle tempBattle = new Battle(1, "No Attacker for Test Suite", strategyId, null, strategySnapshot, null, null, false);
 
         // resets execTrace and stackTrace
@@ -834,6 +835,7 @@ public class SimulationApp {
 
         Color potentialWinner = null;
         potentialWinner = playTurn(true, false, tempBattle, tempBattle.battleGames.get(0));
+
 
         String[][] responseBoard = addPieceIds(board, reqIdlessBoard, isWhiteTurn);
         SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,

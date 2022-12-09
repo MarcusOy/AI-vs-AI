@@ -21,6 +21,10 @@ import {
     Center,
     Text,
     Spacer,
+    AlertTitle,
+    Alert,
+    AlertDescription,
+    AlertIcon,
 } from '@chakra-ui/react'
 import { GoLock } from 'react-icons/go'
 import { FaChessBoard } from 'react-icons/fa'
@@ -130,8 +134,6 @@ const ReplayPage = (p: IReplayPageProps) => {
     const battleGame = data as BattleGame
     const turns = battleGame.turns
     const size = BOARD_SIZES.DEFAULT
-
-    if (turns.length <= 0) return <Spinner />
 
     const goBackwardAGame = () =>
         navigate(`/Replay/${p.battleId}/${Number.parseInt(p.gameNumber!) - 1}`)
@@ -286,6 +288,17 @@ const ReplayPage = (p: IReplayPageProps) => {
             </Stack>
             <Box bg='whiteAlpha.200' flexGrow={1} ml='6' mr='3' borderRadius={3} maxW='xl'>
                 <Stack p='3'>
+                    {battleGame.stackTrace != null && battleGame.stackTrace != 'null' && (
+                        <Alert status='error'>
+                            <AlertIcon />
+                            <Stack>
+                                <AlertTitle>
+                                    {didWhiteWin ? 'Black' : 'White'} Strategy failed to run!
+                                </AlertTitle>
+                                <AlertDescription>{battleGame.stackTrace}</AlertDescription>
+                            </Stack>
+                        </Alert>
+                    )}
                     <HStack>
                         <Stack>
                             <HStack>

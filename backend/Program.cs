@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using AVA.API.Data;
 using AVA.API.Helpers;
 using AVA.API.Services;
-using AVA.API.Controllers;
 using AVA.API.Middleware;
 using MassTransit;
 using AVA.API.Consumers;

@@ -69,6 +69,8 @@ class GameState {
   }
 }
 
+var gameState = new GameState()
+
 /** 
  * Accesses the grid Chess Board on which the game is played.
  * 
