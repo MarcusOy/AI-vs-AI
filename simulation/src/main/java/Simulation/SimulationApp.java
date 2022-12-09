@@ -1249,7 +1249,7 @@ public class SimulationApp {
                     if (j == 0)
                         printInfo += (i - 1) + PRINT_DELIMITER;
 
-                    printInfo += curSplit + PRINT_DELIMITER + "\n";
+                    printInfo += curSplit + PRINT_DELIMITER;
                     numPrintLines++;
                 }
             }
@@ -1274,8 +1274,9 @@ public class SimulationApp {
             System.out.print("|" + lineStringSplitNoPrint[i]);
         System.out.println("");*/
 
-        String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" : "";
-        compressedExecutionTraceHolder[2] = optionalLineCapWarning + PRINT_DELIMITER + printInfo;
+        printInfo = printInfo.substring(0, printInfo.length() - 1);
+        String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "0" + PRINT_DELIMITER + "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" + PRINT_DELIMITER : "";
+        compressedExecutionTraceHolder[2] = optionalLineCapWarning + printInfo;
 
         // prints lineStringsList
         /*String printString = "";

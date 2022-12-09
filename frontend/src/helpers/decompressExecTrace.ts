@@ -164,12 +164,10 @@ export function lineNumberColors(input: string) {
     const { frequencies, min, max } = lineNumberFrequency(input)
     const keys = Object.keys(frequencies)
 
-    console.log({ min, max })
 
     for (let x = 0; x < keys.length; x++) {
         const key = keys[x]
         const percent = (frequencies[key] - min) / (max - min)
-        console.log(key, frequencies[key], percent)
         frequencies[key] = colorInterpolate('rgb(65, 75, 0)', 'rgb(0, 255, 0)', percent)
     }
 

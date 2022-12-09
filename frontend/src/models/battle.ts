@@ -13,6 +13,7 @@ export interface Battle extends BaseEntity {
     name: string;
     battleStatus: BattleStatus;
     isTestSubmission: boolean;
+    testSuiteResult?: string;
     iterations: number;
     attackerWins: number;
     defenderWins: number;

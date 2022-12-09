@@ -259,7 +259,7 @@ const GameRulesTab = () => {
     }
 
     return (
-        <Box h='100%'>
+        <Box h='100%' textAlign='left'>
             <Flex h='100%' justifyContent='center'>
                 <Stack spacing='5' flexGrow={1} maxW='sm'>
                     <Heading fontSize='lg'>1234Chess</Heading>

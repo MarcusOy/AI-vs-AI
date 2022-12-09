@@ -15,6 +15,8 @@ public class Battle : BaseEntity
     [Required]
     public BattleStatus BattleStatus { get; set; }
     public bool IsTestSubmission { get; set; }
+    [TsOptional]
+    public string TestSuiteResult { get; set; }
     [Required]
     public int Iterations { get; set; }
     public int AttackerWins { get; set; }

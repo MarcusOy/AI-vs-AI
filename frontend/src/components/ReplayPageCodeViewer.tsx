@@ -1,4 +1,4 @@
-import { Box, ButtonGroup, Flex, Spinner, Text, IconButton, Stack } from '@chakra-ui/react'
+import { Box, ButtonGroup, Flex, Spinner, Text, IconButton, Stack, Code } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { CodeBlock, vs2015 } from 'react-code-blocks'
 import { decompressExecTrace, lineNumberColors } from '../helpers/decompressExecTrace'
@@ -6,16 +6,39 @@ import { VscDebugStepBack, VscDebugStepOver, VscDebugConsole, VscDebugAlt } from
 import { MdLineStyle } from 'react-icons/md'
 
 const HELPER_CODE_BORDER = '/*----- HELPER CODE BORDER -----*/'
+const CONSOLE_LOG_DELIMITER = '█'
 
 interface IReplayPageCodeViewerProps {
     sourceCode: string
     executionTrace?: string
+    printOutput?: string
+}
+
+interface ILog {
+    index: number
+    log: string
 }
 
 const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
     const [traceIndex, setTraceIndex] = useState(-1)
+    const [showConsole, setShowConsole] = useState(false)
     const lines = decompressExecTrace(p.executionTrace ?? '1').split('|')
     const lineFrequency = lineNumberColors(p.executionTrace ?? '1')
+
+    const splitOutput = p.printOutput ? p.printOutput.split(CONSOLE_LOG_DELIMITER) : []
+
+    console.log({ splitOutput })
+
+    const output: ILog[] = []
+    for (let x = 0; x < splitOutput.length; x += 2) {
+        output.push({
+            index: Number.parseInt(splitOutput[x]) + 1,
+            log: splitOutput[x + 1],
+        })
+    }
+
+    const filteredOutput = traceIndex > -1 ? output.filter((l) => l.index <= traceIndex) : output
+    filteredOutput.reverse()
 
     const source =
         p.sourceCode.split(HELPER_CODE_BORDER).length == 2
@@ -25,16 +48,29 @@ const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
     const numLines = source.split('\n').length
 
     const toggleDebug = () => {
-        if (traceIndex == -1) setTraceIndex(0)
-        else setTraceIndex(-1)
+        if (traceIndex == -1) {
+            setTraceIndex(0)
+            setShowConsole(true)
+        } else {
+            setTraceIndex(-1)
+            setShowConsole(false)
+        }
     }
 
     const stepBackwards = () => {
-        if (traceIndex > 0) setTraceIndex(traceIndex - 1)
+        if (traceIndex > 0) {
+            setTraceIndex(traceIndex - 1)
+            const line = document.getElementById('line-' + lines[traceIndex])
+            if (line) line.scrollIntoView()
+        }
     }
 
     const stepForwards = () => {
-        if (traceIndex < lines.length - 1) setTraceIndex(traceIndex + 1)
+        if (traceIndex < lines.length - 1) {
+            setTraceIndex(traceIndex + 1)
+            const line = document.getElementById('line-' + lines[traceIndex])
+            if (line) line.scrollIntoView()
+        }
     }
 
     return (
@@ -67,14 +103,14 @@ const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
                     tabIndex={-1}
                     aria-label='Toggle debug mode'
                     icon={<VscDebugConsole size={15} />}
-                    // onClick={goForwardATurn}
-                    // isDisabled={currentTurn == turns.length}
+                    variant={showConsole ? 'solid' : 'outline'}
+                    onClick={() => setShowConsole(!showConsole)}
                 />
             </ButtonGroup>
             <Flex
                 overflow='scroll'
                 width='100%'
-                maxH={600}
+                maxH={showConsole ? 400 : 600}
                 lineHeight={1.66667}
                 background='rgb(30, 30, 30)'
                 borderRadius='3px'
@@ -83,6 +119,7 @@ const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
                     {[...Array(numLines)].map((_, i) => {
                         return (
                             <Text
+                                id={'line-' + (i + 1).toString()}
                                 pl='6px'
                                 borderLeftWidth='4px'
                                 borderLeftColor={lineFrequency[i + 1] ?? 'transparent'}
@@ -97,8 +134,6 @@ const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
                     highlight={traceIndex >= 0 && lines[traceIndex]}
                     customStyle={{
                         overflowX: 'unset',
-                        maxHeight: 500,
-                        // width: '100%',
                     }}
                     codeContainerStyle={{
                         fontFamily: 'revert',
@@ -110,6 +145,27 @@ const ReplayPageCodeViewer = (p: IReplayPageCodeViewerProps) => {
                     theme={vs2015}
                 />
             </Flex>
+            <Stack
+                background='rgb(30, 30, 30)'
+                w='100%'
+                h={showConsole ? 300 : 0}
+                overflow='scroll'
+                fontFamily={`source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace${''}`}
+                whiteSpace='pre'
+                flexShrink={1}
+                flexDir='column-reverse'
+                p={2}
+            >
+                {filteredOutput.length <= 0 && <pre>No console output yet.</pre>}
+                {filteredOutput.map((l, i) => {
+                    return (
+                        <Box key={i} borderBottomWidth={1} p={2}>
+                            <b>Line {lines[l.index - 1]}:</b>
+                            <pre>{l.log + '\n'}</pre>
+                        </Box>
+                    )
+                })}
+            </Stack>
         </Stack>
     )
 }

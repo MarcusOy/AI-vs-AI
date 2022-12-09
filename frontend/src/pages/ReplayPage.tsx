@@ -156,7 +156,7 @@ const ReplayPage = (p: IReplayPageProps) => {
     const isAttackerTurn = turns && currentTurn > 0 && turns[currentTurn - 1].isAttackTurn
 
     return (
-        <Flex>
+        <Flex justifyContent='center'>
             <Stack w={size}>
                 <Center>
                     <HStack spacing={2}>
@@ -284,7 +284,7 @@ const ReplayPage = (p: IReplayPageProps) => {
                     </Select>
                 </HStack>
             </Stack>
-            <Box bg='whiteAlpha.200' flexGrow={1} ml='6' mr='3' borderRadius={3}>
+            <Box bg='whiteAlpha.200' flexGrow={1} ml='6' mr='3' borderRadius={3} maxW='xl'>
                 <Stack p='3'>
                     <HStack>
                         <Stack>
@@ -371,6 +371,11 @@ const ReplayPage = (p: IReplayPageProps) => {
                                 executionTrace={
                                     turns && currentTurn > 0
                                         ? turns[currentTurn - 1].linesExecuted!
+                                        : undefined
+                                }
+                                printOutput={
+                                    turns && currentTurn > 0
+                                        ? turns[currentTurn - 1].printInfo!
                                         : undefined
                                 }
                             />

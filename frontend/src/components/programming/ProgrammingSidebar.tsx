@@ -6,13 +6,6 @@ import {
     TabPanel,
     HStack,
     Button,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionIcon,
-    AccordionPanel,
-    VStack,
-    Box,
     useTab,
     Tooltip,
     Badge,
@@ -33,12 +26,9 @@ import {
     ModalHeader,
     ModalOverlay,
     Flex,
-    Text,
-    Heading,
-    Link,
 } from '@chakra-ui/react'
 import { useMultiStyleConfig } from '@chakra-ui/system'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import {
     BsJoystick,
     BsPlay,
@@ -49,12 +39,9 @@ import {
     BsThermometerLow,
 } from 'react-icons/bs'
 import { IoFlask } from 'react-icons/io5'
-import { useNavigate } from 'react-router-dom'
-import IdentityService from '../../data/IdentityService'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import useAVASocket from '../../helpers/useAVASocket'
 import { Battle } from '../../models/battle'
-import { Game } from '../../models/game'
 import { Strategy } from '../../models/strategy'
 import { StrategyStatus } from '../../models/strategy-status'
 import DocumentationTab from './DocumentationTab'
