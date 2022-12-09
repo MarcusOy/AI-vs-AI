@@ -29,7 +29,6 @@ interface IProfileBattlesTabProps {
 }
 
 const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
-    const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
     const { data, error, isLoading } = useAVAFetch('/Battles', {
         params: {
@@ -64,7 +63,6 @@ const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
         }
     })
     const dates: Battle[][] = Object.values(groupBy(battles, 'createdOnDate'))
-    console.log({ battles, dates })
 
     return (
         <Stack spacing='5'>

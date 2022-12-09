@@ -105,12 +105,11 @@ const ModalAi = (props: ModalAiProps) => {
                       gameId: 1,
                       name: 'Untitled Draft',
                       sourceCode: helperFunctions + devComplete,
-                }
+                  }
             if (props.overwrite) {
                 build.name = 'Duplicate of ' + build.name
             }
             const response = await execute({ data: build })
-            console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else if (props.overwrite) {
@@ -118,7 +117,6 @@ const ModalAi = (props: ModalAiProps) => {
                 url: '/Strategy/Duplicate/' + value.id,
                 data: props.strategy,
             })
-            console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else {

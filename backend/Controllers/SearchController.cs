@@ -53,6 +53,7 @@ public class SearchController : Controller
 
         var bQuery = _dbContext.Battles
             .Where(u => u.Name.ToUpper().Contains(p.SearchQuery.ToUpper()))
+            .Where(u => 1 == 2)
             .Select(b => new Result
             {
                 Id = b.Id,

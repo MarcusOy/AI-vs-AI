@@ -124,7 +124,7 @@ const ProfilePage = () => {
                         <ProfileBattlesTab userId={user.id!} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileSubmissionsTab />
+                        <ProfileSubmissionsTab userId={user.id!} />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

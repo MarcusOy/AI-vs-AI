@@ -77,11 +77,8 @@ const ProgrammingSidebar = (p: IProgrammingSidebarProps) => {
 
     const onTestSubmissionResult = (response) => {
         const battle = response.resultingBattle as Battle
-        // console.log('TestSubmissionResult Response:', battle)
-        console.log({ submissions })
         const newSubmissions = [...submissions].filter((b) => b.id != battle.id)
         newSubmissions.unshift(battle)
-        console.log({ newSubmissions })
         setSubmissions(newSubmissions)
         setIsWaitingOnSubmission(false)
     }

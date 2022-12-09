@@ -59,7 +59,7 @@ function ProgrammingPage() {
     return (
         <Box position='fixed' left={0} right={0} bottom={0} top='4.6rem' pt='0'>
             <Split
-                sizes={[25, 75]}
+                sizes={[45, 55]}
                 className='split'
                 minSize={450}
                 gutterAlign='start'

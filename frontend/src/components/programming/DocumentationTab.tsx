@@ -80,7 +80,10 @@ const DocumentationTab = (p: IDocumentationTabProps) => {
                                                 label={p.description ?? ''}
                                             >
                                                 <Text fontSize='sm'>
-                                                    {p.name && p.name != '' && `arg${i + 1}`}:{' '}
+                                                    {p.name != undefined && p.name != ''
+                                                        ? p.name
+                                                        : `arg${i + 1}`}
+                                                    :{' '}
                                                     <Text as='span' color='cyan.300'>
                                                         {p.type}
                                                     </Text>

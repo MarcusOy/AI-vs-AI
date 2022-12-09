@@ -203,13 +203,6 @@ const SubmissionsTab = (p: ISubmissionsTabProps) => {
                                         </Stack>
                                     </HStack>
                                 )}
-                                {/* <Box>{value.name}</Box>
-                                    <Box>
-                                        {value.attackerWins === 1
-                                            ? 'You Win!'
-                                            : 'Iterate and Improve, You Lost...'}
-                                    </Box>
-                                    <Box></Box> */}
                             </AccordionPanel>
                         </AccordionItem>
                     )
