@@ -4,6 +4,7 @@
  */
 
 import { BaseEntity } from './base-entity';
+import { StarterCode } from './starter-code';
 import { Strategy } from './strategy';
 import { User } from './user';
 
@@ -12,8 +13,7 @@ export interface Game extends BaseEntity {
     name: string;
     shortDescription: string;
     longDescription: string;
-    boilerplateCode: string;
-    helperCode: string;
+    starterCode: StarterCode[];
     strategies: Strategy[];
     usersWhoFavorited: User[];
 }

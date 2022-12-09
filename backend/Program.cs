@@ -5,11 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using AVA.API.Data;
 using AVA.API.Helpers;
 using AVA.API.Services;
-using AVA.API.Controllers;
 using AVA.API.Middleware;
 using MassTransit;
 using AVA.API.Consumers;
 using AVA.API.Hubs;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -37,13 +37,11 @@ builder.Services.AddDbContextPool<AVADbContext>(
     dbContextOptions => dbContextOptions
         .UseMySql(settings.ConnectionString, new MySqlServerVersion(new Version(5, 7)))
         .EnableDetailedErrors()
-        .EnableSensitiveDataLogging()
 );
 
-builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-        o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-    );
+builder.Services.AddControllers().AddNewtonsoftJson(
+    o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 
 builder.Services.AddMassTransit(mt =>
 {
@@ -58,7 +56,12 @@ builder.Services.AddMassTransit(mt =>
             h.Password(settings.RabbitMQ.Password);
         });
         cfg.ConfigureEndpoints(context);
+        cfg.UseNewtonsoftJsonSerializer();
+        cfg.ConfigureNewtonsoftJsonSerializer(
+            o => { o.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore; return o; }
+        );
     });
+
 });
 
 // Add websockets functionality
@@ -101,6 +104,7 @@ builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
 builder.Services.AddScoped<IBattlesService, BattlesService>();
+builder.Services.AddScoped<IStarterCodeService, StarterCodeService>();
 
 var app = builder.Build();
 #endregion
@@ -130,7 +134,7 @@ app.MapHub<SimulationHub>("AI");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<IInitializationService>()
+    await scope.ServiceProvider.GetRequiredService<IInitializationService>()
         .InitializeDatabase();
 
 app.Run("https://0.0.0.0:443");

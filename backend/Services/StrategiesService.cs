@@ -11,7 +11,7 @@ namespace AVA.API.Services
         Strategy GetStockStrategy(int stockToChoose);
         Task<Strategy> CreateAsync(Strategy strategy);
         Task<Strategy> UpdateAsync(Strategy strategy);
-        Task<Strategy> SubmitAsync(Strategy strategy);
+        Task<Strategy> SubmitAsync(Guid id);
         Task<Strategy> DeleteAsync(Guid id);
 
         String getStockName(int StockCodeInt);
@@ -23,14 +23,17 @@ namespace AVA.API.Services
         private readonly AVADbContext _dbContext;
         private readonly IIdentityService _identityService;
         private readonly ILogger<StrategiesService> _logger;
+        private readonly IStarterCodeService _starterCodeService;
 
         public StrategiesService(AVADbContext dbContext,
                             IIdentityService identityService,
-                            ILogger<StrategiesService> logger)
+                            ILogger<StrategiesService> logger,
+                            IStarterCodeService starterCodeService)
         {
             _dbContext = dbContext;
             _identityService = identityService;
             _logger = logger;
+            _starterCodeService = starterCodeService;
         }
 
         // public List<Strategy> GetAll()
@@ -41,7 +44,7 @@ namespace AVA.API.Services
 
         public Strategy Get(Guid id)
         {
-            Strategy s = _dbContext.Strategies
+            var s = _dbContext.Strategies
                 .Include(s => s.CreatedByUser)
                 .Include(s => s.Game)
                 .Include(s => s.AttackerBattles)
@@ -100,7 +103,9 @@ namespace AVA.API.Services
             strategy.Game = null;
 
             // populate source code with starter code
-            //strategy.SourceCode = game.BoilerplateCode;
+            strategy.SourceCode = _starterCodeService
+                .Get(game.Id.ToString(), ProgrammingLanguage.JavaScript.ToString())
+                .Boilerplate;
 
             await _dbContext.Strategies.AddAsync(strategy);
             await _dbContext.SaveChangesAsync();
@@ -116,29 +121,27 @@ namespace AVA.API.Services
 
             // trust these fields
             originalStrategy.Name = strategy.Name;
+            originalStrategy.Language = strategy.Language;
             originalStrategy.SourceCode = strategy.SourceCode;
-            originalStrategy.Status = AVA.API.Models.StrategyStatus.Draft;
+            originalStrategy.Status = strategy.Status;
             originalStrategy.IsPrivate = strategy.IsPrivate;
+            originalStrategy.Elo = strategy.Elo;
 
             _dbContext.Strategies.Update(originalStrategy);
-            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;
         }
-        public async Task<Strategy> SubmitAsync(Strategy strategy)
+        public async Task<Strategy> SubmitAsync(Guid strategyId)
         {
             var originalStrategy = await _dbContext.Strategies
                 .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
-                .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+                .FirstOrDefaultAsync(s => s.Id == strategyId);
 
-            // trust these fields
-            originalStrategy.Name = strategy.Name;
-            originalStrategy.SourceCode = strategy.SourceCode;
+            // set strategy to active
             originalStrategy.Status = AVA.API.Models.StrategyStatus.Active;
 
             _dbContext.Strategies.Update(originalStrategy);
-            _dbContext.Update(originalStrategy);
             await _dbContext.SaveChangesAsync();
 
             return originalStrategy;

@@ -30,6 +30,7 @@ import ProfileStrategiesTab from './ProfileStrategiesTab'
 import ProfileBattlesTab from './ProfileAndStratBattlesTab'
 import ProfileSubmissionsTab from './ProfileSubmissionsTab'
 import { WarningIcon } from '@chakra-ui/icons'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const ProfilePage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -37,12 +38,8 @@ const ProfilePage = () => {
     const navigate = useNavigate()
 
     const isSelf = id == whoAmI?.id
-    const { data, error, isLoading } = useAVAFetch(
-        `/Account/${id}`,
-        {},
-        { manual: isSelf }, // don't retrieve account if self
-    )
-    const user: User = isSelf ? whoAmI : data
+    const { data, error, isLoading } = useAVAFetch(`/Account/${id}`)
+    const user: User = data
 
     const index =
         tab == 'View'
@@ -54,6 +51,8 @@ const ProfilePage = () => {
             : tab == 'Submissions'
             ? 3
             : -1
+
+    useDocumentTitle(user ? `@${user.username} ${tab}` : 'User')
 
     const handleTabsChange = (index) => {
         const tab =
@@ -121,7 +120,7 @@ const ProfilePage = () => {
                         <ProfileBattlesTab userId={user.id!} />
                     </TabPanel>
                     <TabPanel>
-                        <ProfileSubmissionsTab />
+                        <ProfileSubmissionsTab userId={user.id!} />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

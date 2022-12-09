@@ -9,6 +9,7 @@ public class AVADbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<AuthToken> AuthTokens { get; set; }
     public DbSet<Game> Games { get; set; }
+    public DbSet<StarterCode> StarterCode { get; set; }
     public DbSet<Strategy> Strategies { get; set; }
     public DbSet<Battle> Battles { get; set; }
     public DbSet<BattleGame> BattleGames { get; set; }
@@ -22,6 +23,10 @@ public class AVADbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        // Manually defining StarterCode's composite PKs
+        builder.Entity<StarterCode>()
+            .HasKey(c => new { c.GameId, c.Type, c.Language });
+
         // Manually defining Strategy -> Battle relationship
         builder.Entity<Strategy>()
             .HasMany(s => s.AttackerBattles)

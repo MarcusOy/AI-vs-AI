@@ -1,0 +1,5 @@
+The goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces
+The game is played on a 10x10 board. The starting configuration of pieces is as follows:
+This is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)
+An N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces
+Captures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.

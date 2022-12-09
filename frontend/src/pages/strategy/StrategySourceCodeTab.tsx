@@ -1,23 +1,8 @@
-import React, { useState } from 'react'
-import {
-    Code,
-    Center,
-    Box,
-    Stack,
-    Text,
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
-    CloseButton,
-} from '@chakra-ui/react'
-import useAVAFetch from '../../helpers/useAVAFetch'
-import { useParams } from 'react-router-dom'
+import React from 'react'
+import { Center, Box, Stack, Text, Alert, AlertDescription, AlertTitle } from '@chakra-ui/react'
 import { Strategy } from '../../models/strategy'
-import { AVAStore } from '../../data/DataStore'
-
+import { CodeBlock, vs2015 } from 'react-code-blocks'
 import { GoLock } from 'react-icons/go'
-import { LockIcon } from '@chakra-ui/icons'
 interface StrategySourceCodeTab {
     strategy: Strategy
 }
@@ -51,10 +36,19 @@ const StrategySourceCodeTab = (p: StrategySourceCodeTab) => {
                     </Box>
                 </Alert>
             )}
-            <Box overflowX='scroll'>
-                <Code>
-                    <pre>{p.strategy.sourceCode}</pre>
-                </Code>
+            <Box>
+                <CodeBlock
+                    customStyle={{
+                        overflowX: 'scroll',
+                    }}
+                    codeContainerStyle={{
+                        fontFamily: 'revert',
+                    }}
+                    text={p.strategy.sourceCode}
+                    language='typescript'
+                    showLineNumbers
+                    theme={vs2015}
+                />
             </Box>
         </Stack>
     )

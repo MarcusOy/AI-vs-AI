@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="30a6eafa-95fa-4ee9-9f9a-556da4c32186" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/API/JavaScript/EasyAI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/API/JavaScript/EasyAI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simulation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/simulation.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Simulation/SimulationApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Simulation/SimulationApp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -18,6 +19,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="JavaScript File" />
       </list>
     </option>
   </component>
@@ -53,16 +55,18 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\willi\OneDrive\Documents\GitHub\AI-vs-AI2\simulation\src\main\java\delight\nashornsandbox\internal" />
+      <recent name="C:\Users\willi\OneDrive\Documents\GitHub\AI-vs-AI2\simulation\src\main\java\delight\nashornsandbox" />
+      <recent name="C:\Users\willi\OneDrive\Documents\GitHub\AI-vs-AI2\simulation\src\main\java\Sandbox" />
       <recent name="C:\Users\willi\IdeaProjects\AI-vs-AI\simulation\src\main\java\API\TypeScript" />
       <recent name="C:\Users\willi\IdeaProjects\AI-vs-AI\simulation\src\main\java\API\JavaScript" />
-      <recent name="C:\Users\willi\IdeaProjects\AI-vs-AI\simulation\src\API" />
     </key>
   </component>
   <component name="RunManager">
     <configuration name="SimulationApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Simulation.SimulationApp" />
       <module name="simulation" />
-      <option name="PROGRAM_PARAMETERS" value="-ma -o" />
+      <option name="PROGRAM_PARAMETERS" value="-d -j" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="Simulation.*" />

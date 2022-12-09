@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import {
@@ -10,14 +10,22 @@ import {
     Avatar,
     HStack,
     Divider,
-    SimpleGrid,
+    Spinner,
 } from '@chakra-ui/react'
-import { ChevronLeftIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
+import { ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
 import { randomColor } from '@chakra-ui/theme-tools'
 import { TbShield, TbSword, TbSwords } from 'react-icons/tb'
 import { Battle } from '../../models/battle'
 import { AVAStore } from '../../data/DataStore'
 import { GoTriangleLeft } from 'react-icons/go'
+import { BattleStatus } from '../../models/battle-status'
+
+const groupBy = function (xs, key) {
+    return xs.reduce(function (rv, x) {
+        ;(rv[x[key]] = rv[x[key]] || []).push(x)
+        return rv
+    }, {})
+}
 
 const winColorProps = {
     backgroundColor: 'rgba(68, 220, 255, 0.20)',
@@ -32,18 +40,24 @@ interface IProfileBattlesTabProps {
 }
 
 const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
-    const { whoAmI } = AVAStore.useState()
     const navigate = useNavigate()
-    const { data, error, isLoading } = useAVAFetch('/Battles', {
+    const { data, error, isLoading, execute } = useAVAFetch('/Battles', {
         params: {
             userId: p.userId,
             strategyId: p.strategyId,
         },
     })
 
-    const battles: Battle[] = data
+    useEffect(() => {
+        const interval = setInterval(() => execute(), 5000)
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
 
-    if (battles == null || battles.length <= 0)
+    // if (isLoading) return <Spinner />
+
+    if (data == null || data.length <= 0)
         return (
             <Center>
                 <Stack mt='48' alignItems='center'>
@@ -56,77 +70,147 @@ const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
             </Center>
         )
 
+    const battles: Battle[] = data.map((b) => {
+        const createdOnDate = new Date(b.createdOn).toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        })
+        return {
+            ...b,
+            createdOnDate,
+        }
+    })
+    const dates: Battle[][] = Object.values(groupBy(battles, 'createdOnDate'))
+
+    const navigateToBattle = (id) => navigate(`/Battle/${id}`)
+
     return (
-        <SimpleGrid columns={[1, 1, 1, 2]} spacing='5'>
-            {battles.map((b, i) => {
-                const name = b.name
-                const attacker = b.attackingStrategy.name
-                const defender = b.defendingStrategy.name
-                const didAttackerWin = b.attackerWins > b.defenderWins
-
-                const isAttacker = p.strategyId
-                    ? b.attackingStrategyId == p.strategyId
-                    : b.attackingStrategy.createdByUserId == p.userId
-
-                const colors =
-                    isAttacker && didAttackerWin
-                        ? winColorProps
-                        : !isAttacker && !didAttackerWin
-                        ? winColorProps
-                        : null
-
-                return (
-                    <Button
-                        key={i}
-                        colorScheme='gray'
-                        onClick={() => navigate(`/Battle/${b.id}`)}
-                        rightIcon={<ChevronRightIcon />}
-                        p={10}
-                        {...colors}
-                    >
-                        <Avatar bg={randomColor({ string: name })} icon={<TbSwords size='25' />} />
-                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
-                            <Stack>
-                                <HStack>
-                                    <TbSword size='15' />
-                                    <Text fontWeight={didAttackerWin ? 'bolder' : 'normal'}>
-                                        {attacker}
-                                    </Text>
-                                </HStack>
-                                <HStack>
-                                    <TbShield size='15' />
-                                    <Text fontWeight={didAttackerWin ? 'normal' : 'bolder'}>
-                                        {defender}
-                                    </Text>
-                                </HStack>
+        <Center>
+            <Stack spacing='5' flexGrow={1} maxW='3xl'>
+                {dates.map((d, i) => {
+                    return (
+                        <React.Fragment key={i}>
+                            <Stack spacing='1'>
+                                <Text fontSize='sm'>{(d[0] as any).createdOnDate}</Text>
+                                <Divider />
                             </Stack>
-                        </Stack>
-                        <Box flexGrow={1} />
-                        <Stack>
-                            <HStack>
-                                <Text fontWeight={didAttackerWin ? 'bolder' : 'normal'}>
-                                    {b.attackerWins}
-                                </Text>
-                                {didAttackerWin && <GoTriangleLeft />}
-                            </HStack>
-                            <HStack>
-                                <Text fontWeight={didAttackerWin ? 'normal' : 'bolder'}>
-                                    {b.defenderWins}
-                                </Text>
-                                {!didAttackerWin && <GoTriangleLeft />}
-                            </HStack>
-                        </Stack>
-                        <Divider
-                            h='4rem'
-                            ml='0'
-                            mr='6'
-                            color='chakra-body-text'
-                            orientation='vertical'
-                        />
-                    </Button>
-                )
-            })}
-        </SimpleGrid>
+                            {d.map((b, i) => {
+                                const name = b.name
+                                const attacker = b.attackingStrategy.name
+                                const attackerV = b.attackingStrategy.version
+                                const defender = b.defendingStrategy.name
+                                const defenderV = b.defendingStrategy.version
+                                const didAttackerWin = b.attackerWins > b.defenderWins
+
+                                const isAttacker = p.strategyId
+                                    ? b.attackingStrategyId == p.strategyId
+                                    : b.attackingStrategy.createdByUserId == p.userId
+
+                                const colors =
+                                    b.battleStatus == BattleStatus.Pending
+                                        ? null
+                                        : isAttacker && didAttackerWin
+                                        ? winColorProps
+                                        : !isAttacker && !didAttackerWin
+                                        ? winColorProps
+                                        : null
+
+                                return (
+                                    <Button
+                                        key={i}
+                                        colorScheme='gray'
+                                        onClick={
+                                            b.battleStatus != BattleStatus.Pending
+                                                ? () => navigateToBattle(b.id)
+                                                : () => console.log('Pending')
+                                        }
+                                        rightIcon={
+                                            b.battleStatus == BattleStatus.Pending ? (
+                                                <Spinner size='sm' />
+                                            ) : (
+                                                <ChevronRightIcon />
+                                            )
+                                        }
+                                        p={10}
+                                        cursor={
+                                            b.battleStatus == BattleStatus.Pending
+                                                ? 'unset'
+                                                : 'pointer'
+                                        }
+                                        {...colors}
+                                    >
+                                        <Avatar
+                                            bg={randomColor({ string: name })}
+                                            icon={<TbSwords size='25' />}
+                                        />
+                                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                                            <Stack>
+                                                <HStack>
+                                                    <TbSword size='15' />
+                                                    <Text
+                                                        fontWeight={
+                                                            didAttackerWin ? 'bolder' : 'normal'
+                                                        }
+                                                    >
+                                                        {attacker}
+                                                    </Text>
+                                                    <Text fontSize='sm'> v{attackerV}</Text>
+                                                </HStack>
+                                                <HStack>
+                                                    <TbShield size='15' />
+                                                    <Text
+                                                        fontWeight={
+                                                            didAttackerWin ? 'normal' : 'bolder'
+                                                        }
+                                                    >
+                                                        {defender}
+                                                    </Text>
+                                                    <Text fontSize='sm'> v{defenderV}</Text>
+                                                </HStack>
+                                            </Stack>
+                                        </Stack>
+                                        <Box flexGrow={1} />
+                                        {b.battleStatus != BattleStatus.Pending && (
+                                            <Stack>
+                                                <HStack>
+                                                    <Text
+                                                        fontWeight={
+                                                            didAttackerWin ? 'bolder' : 'normal'
+                                                        }
+                                                    >
+                                                        {b.attackerWins}
+                                                    </Text>
+                                                    {didAttackerWin && <GoTriangleLeft />}
+                                                </HStack>
+                                                <HStack>
+                                                    <Text
+                                                        fontWeight={
+                                                            didAttackerWin ? 'normal' : 'bolder'
+                                                        }
+                                                    >
+                                                        {b.defenderWins}
+                                                    </Text>
+                                                    {!didAttackerWin && <GoTriangleLeft />}
+                                                </HStack>
+                                            </Stack>
+                                        )}
+                                        <Divider
+                                            h='4rem'
+                                            ml='0'
+                                            mr='6'
+                                            color='chakra-body-text'
+                                            orientation='vertical'
+                                        />
+                                    </Button>
+                                )
+                            })}
+                        </React.Fragment>
+                    )
+                })}
+            </Stack>
+        </Center>
     )
 }
 

@@ -12,6 +12,7 @@ public class Strategy : BaseEntity
     public Guid Id { get; set; }
     [Required, StringLength(50)]
     public string Name { get; set; }
+    public ProgrammingLanguage Language { get; set; }
     public string SourceCode { get; set; }
     [TsOptional]
     public StrategyStatus Status { get; set; }
@@ -19,6 +20,8 @@ public class Strategy : BaseEntity
     public int Version { get; set; }
     [TsOptional]
     public bool IsPrivate { get; set; }
+    [TsOptional]
+    public int Elo { get; set; }
 
     // User Relationship (Strategy is created by user)
     [TsOptional]
@@ -33,9 +36,9 @@ public class Strategy : BaseEntity
     public Game Game { get; set; }
 
     // Battle Relationship (Strategy fights in battles)
-    [TsOptional]
+    [TsOptional, JsonIgnore]
     public List<Battle> AttackerBattles { get; set; }
-    [TsOptional]
+    [TsOptional, JsonIgnore]
     public List<Battle> DefenderBattles { get; set; }
 }
 
@@ -44,4 +47,10 @@ public enum StrategyStatus
     Draft = 0,
     Active = 1,
     InActive = -1
+}
+
+public enum ProgrammingLanguage
+{
+    JavaScript = 0,
+    TypeScript = 1
 }
