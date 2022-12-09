@@ -62,8 +62,8 @@ public class StatsController : Controller
         {
             Strategy strat = _strategyService.Get(idStrat);
 
-            List<Battle> attacker = strat.AttackerBattles;
-            List<Battle> defender = strat.DefenderBattles;
+            List<Battle> attacker = strat.AttackerBattles.Where(b => !b.IsTestSubmission).ToList();
+            List<Battle> defender = strat.DefenderBattles.Where(b => !b.IsTestSubmission).ToList();
 
             int NumWins = 0;
             int NumLoss = 0;

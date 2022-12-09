@@ -20,6 +20,155 @@ public class SearchController : Controller
         _dbContext = dbContext;
     }
 
+    [HttpGet, Route("/Interactions/{Page}")]
+    public async Task<List<InteractionResult>> PaginatedInteractions(int Page)
+    {
+        var uQuery = _dbContext.Users
+            .Where(u => u.Active == true)
+            .Select(u => new InteractionResult
+            {
+                Id = u.Id,
+                Type = InteractionType.User,
+                Title = Convert.ToString(u.FirstName + " " + u.LastName),
+                SourceCode = null,
+                CreatedByGuid = u.Id,
+                CreatedByName = Convert.ToString(u.Username),
+                Time = u.CreatedOn
+            });
+
+        var cQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.CreatedStrategy,
+                Title = Convert.ToString(s.Name),
+                SourceCode = null,
+                CreatedByGuid = s.CreatedByUserId,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.CreatedOn
+            });
+
+        var sQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.SubmittedStrategy,
+                Title = Convert.ToString(s.Name),
+                SourceCode = s.IsPrivate == true ? null : Convert.ToString(s.SourceCode),
+                CreatedByGuid = s.CreatedByUserId,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.UpdatedOn
+            });
+
+        var q = uQuery.Union(cQuery)
+            .Union(sQuery)
+            .OrderByDescending(r => r.Time)
+            .Take(10)
+            .Skip(10 * (Page - 1));
+
+        return await q.ToListAsync();
+    }
+    [HttpGet, Route("/Interactions/")]
+    public async Task<List<InteractionResult>> Interactions()
+    {
+        var uQuery = _dbContext.Users
+            .Where(u => u.Active == true)
+            .Where(u => !u.Username.Equals("system"))
+            .Select(u => new InteractionResult
+            {
+                Id = u.Id,
+                Type = InteractionType.User,
+                Title = Convert.ToString(u.FirstName + " " + u.LastName),
+                SourceCode = null,
+                CreatedByGuid = u.Id,
+                CreatedByName = Convert.ToString(u.Username),
+                Time = u.CreatedOn
+            });
+
+        var cQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.CreatedStrategy,
+                Title = Convert.ToString(s.Name),
+                SourceCode = null,
+                CreatedByGuid = s.CreatedByUserId,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.CreatedOn
+            });
+
+        var sQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Where(s => !s.CreatedByUser.Username.Equals("system"))
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.SubmittedStrategy,
+                Title = Convert.ToString(s.Name),
+                SourceCode = s.IsPrivate == true ? null : Convert.ToString(s.SourceCode),
+                CreatedByGuid = s.CreatedByUserId,
+                CreatedByName = Convert.ToString("@" + s.CreatedByUser.Username),
+                Time = s.UpdatedOn
+            });
+
+        var q = uQuery.Union(cQuery)
+            .Union(sQuery)
+            .OrderByDescending(r => r.Time);
+
+
+        return await q.ToListAsync();
+    }
+
+    [HttpGet, Route("/Interactions/DailyStats")]
+    public int[] DailyStats()
+    {
+        var uQuery = _dbContext.Users
+            .Where(u => u.Active == true)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.Username.Equals("system"))
+
+            .Select(u => new InteractionResult
+            {
+                Id = u.Id,
+                Type = InteractionType.User,
+                Time = u.CreatedOn
+            });
+
+        var cQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.CreatedStrategy,
+                Time = s.CreatedOn
+            });
+
+        var sQuery = _dbContext.Strategies
+            .Where(s => s.Status == StrategyStatus.Active)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
+            .Select(s => new InteractionResult
+            {
+                Id = s.Id,
+                Type = InteractionType.SubmittedStrategy,
+                Time = s.UpdatedOn
+            });
+        var stats = new int[3];
+        uQuery.Union(cQuery)
+            .Union(sQuery)
+            .OrderByDescending(r => r.Time).ToList().ForEach(u =>
+                stats[u.Type == InteractionType.SubmittedStrategy ? 2 : u.Type == InteractionType.CreatedStrategy ? 1 : 0] += 1);
+
+        return stats;
+    }
+
     [HttpGet, Route("/Search"), Authorize]
     public async Task<List<Result>> Search([FromQuery] SearchQueryParameters p)
     {
@@ -53,6 +202,7 @@ public class SearchController : Controller
 
         var bQuery = _dbContext.Battles
             .Where(u => u.Name.ToUpper().Contains(p.SearchQuery.ToUpper()))
+            .Where(u => 1 == 2)
             .Select(b => new Result
             {
                 Id = b.Id,
@@ -78,6 +228,19 @@ public class SearchController : Controller
     }
 
     [ExportTsInterface]
+    public class InteractionResult
+    {
+        public Guid Id { get; set; }
+        public InteractionType Type { get; set; }
+        [MaxLength(100)]
+        public String Title { get; set; }
+        public String SourceCode { get; set; }
+        public Guid CreatedByGuid { get; set; }
+        public String CreatedByName { get; set; }
+        public DateTime Time { get; set; }
+    }
+
+    [ExportTsInterface]
     public class Result
     {
         public Guid Id { get; set; }
@@ -94,5 +257,12 @@ public class SearchController : Controller
         User,
         Strategy,
         Battle
+    }
+
+    public enum InteractionType
+    {
+        User,
+        CreatedStrategy,
+        SubmittedStrategy
     }
 }

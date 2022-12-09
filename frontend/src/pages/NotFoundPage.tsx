@@ -2,8 +2,10 @@ import { Center, Link, Stack, Text } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
 import React from 'react'
 import { Link as RouterLink } from 'react-router-dom'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 const NotFoundPage = () => {
+    useDocumentTitle('404 Not Found')
     return (
         <Center>
             <Stack mt='48' alignItems='center'>

@@ -1,7 +1,18 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { Center, Box, Text, Button, Stack, Avatar, Badge } from '@chakra-ui/react'
+import {
+    Center,
+    Box,
+    Text,
+    Button,
+    Stack,
+    Avatar,
+    Badge,
+    Heading,
+    HStack,
+    Divider,
+} from '@chakra-ui/react'
 import { User } from '../../models/user'
 import { ChevronRightIcon, WarningIcon } from '@chakra-ui/icons'
 import { TbBook2 } from 'react-icons/tb'
@@ -28,44 +39,106 @@ const ProfileStrategiesTab = (p: IProfileStrategiesTabProps) => {
             </Center>
         )
 
+    const activeOrDraftStrategies = strategies.filter((s) => s.status != StrategyStatus.InActive)
+    const archivedStrategies = strategies.filter((s) => s.status == StrategyStatus.InActive)
+
     return (
-        <Stack spacing='5'>
-            {strategies.map((s, i) => {
-                return (
-                    <Button
-                        key={i}
-                        colorScheme='gray'
-                        onClick={() => navigate(`/Strategy/${s.id}/Stats`)}
-                        rightIcon={<ChevronRightIcon />}
-                        p={10}
-                    >
-                        <Avatar bg={randomColor({ string: s.name })} icon={<TbBook2 size='25' />} />
-                        <Stack spacing='0.2rem' textAlign='left' ml={5}>
-                            <Text>{s.name}</Text>
-                            <Text fontSize='xs'>
-                                <span style={{ marginRight: 10 }}>{s.game?.name} </span>
-                                {s.status == StrategyStatus.Draft && (
-                                    <Badge variant='outline' colorScheme='cyan'>
-                                        Draft
-                                    </Badge>
-                                )}
-                                {s.status == StrategyStatus.Active && (
-                                    <Badge variant='solid' colorScheme='cyan'>
-                                        Active
-                                    </Badge>
-                                )}
-                                {s.status == StrategyStatus.InActive && (
-                                    <Badge variant='subtle' colorScheme='cyan'>
-                                        Inactive
-                                    </Badge>
-                                )}
-                            </Text>
+        <Center>
+            <Stack mt={10} spacing='5' flexGrow={1} maxW='3xl'>
+                {activeOrDraftStrategies.map((s, i) => {
+                    return (
+                        <Button
+                            key={i}
+                            colorScheme='gray'
+                            onClick={() => navigate(`/Strategy/${s.id}/Stats`)}
+                            rightIcon={<ChevronRightIcon />}
+                            p={10}
+                        >
+                            <Avatar
+                                bg={randomColor({ string: s.name })}
+                                icon={<TbBook2 size='25' />}
+                            />
+                            <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                                <HStack>
+                                    <Heading fontSize='md'>{s.name}</Heading>
+                                    <Text ml={5}>v{s.version}</Text>
+                                </HStack>
+
+                                <Text fontSize='xs'>
+                                    <span style={{ marginRight: 10 }}>{s.game?.name} </span>
+                                    {s.status == StrategyStatus.Draft && (
+                                        <Badge variant='outline' colorScheme='cyan'>
+                                            Draft
+                                        </Badge>
+                                    )}
+                                    {s.status == StrategyStatus.Active && (
+                                        <Badge variant='solid' colorScheme='cyan'>
+                                            Active
+                                        </Badge>
+                                    )}
+                                    {s.status == StrategyStatus.InActive && (
+                                        <Badge variant='subtle' colorScheme='cyan'>
+                                            Inactive
+                                        </Badge>
+                                    )}
+                                </Text>
+                            </Stack>
+                            <Box flexGrow={1} />
+                        </Button>
+                    )
+                })}
+                {archivedStrategies.length > 0 && (
+                    <>
+                        <Stack spacing='1'>
+                            <Text fontSize='sm'>Archived strategies</Text>
+                            <Divider />
                         </Stack>
-                        <Box flexGrow={1} />
-                    </Button>
-                )
-            })}
-        </Stack>
+                        {archivedStrategies.map((s, i) => {
+                            return (
+                                <Button
+                                    key={i}
+                                    colorScheme='gray'
+                                    onClick={() => navigate(`/Strategy/${s.id}/Stats`)}
+                                    rightIcon={<ChevronRightIcon />}
+                                    p={10}
+                                >
+                                    <Avatar
+                                        bg={randomColor({ string: s.name })}
+                                        icon={<TbBook2 size='25' />}
+                                    />
+                                    <Stack spacing='0.2rem' textAlign='left' ml={5}>
+                                        <HStack>
+                                            <Heading fontSize='md'>{s.name}</Heading>
+                                            <Text ml={5}>v{s.version}</Text>
+                                        </HStack>
+
+                                        <Text fontSize='xs'>
+                                            <span style={{ marginRight: 10 }}>{s.game?.name} </span>
+                                            {s.status == StrategyStatus.Draft && (
+                                                <Badge variant='outline' colorScheme='cyan'>
+                                                    Draft
+                                                </Badge>
+                                            )}
+                                            {s.status == StrategyStatus.Active && (
+                                                <Badge variant='solid' colorScheme='cyan'>
+                                                    Active
+                                                </Badge>
+                                            )}
+                                            {s.status == StrategyStatus.InActive && (
+                                                <Badge variant='subtle' colorScheme='cyan'>
+                                                    Inactive
+                                                </Badge>
+                                            )}
+                                        </Text>
+                                    </Stack>
+                                    <Box flexGrow={1} />
+                                </Button>
+                            )
+                        })}
+                    </>
+                )}
+            </Stack>
+        </Center>
     )
 }
 

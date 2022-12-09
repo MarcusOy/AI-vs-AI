@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import {
+    Avatar,
     Box,
     Button,
     Center,
-    chakra,
-    Flex,
+    Heading,
     HStack,
     Modal,
     ModalBody,
@@ -13,6 +13,7 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    Stack,
     Tab,
     TabList,
     TabPanel,
@@ -22,7 +23,11 @@ import {
     useRadio,
     useRadioGroup,
     VStack,
+    Badge,
+    Spacer,
 } from '@chakra-ui/react'
+import { TbBook2 } from 'react-icons/tb'
+import { randomColor } from '@chakra-ui/theme-tools'
 import { AVAStore } from '../data/DataStore'
 import useAVAFetch from '../helpers/useAVAFetch'
 import { useNavigate } from 'react-router-dom'
@@ -105,12 +110,11 @@ const ModalAi = (props: ModalAiProps) => {
                       gameId: 1,
                       name: 'Untitled Draft',
                       sourceCode: helperFunctions + devComplete,
-                }
+                  }
             if (props.overwrite) {
                 build.name = 'Duplicate of ' + build.name
             }
             const response = await execute({ data: build })
-            console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else if (props.overwrite) {
@@ -118,7 +122,6 @@ const ModalAi = (props: ModalAiProps) => {
                 url: '/Strategy/Duplicate/' + value.id,
                 data: props.strategy,
             })
-            console.log(response)
             IdentityService.refreshIdentity()
             navigate('/Programming/' + response.data.id)
         } else {
@@ -144,7 +147,42 @@ const ModalAi = (props: ModalAiProps) => {
                                 height='40vh'
                             >
                                 <RadioCard key={value} {...radio}>
-                                    {n.name}
+                                    <Avatar
+                                        bg={randomColor({ string: n.name })}
+                                        icon={<TbBook2 size='25' />}
+                                    />
+                                    <Stack ml='3'>
+                                        <Heading fontSize='lg'>{n.name}</Heading>
+                                        {n.status == StrategyStatus.Draft && (
+                                            <Badge
+                                                variant='outline'
+                                                colorScheme='cyan'
+                                                width='min-content'
+                                            >
+                                                Draft
+                                            </Badge>
+                                        )}
+                                        {n.status == StrategyStatus.Active && (
+                                            <Badge
+                                                variant='solid'
+                                                colorScheme='cyan'
+                                                width='min-content'
+                                            >
+                                                Active
+                                            </Badge>
+                                        )}
+                                        {n.status == StrategyStatus.InActive && (
+                                            <Badge
+                                                variant='subtle'
+                                                colorScheme='cyan'
+                                                width='min-content'
+                                            >
+                                                InActive
+                                            </Badge>
+                                        )}
+                                    </Stack>
+                                    <Spacer />
+                                    <Heading size='sm'>v{n.version}</Heading>
                                 </RadioCard>
                                 <StrategyStats strategy={n} />
                             </Box>
@@ -165,7 +203,7 @@ const ModalAi = (props: ModalAiProps) => {
                                 height='40vh'
                             >
                                 <RadioCard key={value} {...radio}>
-                                    {n.name}
+                                    <em>Free slot</em>
                                 </RadioCard>
                                 <Center>
                                     <Box
@@ -177,7 +215,7 @@ const ModalAi = (props: ModalAiProps) => {
                                         ml='2'
                                         mt='2'
                                     >
-                                        0 wins &bull; 0 losses
+                                        {/* 0 wins &bull; 0 losses */}
                                     </Box>
                                 </Center>
                             </Box>
@@ -237,7 +275,7 @@ function StrategyStats(props) {
         win: number
         loss: number
     }
-    const [stats, setStats] = useState<result>({ wins: 0, losses: -1 })
+    const [stats, setStats] = useState<result>({ win: 0, loss: -1 })
     useEffect(() => {
         if (!isLoading) {
             setStats(data)
@@ -267,16 +305,18 @@ function StrategyStats(props) {
                 Created:
                 <Moment format=' HH:MM MM/DD/YYYY'>{props.strategy.createdOn}</Moment>
             </Box>
-            <Box
-                color='gray.500'
-                fontWeight='semibold'
-                letterSpacing='wide'
-                fontSize='xs'
-                ml='2'
-                mt='2'
-            >
-                Status: {props.strategy.status == 0 ? 'Draft' : 'Active'}
-            </Box>
+            {props.strategy.status === 1 && (
+                <Box
+                    color='gray.500'
+                    fontWeight='semibold'
+                    letterSpacing='wide'
+                    fontSize='xs'
+                    ml='2'
+                    mt='2'
+                >
+                    Elo: {props.strategy.elo}
+                </Box>
+            )}
         </VStack>
     )
 }

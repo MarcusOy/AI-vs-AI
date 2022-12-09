@@ -56,6 +56,7 @@ import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
 import DuplicateModal from '../../components/modals/DuplicateModal'
 import DeleteModal from '../../components/modals/DeleteModal'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -71,6 +72,8 @@ const StrategyPage = () => {
     const whoAmIFetch = useAVAFetch('/Account/WhoAmI')
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
     const [selectId, setselectId] = useState('')
+
+    useDocumentTitle(strategy ? `${strategy.name} ${tab}` : 'Strategy')
 
     const handleTabsChange = (index) => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
@@ -169,10 +172,12 @@ const StrategyPage = () => {
                         icon={<TbBook2 size='50' />}
                     />
                     <Stack spacing='0'>
-                        {/* {isSelf ? <EditFullName /> : <Heading>{strategy.name}</Heading>} */}
                         <HStack>
                             <Heading fontSize='4xl' mt={0}>
                                 {strategy.name}
+                            </Heading>
+                            <Heading fontSize='2xl' mt={0}>
+                                v{strategy.version}
                             </Heading>
                             <Tooltip
                                 label={strategy.isPrivate ? 'Private strategy' : 'Public strategy'}

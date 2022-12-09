@@ -4,9 +4,6 @@ using AVA.API.Models;
 using AVA.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore;
 
 namespace AVA.API.Controllers;
 
@@ -14,92 +11,39 @@ public class AiController : Controller
 {
     private readonly IStrategiesService _strategiesService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
-    private readonly AVADbContext _dbContext;
     private readonly IIdentityService _identityService;
-    private readonly IBattlesService _battleService;
+    private readonly IStarterCodeService _starterCodeService;
+    private readonly AVADbContext _dbContext;
 
     public AiController(IStrategiesService strategiesService,
                         ISendEndpointProvider sendEndpointProvider,
                         AVADbContext dbContext,
                         IIdentityService identityService,
-                        IBattlesService battlesService)
+                        IStarterCodeService starterCodeService)
     {
         _strategiesService = strategiesService;
         _sendEndpointProvider = sendEndpointProvider;
         _dbContext = dbContext;
         _identityService = identityService;
-        _battleService = battlesService;
+        _starterCodeService = starterCodeService;
     }
 
     [HttpGet, Route("/getAi/{id}")]
-    public async Task<Strategy> getAi(String id)
+    public Strategy getAi(String id)
       => _strategiesService.Get(new Guid(id));
-
-    [HttpPost, Route("/Strategy/ManualBattle")]
-    public async Task<Guid> ManualBattle([FromBody] ManualBattleRequest req)
-    {
-        var attacking = _dbContext.Strategies
-                            .AsNoTracking()
-                            .FirstOrDefault(s => s.Id == req.AttackingStrategyId);
-
-        var defending = _dbContext.Strategies
-                            .AsNoTracking()
-                            .FirstOrDefault(sd => sd.Id == req.DefendingStrategyId);
-
-        Guid newId = Guid.NewGuid();
-        String newName = attacking.Name + " manually attacked " + defending.Name;
-
-        var request = new SimulationRequest
-        {
-            PendingBattle = new Battle
-            {
-                Id = newId,
-                Name = newName,
-                BattleStatus = BattleStatus.Pending,
-                Iterations = 1,
-                IsTestSubmission = true,
-                AttackingStrategyId = attacking.Id,
-                AttackingStrategy = attacking,
-                DefendingStrategyId = defending.Id,
-                DefendingStrategy = defending
-            },
-            ClientId = _identityService.CurrentUser.Id.ToString()
-        };
-
-        Battle newBattle = new Battle
-        {
-            Id = newId,
-            Name = newName,
-            BattleStatus = BattleStatus.Pending,
-            Iterations = 1,
-            IsTestSubmission = true,
-            AttackingStrategyId = attacking.Id,
-            AttackingStrategy = attacking,
-            DefendingStrategyId = defending.Id,
-            DefendingStrategy = defending
-        };
-
-        // await _battleService.CreateAsync(newBattle);
-        // _dbContext.ChangeTracker.Clear();
-
-        request.PendingBattle.AttackingStrategy.CreatedByUser = null;
-        request.PendingBattle.DefendingStrategy.CreatedByUser = null;
-        request.PendingBattle.AttackingStrategy.AttackerBattles = null;
-        request.PendingBattle.DefendingStrategy.AttackerBattles = null;
-        request.PendingBattle.AttackingStrategy.DefenderBattles = null;
-        request.PendingBattle.DefendingStrategy.DefenderBattles = null;
-
-        var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
-        await endpoint.Send(request);
-
-        return newId;
-    }
 
     // TODO Have frontend send stock to test with in uri
     [HttpPost, Route("/Strategy/TestStrategy")]
-    public async Task<ActionResult> TestStrategy([FromBody] TestStrategyRequest req)
+    public async Task<Battle> TestStrategy([FromBody] TestStrategyRequest req)
     {
-        var s = req.StrategyToTest;
+        var s = _dbContext.Strategies
+            .Where(s => s.CreatedByUserId == _identityService.CurrentUser.Id)
+            .Where(s => s.Status == StrategyStatus.Draft)
+            .FirstOrDefault(s => s.Id == req.StrategyIdToTest);
+
+        if (s is null)
+            throw new InvalidOperationException("Strategy id to test is not valid.");
+
         var attackGuid = s.Id;
         var defenderGuid = new Guid();
         int selectedStock = req.Stock;
@@ -122,6 +66,8 @@ public class AiController : Controller
         var defendingStrategy = _dbContext.Strategies
             .FirstOrDefault(s => s.Id == defenderGuid);
 
+        s.SourceCode = await _starterCodeService.BuildStrategySource(s);
+
         var request = new SimulationRequest
         {
             PendingBattle = new Battle
@@ -131,15 +77,18 @@ public class AiController : Controller
                 BattleStatus = BattleStatus.Pending,
                 Iterations = 1,
                 AttackingStrategyId = attackGuid,
+                AttackingStrategySnapshot = s.SourceCode,
                 AttackingStrategy = new Strategy
                 {
                     Id = attackGuid,
                     Name = s.Name,
-                    Status = StrategyStatus.Active,
-                    SourceCode = s.SourceCode
                 },
                 DefendingStrategyId = defendingStrategy.Id,
-                DefendingStrategy = defendingStrategy,
+                DefendingStrategy = new Strategy
+                {
+                    Id = defenderGuid,
+                    Name = defendingStrategy.Name
+                },
                 IsTestSubmission = true
             },
             ClientId = req.ClientId
@@ -148,7 +97,11 @@ public class AiController : Controller
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         await endpoint.Send(request);
 
-        return Ok("Simulation request sent.");
+        // send strategy objects for frontend to use
+        request.PendingBattle.AttackingStrategy = s;
+        request.PendingBattle.DefendingStrategy = defendingStrategy;
+
+        return request.PendingBattle;
     }
 
     [HttpGet, Route("/Strategy/TestPublish")]
@@ -201,14 +154,8 @@ public class AiController : Controller
     }
     public class TestStrategyRequest
     {
-        public Strategy StrategyToTest { get; set; }
+        public Guid StrategyIdToTest { get; set; }
         public int Stock { get; set; }
         public String ClientId { get; set; }
-    }
-
-    public class ManualBattleRequest
-    {
-        public Guid AttackingStrategyId { get; set; }
-        public Guid DefendingStrategyId { get; set; }
     }
 }
