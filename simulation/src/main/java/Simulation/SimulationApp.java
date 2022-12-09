@@ -828,7 +828,7 @@ public class SimulationApp {
         boolean errorInSource = false;
         // temp battle so processBattleStrategies can be used
         Battle tempBattle = new Battle(1, "No Attacker for Test Suite", strategyId, null, strategySnapshot, null, null, false);
-
+        tempBattle.addBattleGame();
 
         // resets execTrace and stackTrace
         compressedExecutionTraceHolder = new String[3];
