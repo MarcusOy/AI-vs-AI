@@ -9,6 +9,7 @@ using AVA.API.Middleware;
 using MassTransit;
 using AVA.API.Consumers;
 using AVA.API.Hubs;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 #region ConfigureServices
 // Load environment variables (.env)
@@ -38,10 +39,9 @@ builder.Services.AddDbContextPool<AVADbContext>(
         .EnableDetailedErrors()
 );
 
-builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-        o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-    );
+builder.Services.AddControllers().AddNewtonsoftJson(
+    o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 
 builder.Services.AddMassTransit(mt =>
 {
@@ -56,7 +56,12 @@ builder.Services.AddMassTransit(mt =>
             h.Password(settings.RabbitMQ.Password);
         });
         cfg.ConfigureEndpoints(context);
+        cfg.UseNewtonsoftJsonSerializer();
+        cfg.ConfigureNewtonsoftJsonSerializer(
+            o => { o.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore; return o; }
+        );
     });
+
 });
 
 // Add websockets functionality

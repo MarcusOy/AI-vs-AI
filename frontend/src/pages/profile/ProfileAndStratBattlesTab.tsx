@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAVAFetch from '../../helpers/useAVAFetch'
 import {
@@ -41,12 +41,21 @@ interface IProfileBattlesTabProps {
 
 const ProfileAndStratBattlesTab = (p: IProfileBattlesTabProps) => {
     const navigate = useNavigate()
-    const { data, error, isLoading } = useAVAFetch('/Battles', {
+    const { data, error, isLoading, execute } = useAVAFetch('/Battles', {
         params: {
             userId: p.userId,
             strategyId: p.strategyId,
         },
     })
+
+    useEffect(() => {
+        const interval = setInterval(() => execute(), 5000)
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
+
+    // if (isLoading) return <Spinner />
 
     if (data == null || data.length <= 0)
         return (

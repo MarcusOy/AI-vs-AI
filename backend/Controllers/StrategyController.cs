@@ -21,12 +21,14 @@ public class StrategyController : Controller
     private readonly ISendEndpointProvider _sendEndpointProvider;
     private readonly IIdentityService _idService;
     private readonly IBattlesService _battleService;
+    private readonly IStarterCodeService _starterCodeService;
     public StrategyController(IStrategiesService strategiesService,
                                 AVADbContext dbContext,
                                 IHubContext<SimulationHub> hubContext,
                                 ISendEndpointProvider sendEndpointProvider,
                                 IIdentityService idService,
-                                IBattlesService battlesService)
+                                IBattlesService battlesService,
+                                IStarterCodeService starterCodeService)
     {
         _strategyService = strategiesService;
         _dbContext = dbContext;
@@ -34,6 +36,7 @@ public class StrategyController : Controller
         _sendEndpointProvider = sendEndpointProvider;
         _idService = idService;
         _battleService = battlesService;
+        _starterCodeService = starterCodeService;
     }
     [HttpGet, Route("/Strategy/{id}"), Authorize]
     public Strategy Get(string id)
@@ -89,7 +92,6 @@ public class StrategyController : Controller
         var strat = _dbContext.Strategies
                     .Where(s => s.Status == StrategyStatus.Active)
                     .Where(s => s.CreatedByUserId == _idService.CurrentUser.Id)
-                    // .AsNoTracking()
                     .FirstOrDefault(st => st.Id == id);
 
         if (strat is null)
@@ -109,11 +111,15 @@ public class StrategyController : Controller
             IsPrivate = strat.IsPrivate,
             Elo = 0,
             CreatedByUserId = _idService.CurrentUser.Id,
-            GameId = strat.GameId
+            GameId = strat.GameId,
+            CreatedOn = strat.CreatedOn
         };
 
-        await _strategyService.CreateAsync(newStrat);
+        await _dbContext.Strategies.AddAsync(newStrat);
+        newStrat.CreatedOn = strat.CreatedOn;
+        // _dbContext.Strategies.Update(newStrat);
         await _dbContext.SaveChangesAsync();
+
         return newStrat;
     }
 
@@ -165,7 +171,9 @@ public class StrategyController : Controller
                 Iterations = 3,
                 IsTestSubmission = false,
                 AttackingStrategyId = attackingStrat.Id,
+                AttackingStrategySnapshot = await _starterCodeService.BuildStrategySource(attackingStrat),
                 DefendingStrategyId = defendingStrat.Id,
+                DefendingStrategySnapshot = await _starterCodeService.BuildStrategySource(defendingStrat),
             };
 
 
@@ -179,8 +187,8 @@ public class StrategyController : Controller
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:SimulationRequests"));
         foreach (var req in reqQueue)
         {
-            // req.PendingBattle.AttackingStrategy.CreatedByUser.Strategies = null;
-            // req.PendingBattle.DefendingStrategy.CreatedByUser.Strategies = null;
+            req.PendingBattle.AttackingStrategy = null;
+            req.PendingBattle.DefendingStrategy = null;
             await endpoint.Send(req);
         }
 

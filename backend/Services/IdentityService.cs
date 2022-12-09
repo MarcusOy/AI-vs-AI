@@ -193,7 +193,7 @@ namespace AVA.API.Services
                 return _dbContext.Users
                     .Include(u => u.Strategies
                         .Where(s => s.Status != StrategyStatus.InActive)
-                        .OrderByDescending(s => s.UpdatedOn))
+                        .OrderBy(s => s.CreatedOn))
                     .ThenInclude(s => s.Game)
                     .FirstOrDefault(u => u.Id == new Guid(userid));
             }

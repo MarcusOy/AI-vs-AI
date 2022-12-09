@@ -43,7 +43,7 @@ namespace AVA.API.Consumers
             try
             {
                 _logger.LogInformation($"Simulation result recieved. {context.Message.ResultingBattle.Name}");
-                _logger.LogInformation(JsonConvert.SerializeObject(context.Message.ResultingBattle, Formatting.Indented));
+                // _logger.LogInformation(JsonConvert.SerializeObject(context.Message.ResultingBattle, Formatting.Indented));
 
                 _logger.LogInformation($"Saving resulting battle... {context.Message.ResultingBattle.Name}");
                 if (context.Message.ResultingBattle.IsTestSubmission)
