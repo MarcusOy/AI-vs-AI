@@ -70,6 +70,7 @@ const StrategyPage = () => {
     const toast = useToast()
     const whoAmIFetch = useAVAFetch('/Account/WhoAmI')
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
+    const [selectId, setselectId] = useState('')
 
     const handleTabsChange = (index) => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'
@@ -268,32 +269,35 @@ const StrategyPage = () => {
                             >
                                 <ModalOverlay />
                                 <ModalContent>
-                                    <ModalHeader>How many times do you want to attack</ModalHeader>
+                                    <ModalHeader>
+                                        Initiate an unrank battle game, attacker
+                                    </ModalHeader>
                                     <ModalCloseButton />
                                     <ModalBody pb={6}>
                                         <Stack>
-                                            <FormControl>
-                                                <FormLabel>Attacking Number</FormLabel>
-                                                <Input
-                                                    ref={initialRef}
-                                                    placeholder='Enter a number'
-                                                />
-                                            </FormControl>
                                             <Select
                                                 placeholder='Choose Which Strategy To Use'
                                                 size='md'
+                                                onChange={(e) => setselectId(e.target.value)}
                                             >
                                                 {error == undefined &&
                                                     StratList.map((s, i) => {
-                                                        return <option key={s.id}>{s.name}</option>
+                                                        return (
+                                                            <option value={s.id} key={i}>
+                                                                {s.name}
+                                                            </option>
+                                                        )
                                                     })}
                                             </Select>
                                         </Stack>
 
                                         <ModalFooter>
                                             <Button
-                                                // onClick={() => navigate(`/UnrankedGameResult/${attacker strategy id}/${strategy.id}`)
-
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/UnrankedGameResult/${selectId}/${strategy.id}`,
+                                                    )
+                                                }
                                                 colorScheme='blue'
                                                 mr={3}
                                             >
