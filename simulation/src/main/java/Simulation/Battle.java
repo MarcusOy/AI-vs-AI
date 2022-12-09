@@ -28,6 +28,7 @@ public class Battle {
     public String defendingStrategyId;
 
     public boolean isTestSubmission;
+    public String testSuiteResult;
 
     public ArrayList<BattleGame> battleGames;
 
@@ -56,7 +57,7 @@ public class Battle {
     }
 
     public Battle(int iterations, String attackingStrategyId, String defendingStrategyId, String attackingStrategySnapshot, String defendingStrategySnapshot,
-                  Strategy attackingStrategy, Strategy defendingStrategy) {
+                  Strategy attackingStrategy, Strategy defendingStrategy, boolean isTestSubmission) {
         this();
         this.attackingStrategyId = attackingStrategyId;
         this.defendingStrategyId = defendingStrategyId;
@@ -64,6 +65,7 @@ public class Battle {
         this.defendingStrategySnapshot = defendingStrategySnapshot;
         this.attackingStrategy = attackingStrategy;
         this.defendingStrategy = defendingStrategy;
+        this.isTestSubmission = isTestSubmission;
 
         this.iterations = iterations;
     }
@@ -364,6 +366,7 @@ public class Battle {
                 ", defenderWins=" + defenderWins +
                 ", gamesCompleted=" + defenderWins +
                 ", battleGames=" + printBattleGames() /* battleGames */ +
+                ", testSuiteResult=" + testSuiteResult +
                 '}';
     }
 }

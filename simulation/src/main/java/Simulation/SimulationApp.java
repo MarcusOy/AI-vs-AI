@@ -2,17 +2,14 @@ package Simulation;
 
 import API.Java.API;
 
-import javax.script.ScriptEngine;
 import javax.script.*;
-import javax.swing.*;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.MatchResult;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -205,7 +202,7 @@ public class SimulationApp {
 
                 // also initializes gameState upon success
                 SimulationStepRequest manRequest = processMessageManual(message);
-                initializeManualGameState(manRequest);
+                initializeManualGameState(manRequest.sentBoard, manRequest.isWhiteTurn);
                 String[][] reqIdlessBoard = deepCopyBoard(gameState.board);
 
                 boolean isManualStock = isIdStockId(manRequest.strategyId);
@@ -216,7 +213,7 @@ public class SimulationApp {
                 }
                 else {
                     // temp battle so processBattleStrategies can be used
-                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot, null, null);
+                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot, null, null, false);
 
                     // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
                     errorInSource = !processBattleStrategies(tempBattle);
@@ -229,7 +226,7 @@ public class SimulationApp {
                 if (!errorInSource) // only runs the turn if there isn't invalid source to run
                     potentialWinner = playTurn(true, isManualStock, null, null);
 
-                String[][] responseBoard = addPieceIds(manRequest, reqIdlessBoard);
+                String[][] responseBoard = addPieceIds(manRequest.sentBoard, reqIdlessBoard, manRequest.isWhiteTurn);
                 SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
                         potentialWinner != null, Color.WHITE.equals(potentialWinner) != manRequest.isWhiteTurn,
                         manRequest.clientId);
@@ -286,7 +283,7 @@ public class SimulationApp {
                 String defenderIdString = DEFENDER_MANUAL ? "manual" : "stock";
                 String attackerSnapshot = null;
                 String defenderSnapshot = null;
-                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot, null, null);
+                Battle newBattle = new Battle(numGames, attackerIdString, defenderIdString, attackerSnapshot, defenderSnapshot, null, null, false);
                 prepareAndRunBattle(newBattle);
             }
         }
@@ -386,8 +383,7 @@ public class SimulationApp {
 
     // processes the board sent from a manual play window,
     // parsing the cells to create a usable gamestate
-    static void initializeManualGameState(SimulationStepRequest req) {
-        String board[][] = req.sentBoard;
+    static void initializeManualGameState(String[][] board, boolean isWhiteTurn) {
         gameState = new GameState();
 
         // override initialized fields
@@ -396,7 +392,7 @@ public class SimulationApp {
         gameState.numWhitePawns = 0;
         gameState.numWhitePieces = 0;
 
-        gameState.currentPlayer = req.isWhiteTurn ? 0 : 1;
+        gameState.currentPlayer = isWhiteTurn ? 0 : 1;
         API api = new API();
 
         for (int i = 0; i < board.length; i++) {
@@ -427,10 +423,9 @@ public class SimulationApp {
 
     // add the pieceIds back to the gameState board for sending back to a manual
     // play window
-    static String[][] addPieceIds(SimulationStepRequest req, String[][] reqIdlessBoard) {
-        String[][] requestBoard = req.sentBoard;
+    static String[][] addPieceIds(String[][] requestBoard, String[][] reqIdlessBoard, boolean isWhiteTurn) {
         String[][] responseBoard = gameState.board;
-        Color AIColor = req.isWhiteTurn ? Color.WHITE : Color.BLACK;
+        Color AIColor = isWhiteTurn ? Color.WHITE : Color.BLACK;
         String preMovePieceString = null; // with ID
         String postMovePieceString = null; // without ID
         int postMovePieceCol = -1;
@@ -523,6 +518,12 @@ public class SimulationApp {
             // uses sentBattle's snapshot fields to set up fields for the attacking and defending strategies
             boolean wasSourceEvalError = !processBattleStrategies(sentBattle); // if source code had no evaluation errors
             if (!wasSourceEvalError) { // doesn't run battle if there was a source evaluation error
+                // runs testing suite
+                if (sentBattle.isTestSubmission) {
+                    sentBattle.testSuiteResult = runTestingSuite(sentBattle.attackingStrategySnapshot, sentBattle.attackingStrategyId);
+                    compressedExecutionTraceHolder = new String[3];
+                }
+
                 numGames = sentBattle.getIterations();
 
                 if (numGames % 2 == 1) {
@@ -575,11 +576,13 @@ public class SimulationApp {
             else if (JAVASCRIPT_STOCK) {
                 attackerStockOverride = false;
                 evaluatingAttacker = true;
-                sentBattle.attackingStrategySnapshot = getRandomAIJS();
-                attackingSandbox = evaluateSourceCode(getRandomAIJS(), true, sentBattle);
+                String attackerSourceToUse = getRandomAIJS();
+                sentBattle.attackingStrategySnapshot = attackerSourceToUse;
+                attackingSandbox = evaluateSourceCode(attackerSourceToUse, true, sentBattle);
                 evaluatingAttacker = false;
-                sentBattle.defendingStrategySnapshot = getRandomAIJS();
-                defendingSandbox = evaluateSourceCode(getRandomAIJS(), false, sentBattle);
+                String defenderSourceToUse = getRandomAIJS();
+                sentBattle.defendingStrategySnapshot = defenderSourceToUse;
+                defendingSandbox = evaluateSourceCode(defenderSourceToUse, false, sentBattle);
             }
             else {
                 defenderStockOverride = true;
@@ -684,6 +687,159 @@ public class SimulationApp {
             return new HardAI();
 
         return new TrueRandomAI();
+    }
+
+    // runs testing suite before the scheduled battle
+    // returns the testingSuiteResultString
+    static String runTestingSuite(String strategySnapshot, String strategyId) {
+        boolean isWhiteTurn;
+        String[][] board;
+        SimulationStepResponse result;
+
+        // response format |<P/F>|<TestName>\n
+        StringBuilder stringBuilder = new StringBuilder("");
+
+        // test 1A
+        board = new String[][]{
+            {"00b1", "01b1", "", "", "", "", "", "", "02w1", "03w3"},
+            {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
+            {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
+            {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
+            {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
+            {"20b4", "21b1", "", "", "", "", "", "", "22w1", "23w4"},
+            {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+            {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
+            {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
+            {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
+        };
+        isWhiteTurn = true;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest1A = !result.isGameOver;
+        stringBuilder.append(getTestSuiteTestString("Takes first turn as White", passedTest1A));
+
+        // test 1B
+        board = new String[][]{
+                {"00b1", "01b1", "", "", "", "", "", "", "02w1", "03w3"},
+    {"04b3", "05b2", "", "", "", "", "", "", "06w2", "07w3"},
+    {"08b2", "09b2", "", "", "", "", "", "", "10w2", "11w2"},
+    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "15w1"},
+    {"16b4", "17b1", "", "", "", "", "", "", "18w1", "19w4"},
+    {"20b4", "21b1", "", "", "", "23w4", "", "", "22w1", ""},
+    {"24b1", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+    {"28b2", "29b2", "", "", "", "", "", "", "30w2", "31w2"},
+    {"32b3", "33b2", "", "", "", "", "", "", "34w2", "35w3"},
+    {"36b3", "37b1", "", "", "", "", "", "", "38w1", "39w1"},
+};
+        isWhiteTurn = false;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest1B = !result.isGameOver;
+        stringBuilder.append(getTestSuiteTestString("Takes first turn as Black", passedTest1B));
+
+        // test 2A
+        board = new String[][] {
+                {"", "", "", "", "", "", "", "", "02w1", ""},
+    {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
+    {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
+    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
+    {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
+    {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
+    {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+    {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
+    {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
+    {"", "", "", "", "", "", "", "", "", "37b1"},
+};
+        isWhiteTurn = true;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest2A = ("E5, A9").equals(result.moveString);
+        stringBuilder.append(getTestSuiteTestString("Captures when in check as White", passedTest2A));
+
+        // test 2B
+        board = new String[][] {
+                {"02w1", "", "", "", "", "", "", "", "", ""},
+    {"", "05b2", "01b1", "", "", "", "", "", "06w2", ""},
+    {"00b1", "09b2", "", "", "", "", "", "", "10w2", "15w1"},
+    {"12b1", "13b1", "", "", "", "", "", "", "14w1", "03w3"},
+    {"04b3", "17b1", "08b2", "", "16b4", "19w4", "", "11w2", "18w1", "07w3"},
+    {"32b3", "21b1", "28b2", "", "20b4", "23w4", "", "31w2", "22w1", "35w3"},
+    {"36b3", "25b1", "", "", "", "", "", "", "26w1", "27w1"},
+    {"24b1", "29b2", "", "", "", "", "", "", "30w2", "39w1"},
+    {"", "33b2", "", "", "", "", "", "38w1", "34w2", ""},
+    {"", "37b1", "", "", "", "", "", "", "", ""},
+};
+        isWhiteTurn = false;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest2B = ("F4, J0").equals(result.moveString);
+        stringBuilder.append(getTestSuiteTestString("Captures when in check as Black", passedTest2B));
+
+        // test 3A
+        board = new String[][] {
+                {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "10w2", ""},
+    {"", "", "", "", "", "", "", "", "06w2", ""},
+    {"12b1", "", "", "", "16b4", "19w4", "", "11w2", "", ""},
+    {"24b1", "", "", "", "20b4", "23w4", "", "31w2", "", ""},
+    {"", "", "", "", "", "", "36b3", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", "39w1"},
+};
+        isWhiteTurn = true;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest3A = ("A9, A8").equals(result.moveString);
+        stringBuilder.append(getTestSuiteTestString("Dodges with final 1-piece as White", passedTest3A));
+
+        // test 3B
+        board = new String[][] {
+                {"00b1", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "03w3", "", "", "", "", "", ""},
+    {"", "", "08b2", "", "16b4", "19w4", "", "", "", "15w1"},
+    {"", "", "28b2", "", "20b4", "23w4", "", "", "", "27w1"},
+    {"", "33b2", "", "", "", "", "", "", "", ""},
+    {"", "29b2", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", ""},
+};
+        isWhiteTurn = false;
+        result = runTest(board, isWhiteTurn, strategyId, strategySnapshot);
+        boolean passedTest3B = ("J0, J1").equals(result.moveString);
+        stringBuilder.append(getTestSuiteTestString("Dodges with final 1-piece as Black", passedTest3B));
+
+        return stringBuilder.toString();
+    }
+
+    // get testingSuite test string
+    static String getTestSuiteTestString(String testName, boolean passed) {
+        return String.format("|%s|%s\n", passed ? "P" : "F", testName);
+    }
+
+    // runs a single given test of the testing suite
+    static SimulationStepResponse runTest(String[][] board, boolean isWhiteTurn, String strategyId, String strategySnapshot) {
+        initializeManualGameState(board, isWhiteTurn);
+        String[][] reqIdlessBoard = deepCopyBoard(gameState.board);
+
+        boolean errorInSource = false;
+        // temp battle so processBattleStrategies can be used
+        Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", strategyId, null, strategySnapshot, null, null, false);
+
+        // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
+        errorInSource = !processBattleStrategies(tempBattle);
+
+        // resets execTrace and stackTrace
+        compressedExecutionTraceHolder = new String[3];
+
+        Color potentialWinner = null;
+        if (!errorInSource) // only runs the turn if there isn't invalid source to run
+            potentialWinner = playTurn(true, false, null, null);
+
+        String[][] responseBoard = addPieceIds(board, reqIdlessBoard, isWhiteTurn);
+        SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
+                potentialWinner != null, Color.WHITE.equals(potentialWinner) != isWhiteTurn,
+                strategyId);
+
+        return resp;
     }
 
     // runs one game loop, from creating a fresh board to returning
@@ -841,7 +997,7 @@ public class SimulationApp {
     }
 
     // evaluates source code for later fast running
-    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String originalStrategySource, boolean isAttacker, Battle battle) throws ScriptException, NoSuchMethodException {
+    static /*ScriptEngine*/ NashornSandbox evaluateSourceCode(String originalStrategySource, boolean isAttacker, Battle battle) throws ScriptException, NoSuchMethodException, TimeoutException, ExecutionException, InterruptedException {
         // sets up evaluator
         String strategySource = originalStrategySource;
         //ScriptEngineManager factory = new ScriptEngineManager();
@@ -910,7 +1066,6 @@ public class SimulationApp {
         // perform test processing
         if (gameState == null)
             gameState = new GameState();
-        //System.out.println("about to testProcess");
         String testProcessingResult = processStrategySource(sandbox, new String[] { "", "" });
 
         // only injects code if exception wasn't throw in in and by processStrategySource
@@ -1187,12 +1342,12 @@ public class SimulationApp {
                 else
                     result += currentLine;
             }
-            else if (hasFlowJump || hasReturnStatement.matcher(prevWorkingString).matches() || hasContentInThisLine)
+            else // always inject a line //if (hasFlowJump || hasReturnStatement.matcher(prevWorkingString).matches() || hasContentInThisLine)
                 result += codeToInject + currentLine;
             /*else if (hasContentInThisLine)// injects code after current line
                 result += currentLine + codeToInject;*/
-            else
-                result += currentLine;
+            /*else
+                result += currentLine;*/
 
             result += closingBrace;
 
@@ -1593,8 +1748,9 @@ public class SimulationApp {
     }
 
     // gets a moveString from evaluating the strategy's source code
-    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox, String[] compressedExecutionTraceHolder) throws ScriptException, NoSuchMethodException {
-        String result;
+    static String processStrategySource(/*ScriptEngine strategyEngine*/ NashornSandbox strategySandbox, String[] compressedExecutionTraceHolder) throws ScriptException, NoSuchMethodException, TimeoutException, ExecutionException, InterruptedException {
+        final String TIMEOUT_ERROR_STRING = "ThisInvokeCallToGetMove()TimedOut";
+        String result = TIMEOUT_ERROR_STRING;
         String execTrace = "";
 
         // for JS parsing
@@ -1611,6 +1767,19 @@ public class SimulationApp {
             // engine.eval(strategySource/*script*/);
 
             Invocable inv = strategySandbox.getSandboxedInvocable(); //(Invocable) strategyEngine;
+
+            /*final Duration timeout = Duration.ofMillis(1000);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            final Future<String> handler = executor.submit(new GetMoveCallable(inv));
+            try {
+                result = handler.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                handler.cancel(true);
+                executor.shutdownNow();
+                throw new TimeoutException("ERROR: Execution of getMove() timed out.  This may be due to an infinite loop.");
+            }
+
+            executor.shutdownNow();*/
 
             result = "" + inv.invokeFunction("getMove");
 
@@ -2686,5 +2855,2097 @@ public class SimulationApp {
                 "       return ajajb;\n\"A8, A7\";\n" +
                 "    return \"A1, A2\";\n" +
                 "}";*/
+    }
+
+    static String getMaliciousAI(int num) {
+        String m1 = "// cell values are NEVER null - they should be \"\" if empty\n" +
+                "var NUM_PIECES_PER_SIDE = 20; // int\n" +
+                "var NUM_PAWNS_PER_SIDE = 9; // int\n" +
+                "var BOARD_LENGTH = 10; // int\n" +
+                "var MIN_MOVE_DISTANCE = 1; // int\n" +
+                "var MAX_MOVE_DISTANCE = 4; // int\n" +
+                "var WHITE_CHAR = 'w'; // char\n" +
+                "var BLACK_CHAR = 'b'; // char\n" +
+                "var VALID_MOVES_ARRAY_LENGTH = 81; // int\n" +
+                "var TRUE = 1; // int\n" +
+                "var FALSE = 0; // int\n" +
+                "var WHITE = 0; // int\n" +
+                "var BLACK = 1; // int\n" +
+                "var NO_PIECE = -1; // int\n" +
+                "var ERR_INVALID_COLOR = -2; // int\n" +
+                "var ERR_INVALID_COL = -3; // int\n" +
+                "var ERR_INVALID_ROW = -4; // int\n" +
+                "var ERR_FORMAT = -5; // int\n" +
+                "var ERR_FORMAT_MOVE_FROM = -6; // int\n" +
+                "var ERR_FORMAT_MOVE_TO = -7; // int\n" +
+                "var GameState = /** @class */ (function () {\n" +
+                "    function GameState() {\n" +
+                "        this.currentPlayer = 0;\n" +
+                "        this.numWhitePieces = 20;\n" +
+                "        this.numBlackPieces = 20;\n" +
+                "        this.numWhitePawns = 9;\n" +
+                "        this.numBlackPawns = 9;\n" +
+                "        this.numMovesMade = 0;\n" +
+                "        var col9 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w3\");\n" +
+                "        var col8 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col7 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col6 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col5 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col4 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col3 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col2 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col1 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col0 = new Array(\"b3\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        this.board = new Array(col9, col8, col7, col6, col5, col4, col3, col2, col1, col0);\n" +
+                "    }\n" +
+                "    return GameState;\n" +
+                "}());\n" +
+                "/**\n" +
+                " * @return {string[][]} -           The String[][] representation of the game\n" +
+                " board, comprised of ‘cells’, as described\n" +
+                " at the top of this doc.\n" +
+                " */\n" +
+                "function getBoard() {\n" +
+                "    return gameState.board;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @return {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " */\n" +
+                "function getMyColor() {\n" +
+                "    return gameState.currentPlayer;\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} myColor - An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * @returns {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " * \t\t\t\t \t Returns a negative integer, ERR_INVALID_COLOR,\n" +
+                " * \t\t\t\t \t if myColor is invalid\n" +
+                " */\n" +
+                "function getOpponentColor(myColor) {\n" +
+                "    if (myColor === WHITE)\n" +
+                "        return BLACK;\n" +
+                "    else if (myColor === BLACK)\n" +
+                "        return WHITE;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "}\n" +
+                "function getCellValue(arg1, arg2) {\n" +
+                "    // getCellValue(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var foundVal = getCellValue(cellToCol(cell), cellToRow(cell));\n" +
+                "        if (foundVal === null || foundVal.length != 2)\n" +
+                "            return \"\";\n" +
+                "        return foundVal;\n" +
+                "    }\n" +
+                "    // getCellValue(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var board = gameState.board;\n" +
+                "    return board[col][row];\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Array Indexing\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {string}  cell -   The position of the cell on the board, from values “A0” to “J9”.\n" +
+                " *\n" +
+                " * @return {number} -       The index of the target cell’s column in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToCol(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return cellToColChar(cell) - 'A'.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {string} cell -  The position of the cell on the board, from\n" +
+                " * \t\t\t\t values “A0” to “J9”.\n" +
+                " * @return {number} -       The index of the target cell’s row in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToRow(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return parseInt(cell.substring(1));\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " *\n" +
+                " * @return {number} -     The column of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII integer.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToColChar(cell) {\n" +
+                "    return cell.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " * @return {number} -     The row of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII number.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToRowChar(cell) {\n" +
+                "    return cell.charCodeAt(1);\n" +
+                "}\n" +
+                "/*\n" +
+                "----------------------\n" +
+                "Array Index Conversion\n" +
+                "----------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target col’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The column of the cell on the board, from\n" +
+                " *\t\t\t\t characters A-J. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function colToColChar(col) {\n" +
+                "    return String.fromCharCode(col + 'A'.charCodeAt(0));\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} row -   The index of the target row’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The row of the cell on the board, from\n" +
+                " *\t\t\t\t characters 0-9. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function rowToRowChar(row) {\n" +
+                "    return (\"\" + row).charAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target cell’s column in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToCol().\n" +
+                " * @param {number} row -   The index of the target cell’s row in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToRow().\n" +
+                " * @return {string}       The two-character position of the cell on the\n" +
+                " * \t\t\t\t board, from values “A0” to “J9”, that\n" +
+                " * \t\t\t\t corresponds to the passed row and column\n" +
+                " * \t\t\t\t indices.\n" +
+                " *\t\t\t \t For example, colAndRowToCell(2, 4) returns “C4”\n" +
+                " */\n" +
+                "function colAndRowToCell(col, row) {\n" +
+                "    return \"\" + colToColChar(col) + rowToRowChar(row);\n" +
+                "}\n" +
+                "function cellHasPiece(arg1, arg2) {\n" +
+                "    // cellHasPiece(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // cellHasPiece(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return !(getCellValue(col, row) === \"\") ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function isMyPiece(arg1, arg2, arg3) {\n" +
+                "    // isMyPiece(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // isMyPiece(col, row, myColor)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return getPieceColor(col, row) === myColor ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function getPieceColor(arg1, arg2) {\n" +
+                "    // getPieceColor(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceColor(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return NO_PIECE;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    var colorChar = cellVal.charAt(0);\n" +
+                "    var returnColor;\n" +
+                "    if (colorChar === WHITE_CHAR)\n" +
+                "        returnColor = WHITE;\n" +
+                "    else if (colorChar === BLACK_CHAR)\n" +
+                "        returnColor = BLACK;\n" +
+                "    else\n" +
+                "        returnColor = NO_PIECE;\n" +
+                "    return returnColor;\n" +
+                "}\n" +
+                "function getPieceMoveDistance(arg1, arg2) {\n" +
+                "    // getPieceMoveDistance(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceMoveDistance(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return 0;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    return parseInt(cellVal.substring(1));\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Strategy Helpers\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t\t the current player.\n" +
+                " * @return\t{string[]}\t- An array of cells that pieces of the specified\n" +
+                " * \t\t\t\t color are in.  The array is of fixed length 20,\n" +
+                " * \t\t\t\t with empty array entries having the value \"\".\n" +
+                " */\n" +
+                "function getMyPieceLocations(color) {\n" +
+                "    var locations = new Array(NUM_PIECES_PER_SIDE);\n" +
+                "    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++)\n" +
+                "        locations[i] = \"\";\n" +
+                "    var curArrIndex = 0;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        for (var j = 0; j < BOARD_LENGTH; j++) {\n" +
+                "            if (isMyPiece(i, j, color) === TRUE) {\n" +
+                "                locations[curArrIndex] = colAndRowToCell(i, j);\n" +
+                "                curArrIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return locations;\n" +
+                "}\n" +
+                "function getValidMoves(arg1, arg2, arg3) {\n" +
+                "    // getValidMoves(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "    }\n" +
+                "    // getValidMoves(col, row, myColor);\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var moves = new Array(VALID_MOVES_ARRAY_LENGTH);\n" +
+                "    for (var i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {\n" +
+                "        moves[i] = \"\";\n" +
+                "    }\n" +
+                "    var currentArrayIndex = 0;\n" +
+                "    var moveDistance = getPieceMoveDistance(col, row);\n" +
+                "    if (moveDistance <= 0)\n" +
+                "        return moves;\n" +
+                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n" +
+                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n" +
+                "            var newCol = col + i;\n" +
+                "            var newRow = row + j;\n" +
+                "            if ((isCellValid(newCol, newRow) === TRUE)\n" +
+                "                && isMyPiece(newCol, newRow, myColor) != TRUE) {\n" +
+                "                var pieceColor = getPieceColor(col, row);\n" +
+                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n" +
+                "                    continue;*/\n" +
+                "                if (isPlayerInCheck(pieceColor) === TRUE) {\n" +
+                "                    var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);\n" +
+                "                    var rowToCheck = (pieceColor === WHITE) ? 9 : 0;\n" +
+                "                    if (newCol != columnInCheck || newRow != rowToCheck)\n" +
+                "                        continue;\n" +
+                "                }\n" +
+                "                moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);\n" +
+                "                currentArrayIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return moves;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Returns TRUE if the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns FALSE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "// similar func in GameState\n" +
+                "function isPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return TRUE;\n" +
+                "    }\n" +
+                "    return FALSE;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color  An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Assumes the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board, and returns the column that 1-piece is in.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " Returns NO_PIECE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "function whichColumnIsPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return i;\n" +
+                "    }\n" +
+                "    return NO_PIECE;\n" +
+                "}\n" +
+                "function isMoveValid(arg1, arg2, arg3) {\n" +
+                "    // isMoveValid(moveString, myColor, unusedParam)\n" +
+                "    if (typeof arg2 === 'number') {\n" +
+                "        var moveString = arg1;\n" +
+                "        var moveCells = moveString.split(\", \");\n" +
+                "        if (moveCells.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = moveCells[0];\n" +
+                "        arg2 = moveCells[1];\n" +
+                "    }\n" +
+                "    // isMoveValid(fromCell, toCell, myColor)\n" +
+                "    var fromCell = arg1;\n" +
+                "    var toCell = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    if (fromCell === null || toCell === null || fromCell.length != 2 || toCell.length != 2)\n" +
+                "        return ERR_FORMAT;\n" +
+                "    var cellValidRet = isCellValid(fromCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_FROM;\n" +
+                "    cellValidRet = isCellValid(toCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_TO;\n" +
+                "    var pieceMoveDistance = getPieceMoveDistance(fromCell, null);\n" +
+                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n" +
+                "        return FALSE;\n" +
+                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n" +
+                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n" +
+                "        return FALSE;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "function isCellValid(arg1, arg2) {\n" +
+                "    // isCellValid(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        if (cell === null || cell.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        var colChar = cell.charAt(0);\n" +
+                "        var rowChar = cell.charAt(1);\n" +
+                "        if (colChar < 'A' || colChar > 'J')\n" +
+                "            return ERR_INVALID_COL;\n" +
+                "        if (rowChar < '0' || rowChar > '9')\n" +
+                "            return ERR_INVALID_ROW;\n" +
+                "        return TRUE;\n" +
+                "    }\n" +
+                "    // isCellVAlid(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    if (col < 0 || col > 9)\n" +
+                "        return ERR_INVALID_COL;\n" +
+                "    if (row < 0 || row > 9)\n" +
+                "        return ERR_INVALID_ROW;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "\n" +
+                "//MaliciousAI1 tries to move the left 4 back and forth\n" +
+                "function getMove() {\n" +
+                "    var board = getBoard();\n" +
+                "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
+                "\n" +
+                "    if (getMyColor() === 0) {    //we are playing white\n" +
+                "        if (board[4][9] === (\"w4\")) {\n" +
+                "            return \"E9, E5\";\n" +
+                "        } else {\n" +
+                "            return \"E5, E9\";\n" +
+                "        }\n" +
+                "    } else {                            //we are playing black\n" +
+                "        if (board[4][0] === (\"b4\")) {\n" +
+                "            return \"E0, E4\";\n" +
+                "        } else {\n" +
+                "            return \"E4, E0\";\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        String m2 = "// cell values are NEVER null - they should be \"\" if empty\n" +
+                "var NUM_PIECES_PER_SIDE = 20; // int\n" +
+                "var NUM_PAWNS_PER_SIDE = 9; // int\n" +
+                "var BOARD_LENGTH = 10; // int\n" +
+                "var MIN_MOVE_DISTANCE = 1; // int\n" +
+                "var MAX_MOVE_DISTANCE = 4; // int\n" +
+                "var WHITE_CHAR = 'w'; // char\n" +
+                "var BLACK_CHAR = 'b'; // char\n" +
+                "var VALID_MOVES_ARRAY_LENGTH = 81; // int\n" +
+                "var TRUE = 1; // int\n" +
+                "var FALSE = 0; // int\n" +
+                "var WHITE = 0; // int\n" +
+                "var BLACK = 1; // int\n" +
+                "var NO_PIECE = -1; // int\n" +
+                "var ERR_INVALID_COLOR = -2; // int\n" +
+                "var ERR_INVALID_COL = -3; // int\n" +
+                "var ERR_INVALID_ROW = -4; // int\n" +
+                "var ERR_FORMAT = -5; // int\n" +
+                "var ERR_FORMAT_MOVE_FROM = -6; // int\n" +
+                "var ERR_FORMAT_MOVE_TO = -7; // int\n" +
+                "var GameState = /** @class */ (function () {\n" +
+                "    function GameState() {\n" +
+                "        this.currentPlayer = 0;\n" +
+                "        this.numWhitePieces = 20;\n" +
+                "        this.numBlackPieces = 20;\n" +
+                "        this.numWhitePawns = 9;\n" +
+                "        this.numBlackPawns = 9;\n" +
+                "        this.numMovesMade = 0;\n" +
+                "        var col9 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w3\");\n" +
+                "        var col8 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col7 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col6 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col5 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col4 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col3 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col2 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col1 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col0 = new Array(\"b3\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        this.board = new Array(col9, col8, col7, col6, col5, col4, col3, col2, col1, col0);\n" +
+                "    }\n" +
+                "    return GameState;\n" +
+                "}());\n" +
+                "/**\n" +
+                " * @return {string[][]} -           The String[][] representation of the game\n" +
+                " board, comprised of ‘cells’, as described\n" +
+                " at the top of this doc.\n" +
+                " */\n" +
+                "function getBoard() {\n" +
+                "    return gameState.board;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @return {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " */\n" +
+                "function getMyColor() {\n" +
+                "    return gameState.currentPlayer;\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} myColor - An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * @returns {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " * \t\t\t\t \t Returns a negative integer, ERR_INVALID_COLOR,\n" +
+                " * \t\t\t\t \t if myColor is invalid\n" +
+                " */\n" +
+                "function getOpponentColor(myColor) {\n" +
+                "    if (myColor === WHITE)\n" +
+                "        return BLACK;\n" +
+                "    else if (myColor === BLACK)\n" +
+                "        return WHITE;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "}\n" +
+                "function getCellValue(arg1, arg2) {\n" +
+                "    // getCellValue(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var foundVal = getCellValue(cellToCol(cell), cellToRow(cell));\n" +
+                "        if (foundVal === null || foundVal.length != 2)\n" +
+                "            return \"\";\n" +
+                "        return foundVal;\n" +
+                "    }\n" +
+                "    // getCellValue(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var board = gameState.board;\n" +
+                "    return board[col][row];\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Array Indexing\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {string}  cell -   The position of the cell on the board, from values “A0” to “J9”.\n" +
+                " *\n" +
+                " * @return {number} -       The index of the target cell’s column in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToCol(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return cellToColChar(cell) - 'A'.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {string} cell -  The position of the cell on the board, from\n" +
+                " * \t\t\t\t values “A0” to “J9”.\n" +
+                " * @return {number} -       The index of the target cell’s row in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToRow(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return parseInt(cell.substring(1));\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " *\n" +
+                " * @return {number} -     The column of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII integer.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToColChar(cell) {\n" +
+                "    return cell.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " * @return {number} -     The row of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII number.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToRowChar(cell) {\n" +
+                "    return cell.charCodeAt(1);\n" +
+                "}\n" +
+                "/*\n" +
+                "----------------------\n" +
+                "Array Index Conversion\n" +
+                "----------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target col’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The column of the cell on the board, from\n" +
+                " *\t\t\t\t characters A-J. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function colToColChar(col) {\n" +
+                "    return String.fromCharCode(col + 'A'.charCodeAt(0));\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} row -   The index of the target row’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The row of the cell on the board, from\n" +
+                " *\t\t\t\t characters 0-9. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function rowToRowChar(row) {\n" +
+                "    return (\"\" + row).charAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target cell’s column in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToCol().\n" +
+                " * @param {number} row -   The index of the target cell’s row in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToRow().\n" +
+                " * @return {string}       The two-character position of the cell on the\n" +
+                " * \t\t\t\t board, from values “A0” to “J9”, that\n" +
+                " * \t\t\t\t corresponds to the passed row and column\n" +
+                " * \t\t\t\t indices.\n" +
+                " *\t\t\t \t For example, colAndRowToCell(2, 4) returns “C4”\n" +
+                " */\n" +
+                "function colAndRowToCell(col, row) {\n" +
+                "    return \"\" + colToColChar(col) + rowToRowChar(row);\n" +
+                "}\n" +
+                "function cellHasPiece(arg1, arg2) {\n" +
+                "    // cellHasPiece(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // cellHasPiece(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return !(getCellValue(col, row) === \"\") ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function isMyPiece(arg1, arg2, arg3) {\n" +
+                "    // isMyPiece(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // isMyPiece(col, row, myColor)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return getPieceColor(col, row) === myColor ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function getPieceColor(arg1, arg2) {\n" +
+                "    // getPieceColor(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceColor(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return NO_PIECE;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    var colorChar = cellVal.charAt(0);\n" +
+                "    var returnColor;\n" +
+                "    if (colorChar === WHITE_CHAR)\n" +
+                "        returnColor = WHITE;\n" +
+                "    else if (colorChar === BLACK_CHAR)\n" +
+                "        returnColor = BLACK;\n" +
+                "    else\n" +
+                "        returnColor = NO_PIECE;\n" +
+                "    return returnColor;\n" +
+                "}\n" +
+                "function getPieceMoveDistance(arg1, arg2) {\n" +
+                "    // getPieceMoveDistance(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceMoveDistance(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return 0;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    return parseInt(cellVal.substring(1));\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Strategy Helpers\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t\t the current player.\n" +
+                " * @return\t{string[]}\t- An array of cells that pieces of the specified\n" +
+                " * \t\t\t\t color are in.  The array is of fixed length 20,\n" +
+                " * \t\t\t\t with empty array entries having the value \"\".\n" +
+                " */\n" +
+                "function getMyPieceLocations(color) {\n" +
+                "    var locations = new Array(NUM_PIECES_PER_SIDE);\n" +
+                "    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++)\n" +
+                "        locations[i] = \"\";\n" +
+                "    var curArrIndex = 0;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        for (var j = 0; j < BOARD_LENGTH; j++) {\n" +
+                "            if (isMyPiece(i, j, color) === TRUE) {\n" +
+                "                locations[curArrIndex] = colAndRowToCell(i, j);\n" +
+                "                curArrIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return locations;\n" +
+                "}\n" +
+                "function getValidMoves(arg1, arg2, arg3) {\n" +
+                "    // getValidMoves(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "    }\n" +
+                "    // getValidMoves(col, row, myColor);\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var moves = new Array(VALID_MOVES_ARRAY_LENGTH);\n" +
+                "    for (var i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {\n" +
+                "        moves[i] = \"\";\n" +
+                "    }\n" +
+                "    var currentArrayIndex = 0;\n" +
+                "    var moveDistance = getPieceMoveDistance(col, row);\n" +
+                "    if (moveDistance <= 0)\n" +
+                "        return moves;\n" +
+                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n" +
+                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n" +
+                "            var newCol = col + i;\n" +
+                "            var newRow = row + j;\n" +
+                "            if ((isCellValid(newCol, newRow) === TRUE)\n" +
+                "                && isMyPiece(newCol, newRow, myColor) != TRUE) {\n" +
+                "                var pieceColor = getPieceColor(col, row);\n" +
+                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n" +
+                "                    continue;*/\n" +
+                "                if (isPlayerInCheck(pieceColor) === TRUE) {\n" +
+                "                    var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);\n" +
+                "                    var rowToCheck = (pieceColor === WHITE) ? 9 : 0;\n" +
+                "                    if (newCol != columnInCheck || newRow != rowToCheck)\n" +
+                "                        continue;\n" +
+                "                }\n" +
+                "                moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);\n" +
+                "                currentArrayIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return moves;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Returns TRUE if the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns FALSE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "// similar func in GameState\n" +
+                "function isPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return TRUE;\n" +
+                "    }\n" +
+                "    return FALSE;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color  An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Assumes the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board, and returns the column that 1-piece is in.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " Returns NO_PIECE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "function whichColumnIsPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return i;\n" +
+                "    }\n" +
+                "    return NO_PIECE;\n" +
+                "}\n" +
+                "function isMoveValid(arg1, arg2, arg3) {\n" +
+                "    // isMoveValid(moveString, myColor, unusedParam)\n" +
+                "    if (typeof arg2 === 'number') {\n" +
+                "        var moveString = arg1;\n" +
+                "        var moveCells = moveString.split(\", \");\n" +
+                "        if (moveCells.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = moveCells[0];\n" +
+                "        arg2 = moveCells[1];\n" +
+                "    }\n" +
+                "    // isMoveValid(fromCell, toCell, myColor)\n" +
+                "    var fromCell = arg1;\n" +
+                "    var toCell = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    if (fromCell === null || toCell === null || fromCell.length != 2 || toCell.length != 2)\n" +
+                "        return ERR_FORMAT;\n" +
+                "    var cellValidRet = isCellValid(fromCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_FROM;\n" +
+                "    cellValidRet = isCellValid(toCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_TO;\n" +
+                "    var pieceMoveDistance = getPieceMoveDistance(fromCell, null);\n" +
+                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n" +
+                "        return FALSE;\n" +
+                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n" +
+                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n" +
+                "        return FALSE;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "function isCellValid(arg1, arg2) {\n" +
+                "    // isCellValid(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        if (cell === null || cell.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        var colChar = cell.charAt(0);\n" +
+                "        var rowChar = cell.charAt(1);\n" +
+                "        if (colChar < 'A' || colChar > 'J')\n" +
+                "            return ERR_INVALID_COL;\n" +
+                "        if (rowChar < '0' || rowChar > '9')\n" +
+                "            return ERR_INVALID_ROW;\n" +
+                "        return TRUE;\n" +
+                "    }\n" +
+                "    // isCellVAlid(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    if (col < 0 || col > 9)\n" +
+                "        return ERR_INVALID_COL;\n" +
+                "    if (row < 0 || row > 9)\n" +
+                "        return ERR_INVALID_ROW;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "\n" +
+                "//MaliciousAI2 tries to move the left 4 in a triangle\n" +
+                "function getMove() {\n" +
+                "    var board = getBoard();\n" +
+                "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
+                "\n" +
+                "    if (getMyColor() === 0) {    //we are playing white\n" +
+                "        if (board[4][9] === (\"w4\")) {\n" +
+                "            return \"E9, E5\";\n" +
+                "        } else if (board[4][5] === (\"w4\")) {\n" +
+                "            return \"E5, A5\";\n" +
+                "        } else {\n" +
+                "            return \"A5, E9\"\n" +
+                "        }\n" +
+                "    } else {                            //we are playing black\n" +
+                "        if (board[4][0] === (\"b4\")) {\n" +
+                "            return \"E0, E4\";\n" +
+                "        } else if (board[4][4] === (\"b4\")) {\n" +
+                "            return \"E4, A4\";\n" +
+                "        } else {\n" +
+                "            return \"A4, E0\";\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        String m3 = "// cell values are NEVER null - they should be \"\" if empty\n" +
+                "var NUM_PIECES_PER_SIDE = 20; // int\n" +
+                "var NUM_PAWNS_PER_SIDE = 9; // int\n" +
+                "var BOARD_LENGTH = 10; // int\n" +
+                "var MIN_MOVE_DISTANCE = 1; // int\n" +
+                "var MAX_MOVE_DISTANCE = 4; // int\n" +
+                "var WHITE_CHAR = 'w'; // char\n" +
+                "var BLACK_CHAR = 'b'; // char\n" +
+                "var VALID_MOVES_ARRAY_LENGTH = 81; // int\n" +
+                "var TRUE = 1; // int\n" +
+                "var FALSE = 0; // int\n" +
+                "var WHITE = 0; // int\n" +
+                "var BLACK = 1; // int\n" +
+                "var NO_PIECE = -1; // int\n" +
+                "var ERR_INVALID_COLOR = -2; // int\n" +
+                "var ERR_INVALID_COL = -3; // int\n" +
+                "var ERR_INVALID_ROW = -4; // int\n" +
+                "var ERR_FORMAT = -5; // int\n" +
+                "var ERR_FORMAT_MOVE_FROM = -6; // int\n" +
+                "var ERR_FORMAT_MOVE_TO = -7; // int\n" +
+                "var GameState = /** @class */ (function () {\n" +
+                "    function GameState() {\n" +
+                "        this.currentPlayer = 0;\n" +
+                "        this.numWhitePieces = 20;\n" +
+                "        this.numBlackPieces = 20;\n" +
+                "        this.numWhitePawns = 9;\n" +
+                "        this.numBlackPawns = 9;\n" +
+                "        this.numMovesMade = 0;\n" +
+                "        var col9 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w3\");\n" +
+                "        var col8 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col7 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col6 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col5 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col4 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col3 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col2 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col1 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col0 = new Array(\"b3\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        this.board = new Array(col9, col8, col7, col6, col5, col4, col3, col2, col1, col0);\n" +
+                "    }\n" +
+                "    return GameState;\n" +
+                "}());\n" +
+                "/**\n" +
+                " * @return {string[][]} -           The String[][] representation of the game\n" +
+                " board, comprised of ‘cells’, as described\n" +
+                " at the top of this doc.\n" +
+                " */\n" +
+                "function getBoard() {\n" +
+                "    return gameState.board;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @return {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " */\n" +
+                "function getMyColor() {\n" +
+                "    return gameState.currentPlayer;\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} myColor - An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * @returns {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " * \t\t\t\t \t Returns a negative integer, ERR_INVALID_COLOR,\n" +
+                " * \t\t\t\t \t if myColor is invalid\n" +
+                " */\n" +
+                "function getOpponentColor(myColor) {\n" +
+                "    if (myColor === WHITE)\n" +
+                "        return BLACK;\n" +
+                "    else if (myColor === BLACK)\n" +
+                "        return WHITE;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "}\n" +
+                "function getCellValue(arg1, arg2) {\n" +
+                "    // getCellValue(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var foundVal = getCellValue(cellToCol(cell), cellToRow(cell));\n" +
+                "        if (foundVal === null || foundVal.length != 2)\n" +
+                "            return \"\";\n" +
+                "        return foundVal;\n" +
+                "    }\n" +
+                "    // getCellValue(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var board = gameState.board;\n" +
+                "    return board[col][row];\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Array Indexing\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {string}  cell -   The position of the cell on the board, from values “A0” to “J9”.\n" +
+                " *\n" +
+                " * @return {number} -       The index of the target cell’s column in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToCol(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return cellToColChar(cell) - 'A'.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {string} cell -  The position of the cell on the board, from\n" +
+                " * \t\t\t\t values “A0” to “J9”.\n" +
+                " * @return {number} -       The index of the target cell’s row in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToRow(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return parseInt(cell.substring(1));\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " *\n" +
+                " * @return {number} -     The column of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII integer.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToColChar(cell) {\n" +
+                "    return cell.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " * @return {number} -     The row of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII number.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToRowChar(cell) {\n" +
+                "    return cell.charCodeAt(1);\n" +
+                "}\n" +
+                "/*\n" +
+                "----------------------\n" +
+                "Array Index Conversion\n" +
+                "----------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target col’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The column of the cell on the board, from\n" +
+                " *\t\t\t\t characters A-J. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function colToColChar(col) {\n" +
+                "    return String.fromCharCode(col + 'A'.charCodeAt(0));\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} row -   The index of the target row’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The row of the cell on the board, from\n" +
+                " *\t\t\t\t characters 0-9. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function rowToRowChar(row) {\n" +
+                "    return (\"\" + row).charAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target cell’s column in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToCol().\n" +
+                " * @param {number} row -   The index of the target cell’s row in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToRow().\n" +
+                " * @return {string}       The two-character position of the cell on the\n" +
+                " * \t\t\t\t board, from values “A0” to “J9”, that\n" +
+                " * \t\t\t\t corresponds to the passed row and column\n" +
+                " * \t\t\t\t indices.\n" +
+                " *\t\t\t \t For example, colAndRowToCell(2, 4) returns “C4”\n" +
+                " */\n" +
+                "function colAndRowToCell(col, row) {\n" +
+                "    return \"\" + colToColChar(col) + rowToRowChar(row);\n" +
+                "}\n" +
+                "function cellHasPiece(arg1, arg2) {\n" +
+                "    // cellHasPiece(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // cellHasPiece(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return !(getCellValue(col, row) === \"\") ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function isMyPiece(arg1, arg2, arg3) {\n" +
+                "    // isMyPiece(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // isMyPiece(col, row, myColor)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return getPieceColor(col, row) === myColor ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function getPieceColor(arg1, arg2) {\n" +
+                "    // getPieceColor(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceColor(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return NO_PIECE;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    var colorChar = cellVal.charAt(0);\n" +
+                "    var returnColor;\n" +
+                "    if (colorChar === WHITE_CHAR)\n" +
+                "        returnColor = WHITE;\n" +
+                "    else if (colorChar === BLACK_CHAR)\n" +
+                "        returnColor = BLACK;\n" +
+                "    else\n" +
+                "        returnColor = NO_PIECE;\n" +
+                "    return returnColor;\n" +
+                "}\n" +
+                "function getPieceMoveDistance(arg1, arg2) {\n" +
+                "    // getPieceMoveDistance(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceMoveDistance(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return 0;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    return parseInt(cellVal.substring(1));\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Strategy Helpers\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t\t the current player.\n" +
+                " * @return\t{string[]}\t- An array of cells that pieces of the specified\n" +
+                " * \t\t\t\t color are in.  The array is of fixed length 20,\n" +
+                " * \t\t\t\t with empty array entries having the value \"\".\n" +
+                " */\n" +
+                "function getMyPieceLocations(color) {\n" +
+                "    var locations = new Array(NUM_PIECES_PER_SIDE);\n" +
+                "    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++)\n" +
+                "        locations[i] = \"\";\n" +
+                "    var curArrIndex = 0;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        for (var j = 0; j < BOARD_LENGTH; j++) {\n" +
+                "            if (isMyPiece(i, j, color) === TRUE) {\n" +
+                "                locations[curArrIndex] = colAndRowToCell(i, j);\n" +
+                "                curArrIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return locations;\n" +
+                "}\n" +
+                "function getValidMoves(arg1, arg2, arg3) {\n" +
+                "    // getValidMoves(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "    }\n" +
+                "    // getValidMoves(col, row, myColor);\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var moves = new Array(VALID_MOVES_ARRAY_LENGTH);\n" +
+                "    for (var i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {\n" +
+                "        moves[i] = \"\";\n" +
+                "    }\n" +
+                "    var currentArrayIndex = 0;\n" +
+                "    var moveDistance = getPieceMoveDistance(col, row);\n" +
+                "    if (moveDistance <= 0)\n" +
+                "        return moves;\n" +
+                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n" +
+                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n" +
+                "            var newCol = col + i;\n" +
+                "            var newRow = row + j;\n" +
+                "            if ((isCellValid(newCol, newRow) === TRUE)\n" +
+                "                && isMyPiece(newCol, newRow, myColor) != TRUE) {\n" +
+                "                var pieceColor = getPieceColor(col, row);\n" +
+                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n" +
+                "                    continue;*/\n" +
+                "                if (isPlayerInCheck(pieceColor) === TRUE) {\n" +
+                "                    var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);\n" +
+                "                    var rowToCheck = (pieceColor === WHITE) ? 9 : 0;\n" +
+                "                    if (newCol != columnInCheck || newRow != rowToCheck)\n" +
+                "                        continue;\n" +
+                "                }\n" +
+                "                moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);\n" +
+                "                currentArrayIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return moves;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Returns TRUE if the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns FALSE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "// similar func in GameState\n" +
+                "function isPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return TRUE;\n" +
+                "    }\n" +
+                "    return FALSE;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color  An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Assumes the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board, and returns the column that 1-piece is in.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " Returns NO_PIECE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "function whichColumnIsPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return i;\n" +
+                "    }\n" +
+                "    return NO_PIECE;\n" +
+                "}\n" +
+                "function isMoveValid(arg1, arg2, arg3) {\n" +
+                "    // isMoveValid(moveString, myColor, unusedParam)\n" +
+                "    if (typeof arg2 === 'number') {\n" +
+                "        var moveString = arg1;\n" +
+                "        var moveCells = moveString.split(\", \");\n" +
+                "        if (moveCells.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = moveCells[0];\n" +
+                "        arg2 = moveCells[1];\n" +
+                "    }\n" +
+                "    // isMoveValid(fromCell, toCell, myColor)\n" +
+                "    var fromCell = arg1;\n" +
+                "    var toCell = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    if (fromCell === null || toCell === null || fromCell.length != 2 || toCell.length != 2)\n" +
+                "        return ERR_FORMAT;\n" +
+                "    var cellValidRet = isCellValid(fromCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_FROM;\n" +
+                "    cellValidRet = isCellValid(toCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_TO;\n" +
+                "    var pieceMoveDistance = getPieceMoveDistance(fromCell, null);\n" +
+                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n" +
+                "        return FALSE;\n" +
+                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n" +
+                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n" +
+                "        return FALSE;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "function isCellValid(arg1, arg2) {\n" +
+                "    // isCellValid(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        if (cell === null || cell.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        var colChar = cell.charAt(0);\n" +
+                "        var rowChar = cell.charAt(1);\n" +
+                "        if (colChar < 'A' || colChar > 'J')\n" +
+                "            return ERR_INVALID_COL;\n" +
+                "        if (rowChar < '0' || rowChar > '9')\n" +
+                "            return ERR_INVALID_ROW;\n" +
+                "        return TRUE;\n" +
+                "    }\n" +
+                "    // isCellVAlid(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    if (col < 0 || col > 9)\n" +
+                "        return ERR_INVALID_COL;\n" +
+                "    if (row < 0 || row > 9)\n" +
+                "        return ERR_INVALID_ROW;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "\n" +
+                "//MaliciousAI3 tries to first capture a 1 using the right 4, THEN move the left 4 in a triangle\n" +
+                "function getMove() {\n" +
+                "    var board = getBoard();\n" +
+                "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
+                "\n" +
+                "    if (getMyColor() === 0) {    //we are playing white\n" +
+                "        if (board[5][1] === \"w4\") {\n" +
+                "            if (board[4][9] === (\"w4\")) {\n" +
+                "                return \"E9, E5\";\n" +
+                "            } else if (board[4][5] === (\"w4\")) {\n" +
+                "                return \"E5, A5\";\n" +
+                "            } else {\n" +
+                "                return \"A5, E9\"\n" +
+                "            }\n" +
+                "        } else if (board[5][5] === \"w4\") {\n" +
+                "            return \"F5, F1\";\n" +
+                "        } else {\n" +
+                "            return \"F9, F5\";\n" +
+                "        }\n" +
+                "    } else {                            //we are playing black\n" +
+                "        if (board[5][8] === \"b4\") {\n" +
+                "            if (board[4][0] === (\"b4\")) {\n" +
+                "                return \"E0, E4\";\n" +
+                "            } else if (board[4][4] === (\"b4\")) {\n" +
+                "                return \"E4, A4\";\n" +
+                "            } else {\n" +
+                "                return \"A4, E0\";\n" +
+                "            }\n" +
+                "        } else if (board[5][4] === \"b4\") {\n" +
+                "            return \"F4, F8\";\n" +
+                "        } else {\n" +
+                "            return \"F0, F4\";\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        String m4 = "// cell values are NEVER null - they should be \"\" if empty\n" +
+                "var NUM_PIECES_PER_SIDE = 20; // int\n" +
+                "var NUM_PAWNS_PER_SIDE = 9; // int\n" +
+                "var BOARD_LENGTH = 10; // int\n" +
+                "var MIN_MOVE_DISTANCE = 1; // int\n" +
+                "var MAX_MOVE_DISTANCE = 4; // int\n" +
+                "var WHITE_CHAR = 'w'; // char\n" +
+                "var BLACK_CHAR = 'b'; // char\n" +
+                "var VALID_MOVES_ARRAY_LENGTH = 81; // int\n" +
+                "var TRUE = 1; // int\n" +
+                "var FALSE = 0; // int\n" +
+                "var WHITE = 0; // int\n" +
+                "var BLACK = 1; // int\n" +
+                "var NO_PIECE = -1; // int\n" +
+                "var ERR_INVALID_COLOR = -2; // int\n" +
+                "var ERR_INVALID_COL = -3; // int\n" +
+                "var ERR_INVALID_ROW = -4; // int\n" +
+                "var ERR_FORMAT = -5; // int\n" +
+                "var ERR_FORMAT_MOVE_FROM = -6; // int\n" +
+                "var ERR_FORMAT_MOVE_TO = -7; // int\n" +
+                "var GameState = /** @class */ (function () {\n" +
+                "    function GameState() {\n" +
+                "        this.currentPlayer = 0;\n" +
+                "        this.numWhitePieces = 20;\n" +
+                "        this.numBlackPieces = 20;\n" +
+                "        this.numWhitePawns = 9;\n" +
+                "        this.numBlackPawns = 9;\n" +
+                "        this.numMovesMade = 0;\n" +
+                "        var col9 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w3\");\n" +
+                "        var col8 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col7 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col6 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col5 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col4 = new Array(\"b4\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w4\");\n" +
+                "        var col3 = new Array(\"b1\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        var col2 = new Array(\"b2\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w2\");\n" +
+                "        var col1 = new Array(\"b3\", \"b2\", \"\", \"\", \"\", \"\", \"\", \"\", \"w2\", \"w3\");\n" +
+                "        var col0 = new Array(\"b3\", \"b1\", \"\", \"\", \"\", \"\", \"\", \"\", \"w1\", \"w1\");\n" +
+                "        this.board = new Array(col9, col8, col7, col6, col5, col4, col3, col2, col1, col0);\n" +
+                "    }\n" +
+                "    return GameState;\n" +
+                "}());\n" +
+                "/**\n" +
+                " * @return {string[][]} -           The String[][] representation of the game\n" +
+                " board, comprised of ‘cells’, as described\n" +
+                " at the top of this doc.\n" +
+                " */\n" +
+                "function getBoard() {\n" +
+                "    return gameState.board;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @return {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " */\n" +
+                "function getMyColor() {\n" +
+                "    return gameState.currentPlayer;\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} myColor - An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * @returns {number}\t-\t  \t An integer representing the color of\n" +
+                " * \t\t\t\t \t the not current player.\n" +
+                " * \t\t\t\t \t 0 = WHITE  and  1 = BLACK\n" +
+                " * \t\t\t\t \t Returns a negative integer, ERR_INVALID_COLOR,\n" +
+                " * \t\t\t\t \t if myColor is invalid\n" +
+                " */\n" +
+                "function getOpponentColor(myColor) {\n" +
+                "    if (myColor === WHITE)\n" +
+                "        return BLACK;\n" +
+                "    else if (myColor === BLACK)\n" +
+                "        return WHITE;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "}\n" +
+                "function getCellValue(arg1, arg2) {\n" +
+                "    // getCellValue(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var foundVal = getCellValue(cellToCol(cell), cellToRow(cell));\n" +
+                "        if (foundVal === null || foundVal.length != 2)\n" +
+                "            return \"\";\n" +
+                "        return foundVal;\n" +
+                "    }\n" +
+                "    // getCellValue(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var board = gameState.board;\n" +
+                "    return board[col][row];\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Array Indexing\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {string}  cell -   The position of the cell on the board, from values “A0” to “J9”.\n" +
+                " *\n" +
+                " * @return {number} -       The index of the target cell’s column in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToCol(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return cellToColChar(cell) - 'A'.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {string} cell -  The position of the cell on the board, from\n" +
+                " * \t\t\t\t values “A0” to “J9”.\n" +
+                " * @return {number} -       The index of the target cell’s row in the\n" +
+                " *\t\t\t\t String[][] board.\n" +
+                " *                Returns a negative integer if an error occurs.\n" +
+                " *\n" +
+                " * \t\t         Returns ERR_INVALID_COL if cell's column\n" +
+                " *                is a character outside of the range A-J.\n" +
+                " *                Returns ERR_INVALID_ROW if cell's row\n" +
+                " *                is a character outside of the range 0-9.\n" +
+                " *                Returns ERR_FORMAT if the cell is\n" +
+                " *                otherwise improperly formatted.\n" +
+                " */\n" +
+                "function cellToRow(cell) {\n" +
+                "    var isCellValidRet = isCellValid(cell, null);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return parseInt(cell.substring(1));\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " *\n" +
+                " * @return {number} -     The column of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII integer.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToColChar(cell) {\n" +
+                "    return cell.charCodeAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {string} cell - The position of the cell on the board, from\n" +
+                " * \t\t\t\t values \"A0\" to \"J9\".\n" +
+                " * @return {number} -     The row of the cell on the board, from\n" +
+                " * \t\t\t\t characters A-J as an ASCII number.\n" +
+                " *\n" +
+                " *\t\t\t\t See Board documention\n" +
+                " */\n" +
+                "function cellToRowChar(cell) {\n" +
+                "    return cell.charCodeAt(1);\n" +
+                "}\n" +
+                "/*\n" +
+                "----------------------\n" +
+                "Array Index Conversion\n" +
+                "----------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target col’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The column of the cell on the board, from\n" +
+                " *\t\t\t\t characters A-J. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function colToColChar(col) {\n" +
+                "    return String.fromCharCode(col + 'A'.charCodeAt(0));\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} row -   The index of the target row’s row in the\n" +
+                " * \t\t\t\t String[][] board.\n" +
+                " *\n" +
+                " * @return {string} -      The row of the cell on the board, from\n" +
+                " *\t\t\t\t characters 0-9. See diagram at top of doc as a string of length 1.\n" +
+                " */\n" +
+                "function rowToRowChar(row) {\n" +
+                "    return (\"\" + row).charAt(0);\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} col -   The index of the target cell’s column in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToCol().\n" +
+                " * @param {number} row -   The index of the target cell’s row in the\n" +
+                " * \t\t\t\t String[][] board, retrieved through using\n" +
+                " * \t\t\t\t cellToRow().\n" +
+                " * @return {string}       The two-character position of the cell on the\n" +
+                " * \t\t\t\t board, from values “A0” to “J9”, that\n" +
+                " * \t\t\t\t corresponds to the passed row and column\n" +
+                " * \t\t\t\t indices.\n" +
+                " *\t\t\t \t For example, colAndRowToCell(2, 4) returns “C4”\n" +
+                " */\n" +
+                "function colAndRowToCell(col, row) {\n" +
+                "    return \"\" + colToColChar(col) + rowToRowChar(row);\n" +
+                "}\n" +
+                "function cellHasPiece(arg1, arg2) {\n" +
+                "    // cellHasPiece(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // cellHasPiece(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return !(getCellValue(col, row) === \"\") ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function isMyPiece(arg1, arg2, arg3) {\n" +
+                "    // isMyPiece(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass to overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // isMyPiece(col, row, myColor)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    return getPieceColor(col, row) === myColor ? TRUE : FALSE;\n" +
+                "}\n" +
+                "function getPieceColor(arg1, arg2) {\n" +
+                "    // getPieceColor(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceColor(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return NO_PIECE;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    var colorChar = cellVal.charAt(0);\n" +
+                "    var returnColor;\n" +
+                "    if (colorChar === WHITE_CHAR)\n" +
+                "        returnColor = WHITE;\n" +
+                "    else if (colorChar === BLACK_CHAR)\n" +
+                "        returnColor = BLACK;\n" +
+                "    else\n" +
+                "        returnColor = NO_PIECE;\n" +
+                "    return returnColor;\n" +
+                "}\n" +
+                "function getPieceMoveDistance(arg1, arg2) {\n" +
+                "    // getPieceMoveDistance(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        var isCellValidRet = isCellValid(cell, null);\n" +
+                "        if (isCellValidRet != TRUE)\n" +
+                "            return isCellValidRet;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "    }\n" +
+                "    // getPieceMoveDistance(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var isCellValidRet = isCellValid(col, row);\n" +
+                "    if (isCellValidRet != TRUE)\n" +
+                "        return isCellValidRet;\n" +
+                "    if (cellHasPiece(col, row) === FALSE)\n" +
+                "        return 0;\n" +
+                "    var cellVal = getCellValue(col, row);\n" +
+                "    return parseInt(cellVal.substring(1));\n" +
+                "}\n" +
+                "/*\n" +
+                "--------------------\n" +
+                "    Strategy Helpers\n" +
+                "--------------------\n" +
+                "*/\n" +
+                "/**\n" +
+                " *\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t\t the current player.\n" +
+                " * @return\t{string[]}\t- An array of cells that pieces of the specified\n" +
+                " * \t\t\t\t color are in.  The array is of fixed length 20,\n" +
+                " * \t\t\t\t with empty array entries having the value \"\".\n" +
+                " */\n" +
+                "function getMyPieceLocations(color) {\n" +
+                "    var locations = new Array(NUM_PIECES_PER_SIDE);\n" +
+                "    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++)\n" +
+                "        locations[i] = \"\";\n" +
+                "    var curArrIndex = 0;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        for (var j = 0; j < BOARD_LENGTH; j++) {\n" +
+                "            if (isMyPiece(i, j, color) === TRUE) {\n" +
+                "                locations[curArrIndex] = colAndRowToCell(i, j);\n" +
+                "                curArrIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return locations;\n" +
+                "}\n" +
+                "function getValidMoves(arg1, arg2, arg3) {\n" +
+                "    // getValidMoves(cell, myColor, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg2 = cellToRow(cell);\n" +
+                "        arg1 = cellToCol(cell);\n" +
+                "    }\n" +
+                "    // getValidMoves(col, row, myColor);\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    var moves = new Array(VALID_MOVES_ARRAY_LENGTH);\n" +
+                "    for (var i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {\n" +
+                "        moves[i] = \"\";\n" +
+                "    }\n" +
+                "    var currentArrayIndex = 0;\n" +
+                "    var moveDistance = getPieceMoveDistance(col, row);\n" +
+                "    if (moveDistance <= 0)\n" +
+                "        return moves;\n" +
+                "    for (var i = -moveDistance; i <= moveDistance; i += moveDistance) { //William, you almost got it right. I just need to change two places in the code, i++ and j++\n" +
+                "        for (var j = -moveDistance; j <= moveDistance; j += moveDistance) { //to i += moveDistance and j += moveDistance ! Plus corresponding code in SimulationApp\n" +
+                "            var newCol = col + i;\n" +
+                "            var newRow = row + j;\n" +
+                "            if ((isCellValid(newCol, newRow) === TRUE)\n" +
+                "                && isMyPiece(newCol, newRow, myColor) != TRUE) {\n" +
+                "                var pieceColor = getPieceColor(col, row);\n" +
+                "                /*if (isPlayerInCheck(pieceColor) === TRUE && ((pieceColor === WHITE && row != 0) || (pieceColor === BLACK && row != 9)))\n" +
+                "                    continue;*/\n" +
+                "                if (isPlayerInCheck(pieceColor) === TRUE) {\n" +
+                "                    var columnInCheck = whichColumnIsPlayerInCheck(pieceColor);\n" +
+                "                    var rowToCheck = (pieceColor === WHITE) ? 9 : 0;\n" +
+                "                    if (newCol != columnInCheck || newRow != rowToCheck)\n" +
+                "                        continue;\n" +
+                "                }\n" +
+                "                moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);\n" +
+                "                currentArrayIndex++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    return moves;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color - An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Returns TRUE if the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns FALSE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "// similar func in GameState\n" +
+                "function isPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return TRUE;\n" +
+                "    }\n" +
+                "    return FALSE;\n" +
+                "}\n" +
+                "/**\n" +
+                " * @param {number} color  An integer representing the color of\n" +
+                " * \t\t\t     the current player.\n" +
+                " * \t\t\t     0 = WHITE  and  1 = BLACK\n" +
+                "\n" +
+                " * @return {number} -      Assumes the given player’s opponent has\n" +
+                " gotten a 1-piece of theirs to the given\n" +
+                " player’s starting side of the board, and returns the column that 1-piece is in.  Only\n" +
+                " moves that capture this 1-piece will be valid,\n" +
+                " and failure to capture it will result in a\n" +
+                " checkmate.\n" +
+                " Returns a negative integer if an\n" +
+                " error occurs.\n" +
+                "\n" +
+                " Returns NO_PIECE if the given player’s opponent\n" +
+                " does not meet the above condition.\n" +
+                "\n" +
+                " * \t\t         Returns ERR_INVALID_COLOR if the passed color\n" +
+                " is not WHITE or BLACK.\n" +
+                " */\n" +
+                "function whichColumnIsPlayerInCheck(color) {\n" +
+                "    var rowToCheck;\n" +
+                "    if (color === WHITE)\n" +
+                "        rowToCheck = 9;\n" +
+                "    else if (color === BLACK)\n" +
+                "        rowToCheck = 0;\n" +
+                "    else\n" +
+                "        return ERR_INVALID_COLOR;\n" +
+                "    for (var i = 0; i < BOARD_LENGTH; i++) {\n" +
+                "        if ((getPieceColor(i, rowToCheck) === getOpponentColor(color))\n" +
+                "            && (getPieceMoveDistance(i, rowToCheck) === 1))\n" +
+                "            return i;\n" +
+                "    }\n" +
+                "    return NO_PIECE;\n" +
+                "}\n" +
+                "function isMoveValid(arg1, arg2, arg3) {\n" +
+                "    // isMoveValid(moveString, myColor, unusedParam)\n" +
+                "    if (typeof arg2 === 'number') {\n" +
+                "        var moveString = arg1;\n" +
+                "        var moveCells = moveString.split(\", \");\n" +
+                "        if (moveCells.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        // sets up args to pass into overload\n" +
+                "        arg3 = arg2;\n" +
+                "        arg1 = moveCells[0];\n" +
+                "        arg2 = moveCells[1];\n" +
+                "    }\n" +
+                "    // isMoveValid(fromCell, toCell, myColor)\n" +
+                "    var fromCell = arg1;\n" +
+                "    var toCell = arg2;\n" +
+                "    var myColor = arg3;\n" +
+                "    if (fromCell === null || toCell === null || fromCell.length != 2 || toCell.length != 2)\n" +
+                "        return ERR_FORMAT;\n" +
+                "    var cellValidRet = isCellValid(fromCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_FROM;\n" +
+                "    cellValidRet = isCellValid(toCell, null);\n" +
+                "    if (cellValidRet != TRUE)\n" +
+                "        return ERR_FORMAT_MOVE_TO;\n" +
+                "    var pieceMoveDistance = getPieceMoveDistance(fromCell, null);\n" +
+                "    if (pieceMoveDistance === 0 || isMyPiece(fromCell, myColor, null) != TRUE || isMyPiece(toCell, myColor, null) === TRUE)\n" +
+                "        return FALSE;\n" +
+                "    if ((Math.abs(cellToRow(fromCell) - cellToRow(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance)\n" +
+                "        || (Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != 0 && Math.abs(cellToCol(fromCell) - cellToCol(toCell)) != pieceMoveDistance))\n" +
+                "        return FALSE;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "function isCellValid(arg1, arg2) {\n" +
+                "    // isCellValid(cell, unusedParam)\n" +
+                "    if (typeof arg1 === 'string') {\n" +
+                "        var cell = arg1;\n" +
+                "        if (cell === null || cell.length != 2)\n" +
+                "            return ERR_FORMAT;\n" +
+                "        var colChar = cell.charAt(0);\n" +
+                "        var rowChar = cell.charAt(1);\n" +
+                "        if (colChar < 'A' || colChar > 'J')\n" +
+                "            return ERR_INVALID_COL;\n" +
+                "        if (rowChar < '0' || rowChar > '9')\n" +
+                "            return ERR_INVALID_ROW;\n" +
+                "        return TRUE;\n" +
+                "    }\n" +
+                "    // isCellVAlid(col, row)\n" +
+                "    var col = arg1;\n" +
+                "    var row = arg2;\n" +
+                "    if (col < 0 || col > 9)\n" +
+                "        return ERR_INVALID_COL;\n" +
+                "    if (row < 0 || row > 9)\n" +
+                "        return ERR_INVALID_ROW;\n" +
+                "    return TRUE;\n" +
+                "}\n" +
+                "\n" +
+                "//MaliciousAI4 tries to first capture a 2 using the right 4, THEN move the left 4 in a triangle\n" +
+                "function getMove() {\n" +
+                "    var board = getBoard();\n" +
+                "    var pieceLocations = getMyPieceLocations(getMyColor());\n" +
+                "\n" +
+                "    if (getMyColor() === 0) {    //we are playing white\n" +
+                //"        while (true) { }" +
+                "        if (board[1][1] === \"w4\") {\n" +
+                "            if (board[4][9] === (\"w4\")) {\n" +
+                "                return \"E9, E5\";\n" +
+                "            } else if (board[4][5] === (\"w4\")) {\n" +
+                "                return \"E5, A5\";\n" +
+                "            } else {\n" +
+                "                return \"A5, E9\"\n" +
+                "            }\n" +
+                "        } else if (board[5][5] === \"w4\") {\n" +
+                "            return \"F5, B1\";\n" +
+                "        } else {\n" +
+                "            return \"F9, F5\";\n" +
+                "        }\n" +
+                "    } else {                            //we are playing black\n" +
+                "        if (board[1][8] === \"b4\") {\n" +
+                "            if (board[4][0] === (\"b4\")) {\n" +
+                "                return \"E0, E4\";\n" +
+                "            } else if (board[4][4] === (\"b4\")) {\n" +
+                "                return \"E4, A4\";\n" +
+                "            } else {\n" +
+                "                return \"A4, E0\";\n" +
+                "            }\n" +
+                "        } else if (board[5][4] === \"b4\") {\n" +
+                "            return \"F4, B8\";\n" +
+                "        } else {\n" +
+                "            return \"F0, F4\";\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        if (num == 1)
+            return m1;
+        else if (num == 2)
+            return m2;
+        else if (num == 3)
+            return m3;
+        else
+            return m4;
     }
 }
