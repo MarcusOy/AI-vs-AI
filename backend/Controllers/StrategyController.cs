@@ -173,7 +173,7 @@ public class StrategyController : Controller
                 AttackingStrategyId = attackingStrat.Id,
                 AttackingStrategySnapshot = await _starterCodeService.BuildStrategySource(attackingStrat),
                 DefendingStrategyId = defendingStrat.Id,
-                DefendingStrategySnapshot = await _starterCodeService.BuildStrategySource(defendingStrat),
+                DefendingStrategySnapshot = await _starterCodeService.BuildStrategySource(defendingStrat)
             };
 
 

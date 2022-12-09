@@ -98,6 +98,20 @@ namespace AVA.API.Consumers
 
                 List<Battle> BattleList = await BattleListQuery.ToListAsync();
 
+                var clearStrat = _dbContext.Strategies
+                    .Where(cs => cs.Status == StrategyStatus.Active)
+                    .AsNoTracking();
+
+
+                List<Strategy> StratClear = await clearStrat.AsNoTracking().ToListAsync();
+
+                foreach (Strategy c in StratClear)
+                {
+                    c.Elo = 0;
+                    _dbContext.Strategies.Update(c);
+                    await _dbContext.SaveChangesAsync();
+                }
+
                 foreach (Battle bt in BattleList)
                 {
                     Guid AttackerId = bt.AttackingStrategyId;
