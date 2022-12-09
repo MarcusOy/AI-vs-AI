@@ -4,6 +4,9 @@ using AVA.API.Models;
 using AVA.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace AVA.API.Controllers;
 
@@ -36,9 +39,11 @@ public class AiController : Controller
     public async Task<Guid> ManualBattle([FromBody] ManualBattleRequest req)
     {
         var attacking = _dbContext.Strategies
+                            .AsNoTracking()
                             .FirstOrDefault(s => s.Id == req.AttackingStrategyId);
 
         var defending = _dbContext.Strategies
+                            .AsNoTracking()
                             .FirstOrDefault(sd => sd.Id == req.DefendingStrategyId);
 
         Guid newId = Guid.NewGuid();
@@ -74,8 +79,8 @@ public class AiController : Controller
             DefendingStrategy = defending
         };
 
-        await _battleService.CreateAsync(newBattle);
-        _dbContext.ChangeTracker.Clear();
+        // await _battleService.CreateAsync(newBattle);
+        // _dbContext.ChangeTracker.Clear();
 
         request.PendingBattle.AttackingStrategy.CreatedByUser = null;
         request.PendingBattle.DefendingStrategy.CreatedByUser = null;
