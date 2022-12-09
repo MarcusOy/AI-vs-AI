@@ -31,8 +31,14 @@ const UnrankedResult = () => {
     console.log(data)
 
     const battleFetch = useAVAFetch(`/Battle/${data}`)
-
-    return <Heading>This is the result of a unranked battle which id is {data}</Heading>
+    if (battleFetch.isLoading || battleFetch.error) {
+        return <Spinner></Spinner>
+    }
+    return (
+        <Heading>
+            This is the result of a unranked battle which name is {battleFetch.data.name}
+        </Heading>
+    )
 }
 
 export default UnrankedResult
