@@ -1429,7 +1429,7 @@ public class SimulationApp {
             System.out.print("|" + lineStringSplitNoPrint[i]);
         System.out.println("");*/
 
-        printInfo = printInfo.substring(0, printInfo.length() - 1);
+        printInfo = printInfo.substring(0, printInfo.length() > 0 ? printInfo.length() - 1 : 0);
         String optionalLineCapWarning = (numPrintLines >= PRINT_LINE_CAP) ? "0" + PRINT_DELIMITER + "WARNING: console.log() lines capped at " + PRINT_LINE_CAP + " per turn" + PRINT_DELIMITER : "";
         compressedExecutionTraceHolder[2] = optionalLineCapWarning + printInfo;
 
