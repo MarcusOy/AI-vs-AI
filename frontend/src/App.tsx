@@ -16,8 +16,9 @@ import BattlePage from './pages/BattlePage'
 import StrategyPage from './pages/strategy/StrategyPage'
 import ProgrammingPage from './pages/ProgrammingPage'
 import ModalProvider from './components/modals/ModalProvider'
-import ReplayPage from './pages/ReplayPage'
 import ManualPlayPage from './pages/ManualPlayPage'
+import LeaderBoardPage from './pages/LeaderBoardPage'
+import UnrankedResult from './pages/UnrankedResult'
 import ReplayWrapperPage from './pages/ReplayWrapperPage'
 
 function App() {
@@ -78,6 +79,11 @@ function App() {
                             <Route path='/Programming/:id' element={<ProgrammingPage />} />
                             <Route path='/Replay/:bid/:gnum' element={<ReplayWrapperPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
+                            <Route path='/LeaderBoard/:id' element={<LeaderBoardPage />} />
+                            {/* <Route
+                                path='/UnrankedGameResult/:id1/:id2'
+                                element={<UnrankedResult />}
+                            /> */}
                             {/* 👇️ only match this when no other routes match */}
                             <Route path='*' element={<NotFoundPage />} />
                         </Routes>
