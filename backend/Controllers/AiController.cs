@@ -74,8 +74,8 @@ public class AiController : Controller
             DefendingStrategy = defending
         };
 
-        await _battleService.CreateAsync(newBattle);
-        _dbContext.ChangeTracker.Clear();
+        // await _battleService.CreateAsync(newBattle);
+        // _dbContext.ChangeTracker.Clear();
 
         request.PendingBattle.AttackingStrategy.CreatedByUser = null;
         request.PendingBattle.DefendingStrategy.CreatedByUser = null;
