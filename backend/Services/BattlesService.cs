@@ -108,9 +108,9 @@ namespace AVA.API.Services
             OriginalBattle.Iterations = battle.Iterations;
             OriginalBattle.AttackerWins = battle.AttackerWins;
             OriginalBattle.DefenderWins = battle.DefenderWins;
+            OriginalBattle.BattleGames = battle.BattleGames;
 
             _dbContext.Battles.Update(OriginalBattle);
-            _dbContext.Update(OriginalBattle);
             await _dbContext.SaveChangesAsync();
 
             return OriginalBattle;
