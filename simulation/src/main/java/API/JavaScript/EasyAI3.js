@@ -488,122 +488,74 @@ function isCellValid(arg1, arg2) {
         return ERR_INVALID_ROW;
     return TRUE;
 }
-/*function getMove() {
-    var board = gameState.board;
-    var pieceLocations = getMyPieceLocations(getMyColor());
-    var numMovesFound = 0;
-    var moves = new Array(NUM_PIECES_PER_SIDE);
-    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
-        var piece = pieceLocations[i];
-        if (piece === "")
-            break;
-        var validMoves = getValidMoves(piece, getMyColor(), null);
-        for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
-            var move = validMoves[j];
-            if (move === "")
-                break;
-            moves[numMovesFound] = piece + ", " + move;
-            numMovesFound++;
-        }
-    }
-
-    if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated
-        return "CHECKMATED";
-    }
-    return moves[Math.floor((Math.random() * numMovesFound))];
-}*/
-
-var turnNumber = 0;
 
 function getMove() {
-    turnNumber++;
-
     var board = getBoard();
     var pieceLocations = getMyPieceLocations(getMyColor());
 
-    switch (turnNumber) {
+    switch (gameState.numMovesMade / 2 + 1) {
         case 1:
-            if (getMyColor() === 0) {    //we are playing white
-                if (board[1][3] === ("b3") || board[4][3] === ("b3")) {
-                    return "F9, F5";            //move the RIGHT 4 if opponent moved the LEFT 3
-                } else if (board[5][3] === "b3" || board[9][3] === "b3") {
-                    return "E9, E5";            //move the LEFT 4 if opponent moved the RIGHT 3
-                } else {
-                    moves = new Array("E9, E5", "F9, F5");      //pick randomly
-                    return moves[Math.floor((Math.random() * moves.length))];
-                }
-            } else {                            //we are playing black
-                if (board[1][6] === ("w3") || board[4][6] === ("w3")) {
-                    return "F0, F4";            //move the RIGHT 4 if opponent moved the LEFT 3
-                } else if (board[5][6] === ("w3") || board[9][6] === ("w3")) {
-                    return "E0, E4";            //move the LEFT 4 if opponent moved the RIGHT 3
-                } else {
-                    moves = new Array("E0, E4", "F0, F4");      //pick randomly
-                    return moves[Math.floor((Math.random() * moves.length))];
-                }
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                return "C9, E7"; //move the LEFT 2
+            } else {                               //we are playing black
+                return "H0, F2"; //move the LEFT 2
             }
         case 2:
-            if (getMyColor() === 0) {    //we are playing white
-                if (board[5][5] === "w4") {      //we moved the RIGHT 4 for our first move
-                    if (board[5][3] === "b3" || board[9][3] === "b3") {
-                        return "E9, E5";            //move the LEFT 4 if opponent moved the RIGHT 3
-                    } else {                    //otherwise move the RIGHT 2
-                        return "H9, F9";
-                    }
-                } else if (board[4][5] === "w4") {                     //we moved the LEFT 4 for our first move
-                    if (board[1][3] === "b3" || board[4][3] === "b3") {
-                        return "F9, F5";            //move the RIGHT 4 if opponent moved the LEFT 3
-                    } else {                    //otherwise move the LEFT 2
-                        return "C9, E9";
-                    }
-                }
-            } else {                            //we are playing black
-                if (board[5][4] === "b4") {      //we moved the RIGHT 4 for our first move
-                    if (board[5][6] === "w3" || board[9][6] === "w3") {
-                        return "E0, E4";            //move the LEFT 4 if opponent moved the RIGHT 3
-                    } else {                    //otherwise move the RIGHT 2
-                        return "H0, F0";
-                    }
-                } else if (board[4][4] === "b4") {                     //we moved the LEFT 4 for our first move
-                    if (board[1][6] === "w3" || board[4][6] === "w3") {
-                        return "F0, F4";            //move the RIGHT 4 if opponent moved the LEFT 3
-                    } else {                    //otherwise move the LEFT 2
-                        return "C0, E0";
-                    }
-                }
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                return "H9, F7"; //move the RIGHT 2
+            } else {                               //we are playing black
+                return "C0, E2"; //move the RIGHT 2
             }
         case 3:
-            if (getMyColor() === 0) {    //we are playing white
-                if (board[5][9] === "w2") {      //we moved the RIGHT 2 for our second move
-                    return "E9, E5";            //move the LEFT 4
-                } else if (board[4][9] === "w2") { //we moved the LEFT 2 for our second move
-                    return "F9, F5";            //move the RIGHT 4
-                } else {
-                    moves = new Array("H9, F9", "C9, E9");      //let's just move a random 2 and hope for the best =)
-                    return moves[Math.floor(Math.random() * moves.length)];
-                }
-            } else {                            //we are playing black
-                if (board[5][0] === "b2") {      //we moved the RIGHT 2 for our second move
-                    return "E0, E4";            //move the LEFT 4
-                } else if (board[4][0] === "b2") { //we moved the LEFT 2 for our second move
-                    return "F0, F4";            //move the RIGHT 4
-                } else {
-                    moves = new Array("H0, F0", "C0, E0");      //let's just move a random 2 and hope for the best =)
-                    return moves[Math.floor(Math.random() * moves.length)];
-                }
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                return "E9, E5"; //move the LEFT 4
+            } else {                               //we are playing black
+                return "F0, F4"; //move the LEFT 4
             }
         case 4:
-            if (getMyColor() === 0) {    //we are playing white
-                if (board[5][9] === "w2") {      //we moved the RIGHT 2 already
-                    return "C9, E9";            //move the LEFT 2
-                } else {
-                    return "H9, F9";            //move the RIGHT 2
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                return "F9, F5"; //move the RIGHT 4
+            } else {                               //we are playing black
+                return "E0, E4"; //move the RIGHT 4
+            }
+        case 5:     //here is where we take advantage of switch fallthrough (in 5 second cond isn't necessary, just for consistency)
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                if (board[1][9] === "w3") {
+                    return "B9, E9"; //move the LEFT 3
                 }
-            } else {
-                if (board[5][0] === "b2") {      //we moved the RIGHT 2 already
-                    return "C0, E0";            //move the LEFT 2
-                } else {
-                    return "H0, F0";            //move the RIGHT 2
+            } else {                               //we are playing black
+                if (board[8][0] === "b3") {
+                    return "I0, F0"; //move the LEFT 3
+                }
+            }
+        case 6:
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                if (board[8][9] === "w3") {
+                    return "I9, F9"; //move the RIGHT 3
+                }
+            } else {                               //we are playing black
+                if (board[1][0] === "b3") {
+                    return "B0, E0"; //move the RIGHT 3
+                }
+            }
+        case 7:
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                if (board[3][9] === "w1") {
+                    return "D9, C9"; //move the 1 blocking the OUTER 3
+                }
+            } else {                               //we are playing black
+                if (board[6][0] === "b1") {
+                    return "G0, H0"; //move the 1 blocking the OUTER 3
+                }
+            }
+        case 8:
+            if (getMyColor(gameState) === 0) {    //we are playing white
+                if (board[0][9] === "w3") {
+                    return "A9, D9"; //move the OUTER 3
+                }
+            } else {                               //we are playing black
+                if (board[9][0] === "b3") {
+                    return "J0, G0"; //move the OUTER 3
                 }
             }
         default:
@@ -640,7 +592,7 @@ function getMove() {
                     if (piece === "w2" || piece === "b2")
                         continue;*/
                     var piece = getPieceMoveDistance(location);
-                    if (piece === 4) {                   //do not move pieces that are part of the formation
+                    if (piece === 4 || piece === 3) {                   //do not move pieces that are part of the formation
                         continue;
                     }
                     if (piece === 2 && cellToRow(location) % 2 !== getMyColor()) {   //neat way to check which parity of 2s

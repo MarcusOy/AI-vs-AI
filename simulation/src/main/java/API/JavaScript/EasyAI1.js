@@ -488,40 +488,12 @@ function isCellValid(arg1, arg2) {
         return ERR_INVALID_ROW;
     return TRUE;
 }
-/*function getMove() {
-    var board = gameState.board;
-    var pieceLocations = getMyPieceLocations(getMyColor());
-    var numMovesFound = 0;
-    var moves = new Array(NUM_PIECES_PER_SIDE);
-    for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) {
-        var piece = pieceLocations[i];
-        if (piece === "")
-            break;
-        var validMoves = getValidMoves(piece, getMyColor(), null);
-        for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
-            var move = validMoves[j];
-            if (move === "")
-                break;
-            moves[numMovesFound] = piece + ", " + move;
-            numMovesFound++;
-        }
-    }
-
-    if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated
-        return "CHECKMATED";
-    }
-    return moves[Math.floor((Math.random() * numMovesFound))];
-}*/
-
-var turnNumber = 0;
 
 function getMove() {
-    turnNumber++;
-
     var board = getBoard();
     var pieceLocations = getMyPieceLocations(getMyColor());
 
-    switch (turnNumber) {
+    switch (gameState.numMovesMade / 2 + 1) {
         case 1:
             if (getMyColor() === 0) {    //we are playing white
                 if (board[1][3] === ("b3") || board[4][3] === ("b3")) {
