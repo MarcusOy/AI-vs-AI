@@ -49,6 +49,7 @@ namespace AVA.API.Services
                 .Include(b => b.AttackingStrategy)
                 .Include(b => b.DefendingStrategy)
                 .Include(b => b.BattleGames)
+                .Where(b => b.IsTestSubmission == p.ShowOnlyTestSubmissions)
                 .OrderByDescending(b => b.UpdatedOn);
 
             if (p.UserId is not null)
@@ -73,7 +74,8 @@ namespace AVA.API.Services
                     q = q.Where(b => b.DefendingStrategy.Id == p.StrategyId);
             }
 
-            return await q.ToListAsync();
+            return await q.AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<BattleGame> GetBattleGameAsync(Guid battleId, int gameNumber)
@@ -121,6 +123,7 @@ namespace AVA.API.Services
             public Guid? StrategyId { get; set; }
             public Guid? UserId { get; set; }
             public CombatantType CombatantType { get; set; }
+            public bool ShowOnlyTestSubmissions { get; set; }
         }
         public enum CombatantType
         {

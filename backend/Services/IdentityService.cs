@@ -182,8 +182,10 @@ namespace AVA.API.Services
                 if (!_context.User.Claims.Any())
                     throw new AuthenticationException("User is not logged in.");
 
-                var userid = new Guid(_context.User.Claims
-                        .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+
+
+                var userid = _context.User.Claims
+                        .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
 
                 if (userid == null)
                     throw new AuthenticationException("Malformed user. Please log in again");
@@ -192,7 +194,7 @@ namespace AVA.API.Services
                     .Include(u => u.Strategies
                         .OrderByDescending(s => s.UpdatedOn))
                     .ThenInclude(s => s.Game)
-                    .FirstOrDefault(u => u.Id == userid);
+                    .FirstOrDefault(u => u.Id == new Guid(userid));
             }
         }
 
@@ -204,7 +206,7 @@ namespace AVA.API.Services
                 {
                     var testUser = this.CurrentUser;
                 }
-                catch (AuthenticationException ex)
+                catch
                 {
                     return false;
                 }

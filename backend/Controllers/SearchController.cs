@@ -127,7 +127,9 @@ public class SearchController : Controller
     {
         var uQuery = _dbContext.Users
             .Where(u => u.Active == true)
-            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.Username.Equals("system"))
+
             .Select(u => new InteractionResult
             {
                 Id = u.Id,
@@ -137,7 +139,9 @@ public class SearchController : Controller
 
         var cQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Draft)
-            .Where(u => u.CreatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
@@ -147,7 +151,9 @@ public class SearchController : Controller
 
         var sQuery = _dbContext.Strategies
             .Where(s => s.Status == StrategyStatus.Active)
-            .Where(u => u.UpdatedOn.Date == DateTime.Today)
+            .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
+            .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
@@ -158,7 +164,8 @@ public class SearchController : Controller
         uQuery.Union(cQuery)
             .Union(sQuery)
             .OrderByDescending(r => r.Time).ToList().ForEach(u =>
-            stats[u.Type == InteractionType.SubmittedStrategy ? 2 : u.Type == InteractionType.CreatedStrategy ? 1 : 0] += 1);
+                stats[u.Type == InteractionType.SubmittedStrategy ? 2 : u.Type == InteractionType.CreatedStrategy ? 1 : 0] += 1);
+
         return stats;
     }
 
@@ -195,6 +202,7 @@ public class SearchController : Controller
 
         var bQuery = _dbContext.Battles
             .Where(u => u.Name.ToUpper().Contains(p.SearchQuery.ToUpper()))
+            .Where(u => 1 == 2)
             .Select(b => new Result
             {
                 Id = b.Id,

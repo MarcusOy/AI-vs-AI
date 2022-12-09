@@ -9,14 +9,28 @@ public class Turn {
     private String turnData; // Stores the moveString sent to the simulation service.
                      // A valid moveString follows the form, "<fromCell>, <toCell>",
                      // but whatever was sent is stored, even if invalid.
+    private String linesExecuted = "";
+    private String printInfo = "";
 
     public Turn(String battleId, int battleGameNumber, int turnNumber,
-                boolean isAttackTurn, String moveString) {
+                boolean isAttackTurn, String moveString, String compressedLineTrace,
+                String printInfo) {
         this.battleId = battleId;
         this.battleGameNumber = battleGameNumber;
         this.turnNumber = turnNumber;
         this.isAttackTurn = isAttackTurn;
         turnData = moveString;
+        linesExecuted = compressedLineTrace;
+        this.printInfo = printInfo;
+        /*System.out.println(compressedLineTrace);
+
+        int diff = linesExecuted.length() - longestLineTrace.length();
+        if (diff > 0)
+            longestLineTrace = linesExecuted;*/
+    }
+
+    public String getTurnData() {
+        return turnData;
     }
 
     @Override
@@ -27,6 +41,8 @@ public class Turn {
                 ", turnNumber=" + turnNumber +
                 ", isAttackerTurn=" + isAttackTurn +
                 ", turnData='" + turnData + '\'' +
+                ", linesExecuted='" + linesExecuted + '\'' +
+                ", \nprintInfo='" + printInfo + '\'' +
                 '}';
     }
 }

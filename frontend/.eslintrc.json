@@ -37,7 +37,8 @@
         "no-duplicate-imports": "error",
         "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
         "@typescript-eslint/no-inferrable-types": "off",
-        "no-debugger": "warn"
+        "no-debugger": "warn",
+        "no-constant-condition": "off"
     },
     "settings": {
         "import/resolver": {

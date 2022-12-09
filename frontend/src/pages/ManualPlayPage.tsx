@@ -23,6 +23,7 @@ import { initialState } from '../data/ChessBoard'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { useReward } from 'react-rewards'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 export const BOARD_SIZES = {
     DEFAULT: 600, // for replay view
@@ -40,6 +41,8 @@ const ReplayPage = () => {
     const [isPlayerWhite, setIsPlayerWhite] = useState(true)
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { reward } = useReward('rewardId', 'confetti')
+
+    useDocumentTitle('Manual Play')
 
     // create connection to SimulationStepHub
     useEffect(() => {

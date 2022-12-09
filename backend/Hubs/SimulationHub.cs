@@ -33,9 +33,10 @@ namespace AVA.API.Hubs
         public class SimulationStepRequest
         {
             public String[][] SentBoard { get; set; }
-            public bool IsWhiteAI { get; set; }
+            public bool IsWhiteTurn { get; set; }
             public String ClientId { get; set; }
-            public Guid ChosenStockId { get; set; }
+            public Guid StrategyId { get; set; }
+            public String StrategySnapshot { get; set; }
         }
 
     }

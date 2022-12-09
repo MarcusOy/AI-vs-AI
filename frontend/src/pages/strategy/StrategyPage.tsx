@@ -42,6 +42,7 @@ import ProfileBattlesTab from '../profile/ProfileAndStratBattlesTab'
 import { StrategyStatus } from '../../models/strategy-status'
 import DuplicateModal from '../../components/modals/DuplicateModal'
 import DeleteModal from '../../components/modals/DeleteModal'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const StrategyPage = () => {
     const { whoAmI } = AVAStore.useState()
@@ -54,6 +55,8 @@ const StrategyPage = () => {
     const toast = useToast()
 
     const index = tab == 'Stats' ? 0 : tab == 'SourceCode' ? 1 : tab == 'Battles' ? 2 : -1
+
+    useDocumentTitle(strategy ? `${strategy.name} ${tab}` : 'Strategy')
 
     const handleTabsChange = (index) => {
         const tab = index == 1 ? 'SourceCode' : index == 2 ? 'Battles' : 'Stats'

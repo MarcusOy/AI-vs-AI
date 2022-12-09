@@ -37,7 +37,6 @@ builder.Services.AddDbContextPool<AVADbContext>(
     dbContextOptions => dbContextOptions
         .UseMySql(settings.ConnectionString, new MySqlServerVersion(new Version(5, 7)))
         .EnableDetailedErrors()
-        .EnableSensitiveDataLogging()
 );
 
 builder.Services.AddControllers()
@@ -101,6 +100,7 @@ builder.Services.AddScoped<IBattlesService, BattlesService>();
 builder.Services.AddScoped<IInitializationService, InitializationService>();
 builder.Services.AddScoped<IBugsService, BugsService>();
 builder.Services.AddScoped<IBattlesService, BattlesService>();
+builder.Services.AddScoped<IStarterCodeService, StarterCodeService>();
 
 var app = builder.Build();
 #endregion
@@ -130,7 +130,7 @@ app.MapHub<SimulationHub>("AI");
 
 // Initialize the database using the InitializationService
 using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<IInitializationService>()
+    await scope.ServiceProvider.GetRequiredService<IInitializationService>()
         .InitializeDatabase();
 
 app.Run("https://0.0.0.0:443");

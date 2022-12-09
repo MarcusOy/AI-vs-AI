@@ -62,6 +62,10 @@ public class StrategyController : Controller
         return await _strategyService.CreateAsync(s);
     }
 
+    [HttpPost, Route("/Strategy/Submit/{id}"), Authorize]
+    public async Task<Strategy> Submit(Guid id)
+        => await _strategyService.SubmitAsync(id);
+
     [HttpPut, Route("/Strategy/Submit"), Authorize]
     public async Task<Strategy> Submit([FromBody] Strategy s)
     {
@@ -85,7 +89,7 @@ public class StrategyController : Controller
 
     // stockToChoose (-1 = EasyAI   -2 = MedAI   -3 = HardAI)
     [HttpGet, Route("/Strategy/GetStock/{stockToChoose}"), Authorize]
-    public async Task<Strategy> GetStockStrategy(String stockToChoose)
+    public Strategy GetStockStrategy(String stockToChoose)
     {
         return _strategyService.GetStockStrategy(int.Parse(stockToChoose));
     }
