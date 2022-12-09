@@ -19,7 +19,7 @@
     "moment": "^2.29.4",
     "pullstate": "^1.24.0",
     "react": "^18.2.0",
-    "react-code-blocks": "0.0.9-0",
+    "react-code-blocks": "^0.0.9-0",
     "react-dom": "^18.2.0",
     "react-focus-lock": "^2.9.1",
     "react-hook-form": "^7.36.0",
