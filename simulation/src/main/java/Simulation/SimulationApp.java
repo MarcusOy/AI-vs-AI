@@ -206,6 +206,8 @@ public class SimulationApp {
                 String[][] reqIdlessBoard = deepCopyBoard(gameState.board);
 
                 boolean isManualStock = isIdStockId(manRequest.strategyId);
+                Battle tempBattleOptional = null;
+                BattleGame tempBattleGameOptional = null;
                 boolean errorInSource = false;
                 if (isManualStock) {
                     manualPlayStockId = manRequest.strategyId;
@@ -213,10 +215,10 @@ public class SimulationApp {
                 }
                 else {
                     // temp battle so processBattleStrategies can be used
-                    Battle tempBattle = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot, null, null, false);
+                    tempBattleOptional = new Battle(numGames, "No Attacker for Step Play", manRequest.strategyId.toString(), null, manRequest.strategySnapshot, null, null, false);
 
                     // uses tempBattle's snapshot fields to set up fields for the attacking and defending strategies
-                    errorInSource = !processBattleStrategies(tempBattle);
+                    errorInSource = !processBattleStrategies(tempBattleOptional);
                 }
 
                 // resets execTrace and stackTrace
@@ -224,7 +226,10 @@ public class SimulationApp {
 
                 Color potentialWinner = null;
                 if (!errorInSource) // only runs the turn if there isn't invalid source to run
-                    potentialWinner = playTurn(true, isManualStock, null, null);
+                {
+                    tempBattleGameOptional = tempBattleOptional.addBattleGame();
+                    potentialWinner = playTurn(true, isManualStock, tempBattleOptional, tempBattleGameOptional);
+                }
 
                 String[][] responseBoard = addPieceIds(manRequest.sentBoard, reqIdlessBoard, manRequest.isWhiteTurn);
                 SimulationStepResponse resp = new SimulationStepResponse(responseBoard, lastMoveString,
@@ -900,7 +905,8 @@ public class SimulationApp {
         boolean isValid = isMoveValid(moveString, gameState.board);
         if (!isValid) {
             String errorString = String.format("INVALID MOVE from %s: %s\n", playerString(gameState.currentPlayer), moveString);
-            battleGame.stackTrace += errorString + compressedExecutionTraceHolder[1];
+            if (battleGame != null)
+                battleGame.stackTrace += errorString + compressedExecutionTraceHolder[1];
             if (DEBUG) {
                 System.out.print(errorString);
                 System.out.println("Move String must be in the form \"<fromCell>, \"<toCell>\"");
