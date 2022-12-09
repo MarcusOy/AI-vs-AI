@@ -129,6 +129,7 @@ public class SearchController : Controller
             .Where(u => u.Active == true)
             .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Where(s => !s.Username.Equals("system"))
+
             .Select(u => new InteractionResult
             {
                 Id = u.Id,
@@ -140,6 +141,7 @@ public class SearchController : Controller
             .Where(s => s.Status == StrategyStatus.Draft)
             .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
@@ -151,6 +153,7 @@ public class SearchController : Controller
             .Where(s => s.Status == StrategyStatus.Active)
             .Where(u => u.CreatedOn > DateTime.Now.AddDays(-1))
             .Where(s => !s.CreatedByUser.Username.Equals("system"))
+
             .Select(s => new InteractionResult
             {
                 Id = s.Id,
@@ -162,6 +165,7 @@ public class SearchController : Controller
             .Union(sQuery)
             .OrderByDescending(r => r.Time).ToList().ForEach(u =>
                 stats[u.Type == InteractionType.SubmittedStrategy ? 2 : u.Type == InteractionType.CreatedStrategy ? 1 : 0] += 1);
+
         return stats;
     }
 

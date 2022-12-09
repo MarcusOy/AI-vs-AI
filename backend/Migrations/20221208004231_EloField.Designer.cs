@@ -3,6 +3,7 @@ using System;
 using AVA.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AVA.Migrations
 {
     [DbContext(typeof(AVADbContext))]
-    partial class AVADbContextModelSnapshot : ModelSnapshot
+    [Migration("20221208004231_EloField")]
+    partial class EloField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,14 +71,14 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("AttackerStrategySnapshot")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("AttackerWins")
                         .HasColumnType("int");
 
                     b.Property<Guid>("AttackingStrategyId")
                         .HasColumnType("char(36)");
-
-                    b.Property<string>("AttackingStrategySnapshot")
-                        .HasColumnType("longtext");
 
                     b.Property<int>("BattleStatus")
                         .HasColumnType("int");
@@ -106,9 +108,6 @@ namespace AVA.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
-
-                    b.Property<string>("TestSuiteResult")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime(6)");
@@ -153,9 +152,6 @@ namespace AVA.Migrations
 
                     b.Property<string>("FinalBoard")
                         .HasColumnType("longtext");
-
-                    b.Property<bool>("IsAttackerWhite")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("StackTrace")
                         .HasColumnType("longtext");
@@ -207,11 +203,17 @@ namespace AVA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<string>("BoilerplateCode")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("HelperCode")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("LongDescription")
                         .HasMaxLength(2000)
@@ -238,55 +240,34 @@ namespace AVA.Migrations
                         new
                         {
                             Id = 1,
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            LongDescription = "\r\nThe goal of this game is to advance a 1-piece past your opponent’s last rank (equivalently, if you start your turn with a 1-piece at the opponent’s end of the board, you win), or capture all of your opponent’s 1-pieces\r\nThe game is played on a 10x10 board. The starting configuration of pieces is as follows:\r\nThis is player 1’s pieces from player 1’s POV. Player 2 has the same pieces (lower left corner is a 3)\r\nAn N-piece moves exactly N squares in any direction, horizontally, vertically, or diagonally. 2, 3, and 4-pieces may jump over any number of friendly or enemy pieces\r\nCaptures occur when a piece lands on an enemy piece. The lower ranked piece is removed. If both have the same rank, both are removed. Yes, you can suicide your own piece as a move.\r\n                ",
                             Name = "1234 Chess",
-                            ShortDescription = "To be populated by Initialization Service.",
+                            ShortDescription = "Advance a 1-piece past your opponent's last rank.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2,
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            LongDescription = "\r\nCheckers is a board game played between two people on an 8x8 checked board.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Checkers",
-                            ShortDescription = "To be populated by Initialization Service.",
+                            ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3,
+                            BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DeletedOn = new DateTime(2022, 12, 8, 0, 42, 31, 530, DateTimeKind.Utc).AddTicks(6282),
+                            LongDescription = "\r\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Chess",
-                            ShortDescription = "To be populated by Initialization Service.",
+                            ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
-                });
-
-            modelBuilder.Entity("AVA.API.Models.StarterCode", b =>
-                {
-                    b.Property<int>("GameId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Language")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("GameId", "Type", "Language");
-
-                    b.ToTable("StarterCode");
                 });
 
             modelBuilder.Entity("AVA.API.Models.Strategy", b =>
@@ -312,9 +293,6 @@ namespace AVA.Migrations
 
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("Language")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -350,8 +328,7 @@ namespace AVA.Migrations
                             Elo = 0,
                             GameId = 1,
                             IsPrivate = false,
-                            Language = 0,
-                            Name = "Stock Easy AI (Java)",
+                            Name = "Stock Easy AI",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -364,8 +341,7 @@ namespace AVA.Migrations
                             Elo = 0,
                             GameId = 1,
                             IsPrivate = false,
-                            Language = 0,
-                            Name = "Stock Medium AI (Java)",
+                            Name = "Stock Medium AI",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -378,8 +354,7 @@ namespace AVA.Migrations
                             Elo = 0,
                             GameId = 1,
                             IsPrivate = false,
-                            Language = 0,
-                            Name = "Stock Hard AI (Java)",
+                            Name = "Stock Hard AI",
                             Status = 1,
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Version = 0
@@ -405,12 +380,6 @@ namespace AVA.Migrations
 
                     b.Property<bool>("IsAttackTurn")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LinesExecuted")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PrintInfo")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("TurnData")
                         .IsRequired()
@@ -492,8 +461,8 @@ namespace AVA.Migrations
                             Email = "marcus.orciuch@gmail.com",
                             FirstName = "System",
                             LastName = "User",
-                            Password = "w976r1jTd2s92sBQUNXf3cgFcys4EzRyWTmyw5ynu5s=",
-                            Salt = "4mJGCAG3c4jkAUkDcyg6tQ==",
+                            Password = "MaFytUGjUNcjQoY9PtA0MAty4Q4CXr3i7ARKSauCobA=",
+                            Salt = "ZqkheuV2bLD+nuiQLyQDOQ==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "system"
                         },
@@ -505,8 +474,8 @@ namespace AVA.Migrations
                             Email = "morciuch@purdue.edu",
                             FirstName = "Marcus",
                             LastName = "Orciuch",
-                            Password = "DvfJsoaEtwapRt5quVh9lfoI8T5X0+Sy95WXBhPCcm0=",
-                            Salt = "z2Cxsu1uUMmJGlI97+bCkw==",
+                            Password = "pZhK1kS+NTnVZfhArmIDZzcJyy3WO8Ri8Hbgp9zbDaY=",
+                            Salt = "kPlxweFSz7ZkE6tkmArZ8A==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "marcus"
                         },
@@ -518,8 +487,8 @@ namespace AVA.Migrations
                             Email = "korciuch@purdue.edu",
                             FirstName = "Kyle",
                             LastName = "Orciuch",
-                            Password = "O8jLtI1NVu1ql3HRV/nVG5ChDk0VJvxdHgxGbfyeiKk=",
-                            Salt = "J+ngHLhwlA0qQcxzXc2ROQ==",
+                            Password = "AyFDDlKhjkGAM2heh4tGxLrRKyKXjjTsq9hHeqFhWyc=",
+                            Salt = "qWqwqxvOYuGe2Bxol8Q6ag==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "kyle"
                         });
@@ -583,17 +552,6 @@ namespace AVA.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("AVA.API.Models.StarterCode", b =>
-                {
-                    b.HasOne("AVA.API.Models.Game", "Game")
-                        .WithMany("StarterCode")
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Game");
-                });
-
             modelBuilder.Entity("AVA.API.Models.Strategy", b =>
                 {
                     b.HasOne("AVA.API.Models.User", "CreatedByUser")
@@ -653,8 +611,6 @@ namespace AVA.Migrations
 
             modelBuilder.Entity("AVA.API.Models.Game", b =>
                 {
-                    b.Navigation("StarterCode");
-
                     b.Navigation("Strategies");
 
                     b.Navigation("UsersWhoFavorited");
