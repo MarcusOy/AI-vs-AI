@@ -1,3 +1,4 @@
+import { HamburgerIcon } from '@chakra-ui/icons'
 import {
     Accordion,
     AccordionButton,
@@ -25,6 +26,12 @@ import {
     TabPanels,
     Tabs,
     useDisclosure,
+    IconButton,
+    Popover,
+    PopoverBody,
+    PopoverContent,
+    PopoverTrigger,
+    VStack,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { IoAlertCircle, IoCheckmarkCircle, IoCloseCircle } from 'react-icons/io5'
@@ -56,6 +63,7 @@ const SubmissionsTab = (p: ISubmissionsTabProps) => {
 
             <Accordion allowToggle>
                 {p.submissions.map((s, key) => {
+                    console.log(s)
                     const g = s.battleStatus != BattleStatus.Pending ? s.battleGames[0] : undefined
                     const finalBoard = g ? (JSON.parse(g.finalBoard) as string[][]) : []
 
@@ -203,6 +211,27 @@ const SubmissionsTab = (p: ISubmissionsTabProps) => {
                                         </Stack>
                                     </HStack>
                                 )}
+                                {g &&        <Popover placement='bottom' matchWidth={true} size='sm'>
+                                    <PopoverTrigger>
+                                        <Button rightIcon={<HamburgerIcon />}>Basic Robustness Tests</Button>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                                <PopoverBody>
+                                            <VStack>
+                                                {s.testSuiteResult?.split('\n').map((t, i) => {
+                                                    if (t.length >= 3) {
+                                                        return (<Box display={'inherit'} gap='2' key={i}>
+                                                            <Text color={t.charAt(1) == 'P' ? 'green' : 'red'}>{t.substring(3)}</Text>
+                                                    
+                                                        </Box>)
+                                                    }
+                                                }
+                                                )}
+                                        
+                                    </VStack>
+                                </PopoverBody>
+                            </PopoverContent>
+                        </Popover>}
                             </AccordionPanel>
                         </AccordionItem>
                     )
