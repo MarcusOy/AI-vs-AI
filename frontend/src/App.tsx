@@ -22,6 +22,7 @@ import ReplayPage from './pages/ReplayPage'
 import ManualPlayPage from './pages/ManualPlayPage'
 import LeaderBoardPage from './pages/LeaderBoardPage'
 import UnrankedResult from './pages/UnrankedResult'
+import MatchResultPage from './pages/MatchmakingResultPage'
 
 function App() {
     const { data, isLoading, error, execute } = useAVAFetch('/Account/WhoAmI')
@@ -83,6 +84,7 @@ function App() {
                             <Route path='/Programming/' element={<InvalidStrategyPage />} />
                             <Route path='/Replay/:bid/:gnum' element={<ReplayPage />} />
                             <Route path='/ManualPlay' element={<ManualPlayPage />} />
+                            <Route path='/Result/:id' element={<MatchResultPage />} />
                             <Route path='/LeaderBoard/:id' element={<LeaderBoardPage />} />
                             <Route
                                 path='/UnrankedGameResult/:id1/:id2'

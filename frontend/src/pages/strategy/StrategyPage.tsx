@@ -239,7 +239,7 @@ const StrategyPage = () => {
                                     <Center>
                                         <ModalFooter>
                                             <Button
-                                                /* onClick={() => navigate('/Jiahao page')} */
+                                                onClick={() => navigate(`/Result/${id}`)} 
                                                 colorScheme='orange'
                                                 mr={3}
                                             >
