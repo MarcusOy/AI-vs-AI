@@ -10,8 +10,6 @@ const MAX_MOVE_DISTANCE = 4; // int
 const WHITE_CHAR = "w"; // char
 const BLACK_CHAR = "b"; // char
 
-const VALID_MOVES_ARRAY_LENGTH = 81; // int
-
 const TRUE = 1; // int
 const FALSE = 0; // int
 
@@ -273,7 +271,7 @@ function colToColChar(col: number): string {
  *				 characters 0-9. See diagram at top of doc as a string of length 1.
  */
 function rowToRowChar(row: number): string {
-  return String.fromCharCode(row).charAt(0);
+  return ("" + row).charAt(0);
 }
 
 /**
@@ -588,16 +586,12 @@ function getPieceMoveDistance(arg1: any, arg2: any): number {
  * 				 with empty array entries having the value "".
  */
 function getMyPieceLocations(color: number): string[] {
-  var locations: string[] = new Array(NUM_PIECES_PER_SIDE);
-  for (var i = 0; i < NUM_PIECES_PER_SIDE; i++) locations[i] = "";
-
-  var curArrIndex = 0;
+  var locations: string[] = new Array();
 
   for (var i = 0; i < BOARD_LENGTH; i++) {
     for (var j = 0; j < BOARD_LENGTH; j++) {
       if (isMyPiece(i, j, color) == TRUE) {
-        locations[curArrIndex] = colAndRowToCell(i, j);
-        curArrIndex++;
+        locations.push(colAndRowToCell(i, j));
       }
     }
   }
@@ -656,13 +650,8 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
   var col: number = arg1;
   var row: number = arg2;
   var myColor: number = arg3;
-  var moves: string[] = new Array(VALID_MOVES_ARRAY_LENGTH);
+  var moves: string[] = new Array();
 
-  for (var i = 0; i < VALID_MOVES_ARRAY_LENGTH; i++) {
-    moves[i] = "";
-  }
-
-  var currentArrayIndex = 0;
   var moveDistance = getPieceMoveDistance(col, row);
 
   if (moveDistance <= 0) return moves;
@@ -682,8 +671,7 @@ function getValidMoves(arg1: any, arg2: any, arg3: any): string[] {
           var rowToCheck = pieceColor == WHITE ? 9 : 0;
           if (newCol != columnInCheck || newRow != rowToCheck) continue;
         }
-        moves[currentArrayIndex] = colAndRowToCell(newCol, newRow);
-        currentArrayIndex++;
+        moves.push(colAndRowToCell(newCol, newRow));
       }
     }
   }
@@ -955,88 +943,74 @@ function isCellValid(arg1: any, arg2: any): number {
 
 /**
  * Gets all legal moves that capture a 1-piece without using an allied 1-piece to do so.
- * @return All legal move strings that capture (not trade) a 1-piece, along with how many moves, all in an outer array of 2 elements.
- * For example,  [<all legal 1-piece capture moveStrings array>, <number of moves in array>]
+ * 
+ * @return All legal move strings that capture (not trade) a 1-piece.
  */
-function getAllLegalCapture1PieceMoves(): [string[], number] {
+function getAllLegalCapture1PieceMoves(): string[] {
   const board: string[][] = gameState.board;
   const pieceLocations: string[] = getMyPieceLocations(getMyColor());
-  let numMovesFound: number = 0;
-  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
-  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+  let moves: string[] = new Array();
+  for (let i: number = 0; i < pieceLocations.length; i++) {
     const piece: string = pieceLocations[i];
-    if (piece === "")
-      break;
+
     const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
-    for (let j: number = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+    for (let j: number = 0; j < validMoves.length; j++) {
       const move: string = validMoves[j];
-      if (move === "")
-        break;
 
       if (getPieceMoveDistance(move, board) == 1
         && getPieceMoveDistance(piece, board) > getPieceMoveDistance(move, board)) {
-        moves[numMovesFound] = piece + ", " + move;
-        numMovesFound++;
+        moves.push(piece + ", " + move);
       }
     }
   }
-  return [moves, numMovesFound];
+  return moves;
 }
 
 /**
 * Gets all legal moves that capture a enemy piece without losing an allied piece in the process.
-* @return All legal move strings that capture (not trade) a piece, along with how many moves, all in an outer array of 2 elements.
-* For example,  [<all legal capture moveStrings array>, <number of moves in array>]
+
+* @return All legal move strings that capture (not trade) a piece.
 */
-function getAllLegalCaptureMoves(): [string[], number] {
+function getAllLegalCaptureMoves(): string[] {
   const board: string[][] = gameState.board;
   const pieceLocations: string[] = getMyPieceLocations(getMyColor());
-  let numMovesFound: number = 0;
-  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
-  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+  let moves: string[] = new Array();
+  for (let i: number = 0; i < pieceLocations.length; i++) {
     const piece: string = pieceLocations[i];
-    if (piece === "")
-      break;
+
     const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
-    for (let j: number = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+    for (let j: number = 0; j < validMoves.length; j++) {
       const move: string = validMoves[j];
-      if (move === "")
-        break;
 
       if (getPieceMoveDistance(move, board) != 0
         && getPieceMoveDistance(piece, board) > getPieceMoveDistance(move, board)) {
-        moves[numMovesFound] = piece + ", " + move;
-        numMovesFound++;
+        moves.push(piece + ", " + move);
       }
     }
   }
-  return [moves, numMovesFound];
+  return moves;
 }
 
 /**
 * Gets all legal moves.
-* @return All legal move strings, along with how many moves, all in an outer array of 2 elements.
-* For example,  [<all legal moveStrings array>, <number of moves in array>]
+
+* @return All legal move strings.
 */
-function getAllLegalMoves(): [string[], number] {
+function getAllLegalMoves(): string[] {
   const board: string[][] = gameState.board;
   const pieceLocations: string[] = getMyPieceLocations(getMyColor());
-  let numMovesFound: number = 0;
-  let moves: string[] = new Array(NUM_PIECES_PER_SIDE);
-  for (let i: number = 0; i < NUM_PIECES_PER_SIDE; i++) {
+  let moves: string[] = new Array();
+  for (let i: number = 0; i < pieceLocations.length; i++) {
     let piece: string = pieceLocations[i];
-    if (piece === "")
-      break;
+
     const validMoves: string[] = getValidMoves(piece, getMyColor(), null);
-    for (var j = 0; j < VALID_MOVES_ARRAY_LENGTH; j++) {
+    for (var j = 0; j < validMoves.length; j++) {
       const move: string = validMoves[j];
-      if (move === "")
-        break;
-      moves[numMovesFound] = piece + ", " + move;
-      numMovesFound++;
+
+      moves.push(piece + ", " + move);
     }
   }
-  return [moves, numMovesFound];
+  return moves;
 }
 
 /**
@@ -1046,12 +1020,10 @@ function getAllLegalMoves(): [string[], number] {
 * If no legal move exists, returns "CHECKMATED" to indicate that you have lost.
 */
 function getRandomMove(): string {
-  const arr: [string[], number] = getAllLegalMoves();
-  const moves: string[] = arr[0];
-  const numMovesFound: number = arr[1];
+  const moves: string[] = getAllLegalMoves();
 
-  if (numMovesFound === 0) { //if you have no legal moves, that means you are checkmated
+  if (moves.length === 0) { //if you have no legal moves, that means you are checkmated
     return "CHECKMATED";
   }
-  return moves[Math.floor((Math.random() * numMovesFound))];
+  return moves[Math.floor((Math.random() * moves.length))];
 }
