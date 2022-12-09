@@ -3,6 +3,7 @@ using System;
 using AVA.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AVA.Migrations
 {
     [DbContext(typeof(AVADbContext))]
-    partial class AVADbContextModelSnapshot : ModelSnapshot
+    [Migration("20221208004231_EloField")]
+    partial class EloField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -151,9 +153,6 @@ namespace AVA.Migrations
                     b.Property<string>("FinalBoard")
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("IsAttackerWhite")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("StackTrace")
                         .HasColumnType("longtext");
 
@@ -263,8 +262,8 @@ namespace AVA.Migrations
                             Id = 3,
                             BoilerplateCode = "\r\n                    const step(state, actions) => {\r\n                        return null;\r\n                    }\r\n\r\n                    export default step;\r\n                ",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedOn = new DateTime(2022, 11, 4, 15, 27, 58, 607, DateTimeKind.Utc).AddTicks(4570),
-                            LongDescription = "\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \nBlah blah blah\n                ",
+                            DeletedOn = new DateTime(2022, 12, 8, 0, 42, 31, 530, DateTimeKind.Utc).AddTicks(6282),
+                            LongDescription = "\r\nChess is a board game played between two people on an 8x8 checked board like the one shown below.\r\nEach player has 12 pieces that are like flat round disks that fit inside each of the boxes on the board. The pieces are placed on every other dark square and then staggered by rows, like shown on the board. \r\nBlah blah blah\r\n                ",
                             Name = "Chess",
                             ShortDescription = "Eliminate all of your opponents pieces by jumping over them.",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
@@ -462,8 +461,8 @@ namespace AVA.Migrations
                             Email = "marcus.orciuch@gmail.com",
                             FirstName = "System",
                             LastName = "User",
-                            Password = "+IIAO0R3334td3uKozQj81tru0Gk7ZyqObMcY2e93vs=",
-                            Salt = "pXvUNAefXm5O8DGfRR4Sog==",
+                            Password = "MaFytUGjUNcjQoY9PtA0MAty4Q4CXr3i7ARKSauCobA=",
+                            Salt = "ZqkheuV2bLD+nuiQLyQDOQ==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "system"
                         },
@@ -475,8 +474,8 @@ namespace AVA.Migrations
                             Email = "morciuch@purdue.edu",
                             FirstName = "Marcus",
                             LastName = "Orciuch",
-                            Password = "me4jHHeFwVIwCHln4/iGsvv/38VCkmt1Y8iDf9fVtRE=",
-                            Salt = "hbRJYOCRWTXHdLjbM1z78Q==",
+                            Password = "pZhK1kS+NTnVZfhArmIDZzcJyy3WO8Ri8Hbgp9zbDaY=",
+                            Salt = "kPlxweFSz7ZkE6tkmArZ8A==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "marcus"
                         },
@@ -488,8 +487,8 @@ namespace AVA.Migrations
                             Email = "korciuch@purdue.edu",
                             FirstName = "Kyle",
                             LastName = "Orciuch",
-                            Password = "ZqqCv+lHdiTwxWqoFbht06pgL4HAFsX1nnCdE6DYZwM=",
-                            Salt = "nQW1XsHPuL8urXcWGWAlmA==",
+                            Password = "AyFDDlKhjkGAM2heh4tGxLrRKyKXjjTsq9hHeqFhWyc=",
+                            Salt = "qWqwqxvOYuGe2Bxol8Q6ag==",
                             UpdatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "kyle"
                         });
