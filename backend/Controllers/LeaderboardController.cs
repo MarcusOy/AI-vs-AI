@@ -27,6 +27,7 @@ public class LeaderboardController : Controller
     {
         var leaderboardQuery = _dbContext.Strategies
             .Where(s => s.GameId == gameId)
+            .Where(s => s.Status == StrategyStatus.Active)
             .OrderByDescending(s => s.Elo)
             .Take(10);
 

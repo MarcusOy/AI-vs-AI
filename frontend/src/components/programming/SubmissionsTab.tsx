@@ -17,24 +17,20 @@ import {
     ModalBody,
     ModalCloseButton,
     ModalContent,
-    ModalFooter,
-    ModalHeader,
     ModalOverlay,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
     useDisclosure,
-    IconButton,
     Popover,
     PopoverBody,
     PopoverContent,
     PopoverTrigger,
-    VStack,
+    ListIcon,
+    ListItem,
+    List,
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { IoAlertCircle, IoCheckmarkCircle, IoCloseCircle } from 'react-icons/io5'
+import { IoMdCloseCircle } from 'react-icons/io'
+import { MdCheckCircle } from 'react-icons/md'
 import { TbShield, TbSword } from 'react-icons/tb'
 import { useNavigate } from 'react-router-dom'
 import { Battle } from '../../models/battle'
@@ -211,27 +207,42 @@ const SubmissionsTab = (p: ISubmissionsTabProps) => {
                                         </Stack>
                                     </HStack>
                                 )}
-                                {g &&        <Popover placement='bottom' matchWidth={true} size='sm'>
-                                    <PopoverTrigger>
-                                        <Button rightIcon={<HamburgerIcon />}>Basic Robustness Tests</Button>
-                            </PopoverTrigger>
-                            <PopoverContent>
-                                <PopoverBody>
-                                            <VStack>
-                                                {s.testSuiteResult?.split('\n').map((t, i) => {
-                                                    if (t.length >= 3) {
-                                                        return (<Box display={'inherit'} gap='2' key={i}>
-                                                            <Text color={t.charAt(1) == 'P' ? 'green' : 'red'}>{t.substring(3)}</Text>
-                                                    
-                                                        </Box>)
-                                                    }
-                                                }
-                                                )}
-                                        
-                                    </VStack>
-                                </PopoverBody>
-                            </PopoverContent>
-                        </Popover>}
+                                {g && (
+                                    <Popover placement='bottom' matchWidth={true} size='sm'>
+                                        <PopoverTrigger>
+                                            <Button leftIcon={<HamburgerIcon />}>
+                                                Basic Robustness Tests
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                            <PopoverBody>
+                                                <List spacing={3}>
+                                                    {s.testSuiteResult?.split('\n').map((t, i) => {
+                                                        if (t.length >= 3) {
+                                                            return (
+                                                                <ListItem key={i}>
+                                                                    {t.charAt(1) == 'P' ? (
+                                                                        <ListIcon
+                                                                            as={MdCheckCircle}
+                                                                            color='green.500'
+                                                                        />
+                                                                    ) : (
+                                                                        <ListIcon
+                                                                            as={IoMdCloseCircle}
+                                                                            color='red.500'
+                                                                        />
+                                                                    )}
+
+                                                                    {t.substring(3)}
+                                                                </ListItem>
+                                                            )
+                                                        }
+                                                    })}
+                                                </List>
+                                            </PopoverBody>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
                             </AccordionPanel>
                         </AccordionItem>
                     )

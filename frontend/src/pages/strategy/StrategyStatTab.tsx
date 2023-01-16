@@ -89,9 +89,7 @@ const StrategyStatTab = (p: IStrategyPage) => {
                         <Stat>
                             <StatLabel fontSize='xl'>Leaderboard Rank</StatLabel>
                             <StatNumber fontSize='4xl'>
-                                {p.strategy.status == StrategyStatus.Active
-                                    ? 'RANKING HERE'
-                                    : 'Unranked'}
+                                {p.strategy.status == StrategyStatus.Active ? 'Ranked' : 'Unranked'}
                             </StatNumber>
                             <StatHelpText fontSize='xl'>
                                 <StatArrow type='increase' />

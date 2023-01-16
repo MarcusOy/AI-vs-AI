@@ -158,7 +158,8 @@ const GameObjectivePage = () => {
     const victoryDescription =
         victoryType == 'Infiltration' ? (
             <>
-                <b>Infiltration</b> occurs when a 1 piece crosses the opponent&apos;s back row.
+                <b>Infiltration</b> occurs when a 1 piece crosses the opponent&apos;s back row and
+                survives for a turn.
                 <br />
                 <br /> A <b>White 1</b> enters Black&apos;s back row. <br /> {'> '}White wins!
             </>
@@ -211,7 +212,7 @@ const GameMiscellaneousPage = () => {
                     player who just moved and made the capture wins
                 </ListItem>
                 <ListItem>
-                    In the unlikely event 1000 moves get played without someone winning, a
+                    In the unlikely event 2000 moves get played without someone winning, a
                     tiebreaker occurs to decide who won. The tiebreakers are in order:
                 </ListItem>
             </UnorderedList>
